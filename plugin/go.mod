@@ -2,13 +2,19 @@ module github.com/Bidon15/banhbaoring/plugin
 
 go 1.24.0
 
-require github.com/openbao/openbao/sdk/v2 v2.5.0
+require (
+	github.com/btcsuite/btcd/btcec/v2 v2.3.6
+	github.com/openbao/openbao/sdk/v2 v2.5.0
+	github.com/stretchr/testify v1.11.1
+	golang.org/x/crypto v0.45.0
+)
 
 require (
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
@@ -43,8 +49,6 @@ require (
 	github.com/openbao/openbao/api/v2 v2.5.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
-	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
