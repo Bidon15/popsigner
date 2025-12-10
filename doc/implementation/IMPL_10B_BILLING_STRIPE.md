@@ -22,7 +22,7 @@ Implement subscription billing with Stripe including plans, payments, and usage 
 | Usage-based billing | ✅ |
 | Webhook handling | ✅ |
 | Invoice retrieval | ✅ |
-| Crypto payments | ❌ (Agent 10C - future) |
+| Crypto payments | ❌ (out of scope) |
 
 ---
 

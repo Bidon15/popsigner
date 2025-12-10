@@ -125,7 +125,7 @@ Tenant (Organization)
 │   └── ci-bot (Operator)
 └── Billing
     ├── Subscription: Pro
-    └── Payment Method: Stripe / Crypto
+    └── Payment Method: Stripe
 ```
 
 #### 2.2.2 Resource Quotas by Plan
@@ -294,26 +294,7 @@ Response:
 - SEPA for EU
 - Invoicing for Enterprise
 
-**Phase 2: Crypto Payments (Post-Launch)**
-| Stablecoin | Network | Integration |
-|------------|---------|-------------|
-| USDC | Ethereum, Base, Arbitrum | Circle APIs |
-| USDT | Ethereum, Tron | Direct wallet |
-| DAI | Ethereum | Direct wallet |
-| TIA | Celestia | Native integration |
-
-#### 2.4.4 Crypto Payment Flow
-
-```
-1. User selects "Pay with Crypto"
-2. System generates unique deposit address
-3. User sends stablecoins
-4. Webhook confirms on-chain payment
-5. Credits applied to account
-6. Receipt generated (fiat equivalent)
-```
-
-#### 2.4.5 Billing API Endpoints
+#### 2.4.4 Billing API Endpoints
 
 ```
 GET    /v1/billing/subscription     Current subscription
@@ -321,7 +302,6 @@ POST   /v1/billing/subscription     Change plan
 GET    /v1/billing/usage            Usage metrics
 GET    /v1/billing/invoices         Invoice history
 POST   /v1/billing/payment-methods  Add payment method
-GET    /v1/billing/crypto/address   Get crypto deposit address
 ```
 
 ---
@@ -455,7 +435,7 @@ POST /v1/webhooks
 ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
 │  Auth Service   │      │  Keys Service   │      │ Billing Service │
 │  - Login/OAuth  │      │  - CRUD keys    │      │  - Stripe       │
-│  - API keys     │      │  - Sign ops     │      │  - Crypto pay   │
+│  - API keys     │      │  - Sign ops     │      │  - Invoices     │
 │  - Sessions     │      │  - Audit log    │      │  - Usage meter  │
 └────────┬────────┘      └────────┬────────┘      └────────┬────────┘
          │                        │                        │
@@ -658,7 +638,6 @@ results, err := client.Keys.SignBatch(ctx, banhbaoring.SignBatchRequest{
 | **5.3** | Billing (Stripe integration)          | 2 weeks  |
 | **5.4** | Audit logs, Webhooks                  | 1 week   |
 | **5.5** | SDKs (Go, Rust)                       | 2 weeks  |
-| **5.6** | Crypto payments (USDC)                | 2 weeks  |
 
 ---
 
@@ -666,7 +645,6 @@ results, err := client.Keys.SignBatch(ctx, banhbaoring.SignBatchRequest{
 
 | Enhancement                   | Description                            | Priority |
 | ----------------------------- | -------------------------------------- | -------- |
-| **TIA Native Payments**       | Pay directly with Celestia's TIA token | High     |
 | **Multi-Chain Keys**          | Support for Ethereum, Solana keys      | Medium   |
 | **Key Ceremony**              | Multi-party key generation             | Medium   |
 | **Hardware Security Modules** | HSM-backed key storage                 | High     |

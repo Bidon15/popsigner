@@ -58,7 +58,7 @@ BanhBaoRing is a complete key management SaaS platform for Celestia and Cosmos e
 
 | Document | Description | Status |
 |----------|-------------|--------|
-| [PRD_CONTROL_PLANE.md](./PRD_CONTROL_PLANE.md) | Multi-tenant API, billing (Stripe + crypto) | 📝 PRD Ready |
+| [PRD_CONTROL_PLANE.md](./PRD_CONTROL_PLANE.md) | Multi-tenant API, billing (Stripe) | 📝 PRD Ready |
 | [PRD_DASHBOARD.md](./PRD_DASHBOARD.md) | Web dashboard, UX, 5-min onboarding | 📝 PRD Ready |
 | [PRD_OPERATOR.md](./PRD_OPERATOR.md) | K8s operator for one-command deployment | 📝 PRD Ready |
 
@@ -86,13 +86,12 @@ Multi-tenant backend API that wraps the core library.
 - Multi-tenant isolation (organizations, namespaces)
 - Authentication (OAuth, API keys, wallet connect)
 - Role-based access control (RBAC)
-- Billing (Stripe + stablecoin payments)
+- Billing (Stripe)
 - Audit logging & compliance
 - Webhooks
 
 **Billing:**
 - Stripe integration (cards, ACH, SEPA)
-- Crypto payments (USDC, USDT, TIA)
 
 **Timeline:** ~9 weeks
 
@@ -106,12 +105,12 @@ User-facing web application for key management.
 - Key management UI (create, view, sign test)
 - Usage analytics & audit log viewer
 - Team management
-- Billing & crypto payments
+- Billing (Stripe)
 
 **USPs:**
 - 🚀 5-minute signup to first signature
 - 🔐 HSM-level security made simple
-- 🌐 Web3 native (wallet login, crypto payments)
+- 🌐 Web3 native (wallet login)
 - 📊 Real-time monitoring
 
 **Timeline:** ~7 weeks
@@ -214,7 +213,6 @@ cfg := client.Config{
 **Payment Options:**
 - 💳 Credit/debit cards (Stripe)
 - 🏦 Bank transfer (ACH, SEPA)
-- 🪙 Crypto (USDC, USDT, TIA)
 
 ---
 

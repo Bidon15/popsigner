@@ -1,10 +1,11 @@
 # Implementation Guide
 
-This directory contains implementation specifications for **29 agents** across 3 products:
+This directory contains implementation specifications for **33 agents** across 4 products:
 
 - **Core Library** (Phases 0-5): 19 agents
 - **Control Plane API** (Phase 6): 8 agents
 - **SDKs** (Phase 7): 2 agents
+- **Web Dashboard** (Phase 8): 4 agents
 
 ---
 
@@ -172,6 +173,30 @@ replace (
 
 ---
 
+## Phase 8: Web Dashboard
+
+> **PRD:** [`doc/product/PRD_DASHBOARD.md`](../product/PRD_DASHBOARD.md)
+
+### Agent 12A: Dashboard Foundation (BLOCKING)
+
+| ID      | Component            | Skills                | Files                           |
+| ------- | -------------------- | --------------------- | ------------------------------- |
+| **12A** | Dashboard Foundation | templ, Tailwind, HTMX | `templates/`, `static/`, routes |
+
+**This agent MUST complete before Phase 8.1 agents can start.**
+
+### Phase 8.1: Auth & Pages (3 parallel)
+
+| ID      | Component      | Skills          | Files                           |
+| ------- | -------------- | --------------- | ------------------------------- |
+| **12B** | Auth Pages     | OAuth, sessions | `templates/pages/login.templ`   |
+| **12C** | Keys Pages     | HTMX, forms     | `templates/pages/keys_*.templ`  |
+| **12D** | Settings Pages | Billing, audit  | `templates/pages/billing.templ` |
+
+> **Tech Stack:** Go + templ + HTMX + Alpine.js + Tailwind CSS (NO React, NO Node.js)
+
+---
+
 ## Execution Order
 
 ```
@@ -256,6 +281,35 @@ Phase 6.3 - Supporting Services (2 parallel):
 │ Audit Logs   │  │   Stripe     │
 │ Webhooks     │  │   Billing    │
 └──────────────┘  └──────────────┘
+
+════════════════════════════════════════════════════════════════════════
+                         SDKS (CAN RUN PARALLEL)
+════════════════════════════════════════════════════════════════════════
+
+Phase 7 - Official SDKs (2 parallel):
+┌──────────────┐  ┌──────────────┐
+│     11A      │  │     11B      │
+│   Go SDK     │  │  Rust SDK    │
+│              │  │              │
+└──────────────┘  └──────────────┘
+
+════════════════════════════════════════════════════════════════════════
+                      WEB DASHBOARD (HTMX + TEMPL)
+════════════════════════════════════════════════════════════════════════
+
+Phase 8.0 - Dashboard Foundation (BLOCKING):
+                        ┌──────────┐
+                        │   12A    │
+                        │ Foundation│
+                        │ templ+CSS│
+                        └──────────┘
+
+Phase 8.1 - Dashboard Pages (3 parallel):
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│     12B      │  │     12C      │  │     12D      │
+│ Auth Pages   │  │ Keys Pages   │  │ Settings     │
+│ Onboarding   │  │ HTMX         │  │ Billing      │
+└──────────────┘  └──────────────┘  └──────────────┘
 ```
 
 ---
@@ -286,9 +340,26 @@ Phase 6.3 - Supporting Services (2 parallel):
 
 **Subtotal: 8 agents**
 
+### SDKs (Phase 7)
+
+| Phase | Agents     | Description        |
+| ----- | ---------- | ------------------ |
+| **7** | 2 parallel | 11A, 11B - Go/Rust |
+
+**Subtotal: 2 agents**
+
+### Web Dashboard (Phase 8)
+
+| Phase   | Agents       | Description            |
+| ------- | ------------ | ---------------------- |
+| **8.0** | 1 (blocking) | Agent 12A - Foundation |
+| **8.1** | 3 parallel   | 12B, 12C, 12D - Pages  |
+
+**Subtotal: 4 agents**
+
 ---
 
-**Total: 27 agents** across Core Library + Control Plane
+**Total: 33 agents** across Core Library + Control Plane + SDKs + Dashboard
 
 ---
 
@@ -390,6 +461,20 @@ Phase 6.3 - Supporting Services (2 parallel):
 
 - [IMPL_11A_SDK_GO.md](./IMPL_11A_SDK_GO.md) - Go SDK
 - [IMPL_11B_SDK_RUST.md](./IMPL_11B_SDK_RUST.md) - Rust SDK
+
+---
+
+## Web Dashboard Documents
+
+### Agent 12A: Dashboard Foundation
+
+- [IMPL_12A_DASHBOARD_FOUNDATION.md](./IMPL_12A_DASHBOARD_FOUNDATION.md) - templ, Tailwind, layouts
+
+### Phase 8.1: Dashboard Pages
+
+- [IMPL_12B_DASHBOARD_AUTH.md](./IMPL_12B_DASHBOARD_AUTH.md) - Auth & Onboarding
+- [IMPL_12C_DASHBOARD_KEYS.md](./IMPL_12C_DASHBOARD_KEYS.md) - Keys Management
+- [IMPL_12D_DASHBOARD_SETTINGS.md](./IMPL_12D_DASHBOARD_SETTINGS.md) - Settings & Billing
 
 ---
 
