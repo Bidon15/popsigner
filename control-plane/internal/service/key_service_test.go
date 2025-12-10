@@ -326,6 +326,43 @@ func (m *mockOrgRepo) DeleteInvitation(ctx context.Context, id uuid.UUID) error 
 	return nil
 }
 
+func (m *mockOrgRepo) GetByStripeCustomer(ctx context.Context, customerID string) (*models.Organization, error) {
+	for _, org := range m.orgs {
+		if org.StripeCustomerID != nil && *org.StripeCustomerID == customerID {
+			return org, nil
+		}
+	}
+	return nil, nil
+}
+
+func (m *mockOrgRepo) UpdateStripeCustomer(ctx context.Context, orgID uuid.UUID, customerID string) error {
+	if org, ok := m.orgs[orgID]; ok {
+		org.StripeCustomerID = &customerID
+	}
+	return nil
+}
+
+func (m *mockOrgRepo) UpdateStripeSubscription(ctx context.Context, orgID uuid.UUID, subscriptionID string) error {
+	if org, ok := m.orgs[orgID]; ok {
+		org.StripeSubscriptionID = &subscriptionID
+	}
+	return nil
+}
+
+func (m *mockOrgRepo) ClearStripeSubscription(ctx context.Context, orgID uuid.UUID) error {
+	if org, ok := m.orgs[orgID]; ok {
+		org.StripeSubscriptionID = nil
+	}
+	return nil
+}
+
+func (m *mockOrgRepo) UpdatePlan(ctx context.Context, orgID uuid.UUID, plan models.Plan) error {
+	if org, ok := m.orgs[orgID]; ok {
+		org.Plan = plan
+	}
+	return nil
+}
+
 type mockAuditRepo struct {
 	logs []*models.AuditLog
 }

@@ -1,9 +1,10 @@
 # Implementation Guide
 
-This directory contains implementation specifications for **26 agents** across 2 products:
+This directory contains implementation specifications for **29 agents** across 3 products:
 
 - **Core Library** (Phases 0-5): 19 agents
-- **Control Plane API** (Phase 6): 7 agents
+- **Control Plane API** (Phase 6): 8 agents
+- **SDKs** (Phase 7): 2 agents
 
 ---
 
@@ -153,6 +154,21 @@ replace (
 | ------- | ---------------- | ---------- | ---------------------------------------- |
 | **10A** | Audit & Webhooks | HMAC, HTTP | `audit_service.go`, `webhook_service.go` |
 | **10B** | Billing (Stripe) | Stripe API | `billing_service.go`                     |
+
+---
+
+## Phase 7: SDKs
+
+> **Can run in parallel with Phase 6.3 or after.**
+
+### Phase 7.1: Official SDKs (2 parallel)
+
+| ID      | Component | Skills               | Files       |
+| ------- | --------- | -------------------- | ----------- |
+| **11A** | Go SDK    | Go, HTTP             | `sdk-go/`   |
+| **11B** | Rust SDK  | Rust, async, reqwest | `sdk-rust/` |
+
+> **Why Go + Rust?** Celestia only has official clients in Go and Rust. No TypeScript/JS client exists.
 
 ---
 
@@ -369,6 +385,11 @@ Phase 6.3 - Supporting Services (2 parallel):
 
 - [IMPL_10A_AUDIT_WEBHOOKS.md](./IMPL_10A_AUDIT_WEBHOOKS.md) - Audit Logs & Webhooks
 - [IMPL_10B_BILLING_STRIPE.md](./IMPL_10B_BILLING_STRIPE.md) - Stripe Billing
+
+### Phase 7: SDKs
+
+- [IMPL_11A_SDK_GO.md](./IMPL_11A_SDK_GO.md) - Go SDK
+- [IMPL_11B_SDK_RUST.md](./IMPL_11B_SDK_RUST.md) - Rust SDK
 
 ---
 

@@ -289,7 +289,7 @@
 
 ---
 
-### 2.4 Key Details Page
+### 2.5 Key Details Page
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -352,7 +352,7 @@
 
 ---
 
-### 2.5 Billing Page (with Crypto Payments)
+### 2.6 Billing Page (with Crypto Payments)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -430,7 +430,7 @@
 
 ---
 
-### 2.6 Audit Log Page
+### 2.7 Audit Log Page
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -505,52 +505,117 @@
 --font-mono: "JetBrains Mono", "Fira Code", monospace;
 ```
 
-### 3.3 Component Examples
+### 3.3 Component Examples (HTMX + templ)
 
-**Buttons:**
+**Buttons (Tailwind classes):**
 
-```jsx
-// Primary - gradient with glow (warm accent)
-<Button variant="primary">Create Key</Button>
-// bg-gradient-to-r from-primary-500 to-accent-500
-// shadow-lg shadow-primary-500/25
-// hover:shadow-primary-500/40
+```html
+<!-- Primary - gradient with glow -->
+<button
+  class="bg-gradient-to-r from-purple-500 to-orange-500 
+               text-white font-semibold px-6 py-3 rounded-lg
+               shadow-lg shadow-purple-500/25 
+               hover:shadow-purple-500/40 
+               transition-all duration-300"
+>
+  Create Key
+</button>
 
-// Secondary - outline
-<Button variant="secondary">View Details</Button>
+<!-- Secondary - outline -->
+<button
+  class="border border-purple-500/50 text-purple-300
+               px-4 py-2 rounded-lg
+               hover:bg-purple-500/10 hover:border-purple-500
+               transition-all duration-200"
+>
+  View Details
+</button>
 
-// Ghost - subtle hover
-<Button variant="ghost">Cancel</Button>
+<!-- Ghost - subtle hover -->
+<button
+  class="text-gray-400 px-4 py-2 rounded-lg
+               hover:text-white hover:bg-white/5
+               transition-all duration-200"
+>
+  Cancel
+</button>
 ```
 
-**Cards:**
+**Cards (templ component):**
 
-```jsx
-// Glass-morphism with warm undertones
-<Card>
-  // bg-bg-secondary/80 backdrop-blur-lg border border-border //
-  hover:border-primary-500/50 hover:shadow-primary-500/10 // transition-all
-  duration-300
-</Card>
+```go
+// templates/components/card.templ
+templ Card(title string) {
+    <div class="bg-[#1a1625]/80 backdrop-blur-lg
+                border border-[#4a3f5c] rounded-xl p-6
+                hover:border-purple-500/50
+                hover:shadow-lg hover:shadow-purple-500/10
+                transition-all duration-300">
+        <h3 class="text-lg font-semibold text-white mb-4">{ title }</h3>
+        { children... }
+    </div>
+}
 ```
 
-**Key Cards:**
+**Key Cards (templ component):**
 
-```jsx
-// Distinctive key display
-<KeyCard>
-  // Gradient left border indicating status // border-l-4 border-l-success
-  (active) // border-l-4 border-l-warning (unused)
-</KeyCard>
+```go
+// templates/components/key_card.templ
+templ KeyCard(key models.Key) {
+    <div class="bg-[#1a1625] border-l-4 border-l-emerald-500
+                border border-[#4a3f5c] rounded-lg p-4
+                hover:bg-[#1a1625]/80 transition-all"
+         id={ "key-" + key.ID }>
+        <div class="flex justify-between items-start">
+            <div>
+                <h3 class="text-white font-semibold flex items-center gap-2">
+                    🔑 { key.Name }
+                </h3>
+                <p class="text-gray-400 font-mono text-sm mt-1">
+                    { key.Address[:12] }...{ key.Address[len(key.Address)-6:] }
+                </p>
+            </div>
+            <span class="text-xs text-purple-400 bg-purple-500/10 px-2 py-1 rounded">
+                { key.Namespace }
+            </span>
+        </div>
+        <div class="flex gap-2 mt-4">
+            <button hx-get={ "/keys/" + key.ID }
+                    hx-target="#main-content"
+                    hx-push-url="true"
+                    class="text-sm text-purple-400 hover:text-purple-300">
+                View Details
+            </button>
+            <button hx-post={ "/keys/" + key.ID + "/sign-test" }
+                    hx-target="#sign-result"
+                    class="text-sm text-cyan-400 hover:text-cyan-300">
+                Sign Test
+            </button>
+        </div>
+    </div>
+}
 ```
 
-**Code Blocks:**
+**Code Blocks (with Highlight.js):**
 
-```jsx
-// Syntax highlighted with copy button and language badge
-<CodeBlock language="go" copyButton>
-  {`client := banhbaoring.NewClient("bbr_key_xxx")`}
-</CodeBlock>
+```go
+// templates/components/code_block.templ
+templ CodeBlock(language, code string) {
+    <div class="relative group" x-data="{ copied: false }">
+        <div class="absolute top-2 right-2 flex items-center gap-2">
+            <span class="text-xs text-gray-500 uppercase">{ language }</span>
+            <button @click="navigator.clipboard.writeText($refs.code.textContent); copied = true; setTimeout(() => copied = false, 2000)"
+                    class="text-gray-400 hover:text-white p-1 rounded
+                           opacity-0 group-hover:opacity-100 transition-opacity">
+                <span x-show="!copied">📋</span>
+                <span x-show="copied" class="text-emerald-400">✓</span>
+            </button>
+        </div>
+        <pre class="bg-[#0c0a14] border border-[#4a3f5c] rounded-lg p-4 overflow-x-auto">
+            <code x-ref="code" class={ "language-" + language }>{ code }</code>
+        </pre>
+    </div>
+}
 ```
 
 ---
@@ -559,40 +624,54 @@
 
 ### 4.1 Tech Stack
 
-| Layer             | Technology                             |
-| ----------------- | -------------------------------------- |
-| Framework         | Next.js 14 (App Router)                |
-| Styling           | Tailwind CSS + Radix UI                |
-| State             | Zustand + React Query (TanStack Query) |
-| Auth              | NextAuth.js (Auth.js)                  |
-| Charts            | Recharts                               |
-| Code Highlighting | Shiki                                  |
-| Forms             | React Hook Form + Zod                  |
-| Animations        | Framer Motion                          |
-| Icons             | Lucide React                           |
-| Date/Time         | date-fns                               |
+| Layer              | Technology                   | Notes                            |
+| ------------------ | ---------------------------- | -------------------------------- |
+| **Language**       | Go 1.22+                     | Same as control-plane API        |
+| **Router**         | Chi                          | Already in use for API           |
+| **Templates**      | templ                        | Type-safe, compiled Go templates |
+| **Styling**        | Tailwind CSS                 | Utility-first CSS                |
+| **Components**     | DaisyUI                      | Tailwind component library       |
+| **Interactivity**  | HTMX 2.0                     | HTML-over-the-wire               |
+| **Reactivity**     | Alpine.js 3.x                | Dropdowns, modals, toasts        |
+| **Charts**         | Chart.js                     | Simple, HTMX-compatible          |
+| **Code Highlight** | Highlight.js                 | Syntax highlighting              |
+| **Icons**          | Lucide (static) or Heroicons | SVG icons                        |
+| **OAuth**          | markbates/goth               | GitHub, Google, Discord          |
+| **Sessions**       | gorilla/sessions + Redis     | Secure session management        |
+| **Forms**          | go-playground/validator      | Server-side validation           |
 
-### 4.2 Performance Targets
+### 4.2 Why This Stack
 
-| Metric                         | Target  |
-| ------------------------------ | ------- |
-| LCP (Largest Contentful Paint) | < 2.5s  |
-| FID (First Input Delay)        | < 100ms |
-| CLS (Cumulative Layout Shift)  | < 0.1   |
-| Time to Interactive            | < 3s    |
-| Bundle size (gzipped)          | < 150KB |
-| Lighthouse Score               | > 90    |
+| Consideration       | HTMX + Go Advantage                                       |
+| ------------------- | --------------------------------------------------------- |
+| **Single Language** | Go for frontend + backend, no context switching           |
+| **Simplicity**      | No Node.js, no npm, no build pipeline for JS              |
+| **Performance**     | Server renders HTML, smaller payloads, instant navigation |
+| **Deployment**      | Single binary, no separate frontend deployment            |
+| **Maintainability** | One codebase, one repo, one CI/CD pipeline                |
+| **SEO/Sharing**     | Full HTML on first load, no hydration flash               |
 
-### 4.3 Accessibility
+### 4.3 Performance Targets
+
+| Metric                         | Target | Notes                            |
+| ------------------------------ | ------ | -------------------------------- |
+| LCP (Largest Contentful Paint) | < 1.5s | Server-rendered, no JS hydration |
+| FID (First Input Delay)        | < 50ms | Minimal JS, instant interactions |
+| CLS (Cumulative Layout Shift)  | < 0.05 | No layout shifts from JS loading |
+| Time to Interactive            | < 1.5s | HTML ready immediately           |
+| Total JS bundle (gzipped)      | < 50KB | HTMX + Alpine + Chart.js only    |
+| Lighthouse Score               | > 95   | Lighter stack = better scores    |
+
+### 4.4 Accessibility
 
 - WCAG 2.1 AA compliance
-- Full keyboard navigation
-- Screen reader support (ARIA labels)
+- Full keyboard navigation (HTMX preserves focus)
+- Screen reader support (semantic HTML)
 - Color contrast ratios > 4.5:1
 - Focus indicators on all interactive elements
-- Reduced motion support
+- Reduced motion support via `prefers-reduced-motion`
 
-### 4.4 Browser Support
+### 4.5 Browser Support
 
 | Browser       | Minimum Version |
 | ------------- | --------------- |
@@ -605,60 +684,256 @@
 
 ---
 
-## 5. Page Structure
+## 5. Project Structure
 
-### 5.1 Public Pages (No Auth)
-
-```
-/                    - Landing page
-/login               - Login page
-/signup              - Signup page
-/docs                - Documentation (public)
-/pricing             - Pricing page
-/blog                - Blog (if applicable)
-```
-
-### 5.2 Protected Pages (Auth Required)
+### 5.1 Directory Layout
 
 ```
-/dashboard           - Overview
-/keys                - Keys list
-/keys/new            - Create key wizard
-/keys/[id]           - Key details
-/usage               - Usage statistics
-/audit               - Audit log
-/settings            - Settings parent
-/settings/team       - Team management
-/settings/api-keys   - API key management
-/settings/billing    - Billing & payments
-/settings/profile    - User profile
+control-plane/
+├── cmd/
+│   └── server/
+│       └── main.go                 # Entry point
+├── internal/
+│   ├── config/
+│   ├── database/
+│   ├── middleware/
+│   ├── models/
+│   ├── repository/
+│   ├── service/
+│   ├── handler/
+│   │   ├── api/                    # JSON API handlers (/v1/*)
+│   │   │   ├── keys_api.go
+│   │   │   ├── auth_api.go
+│   │   │   └── ...
+│   │   └── web/                    # HTML handlers (/*)
+│   │       ├── auth_handler.go     # Login, signup, OAuth callbacks
+│   │       ├── dashboard_handler.go
+│   │       ├── keys_handler.go
+│   │       ├── billing_handler.go
+│   │       ├── audit_handler.go
+│   │       └── settings_handler.go
+│   └── pkg/
+├── templates/                      # templ files
+│   ├── layouts/
+│   │   ├── base.templ              # HTML head, scripts, body wrapper
+│   │   ├── auth.templ              # Auth pages layout (no sidebar)
+│   │   └── dashboard.templ         # Dashboard layout (sidebar + nav)
+│   ├── pages/
+│   │   ├── login.templ
+│   │   ├── signup.templ
+│   │   ├── onboarding.templ
+│   │   ├── dashboard.templ
+│   │   ├── keys_list.templ
+│   │   ├── keys_detail.templ
+│   │   ├── keys_new.templ
+│   │   ├── audit.templ
+│   │   ├── billing.templ
+│   │   └── settings/
+│   │       ├── team.templ
+│   │       ├── api_keys.templ
+│   │       └── profile.templ
+│   ├── partials/                   # HTMX partial responses
+│   │   ├── keys_list.templ         # Just the keys list (for filtering)
+│   │   ├── activity_feed.templ     # Just activity items
+│   │   ├── sign_result.templ       # Sign test result
+│   │   └── modal_content.templ     # Modal inner content
+│   └── components/
+│       ├── button.templ
+│       ├── card.templ
+│       ├── key_card.templ
+│       ├── nav.templ
+│       ├── sidebar.templ
+│       ├── modal.templ
+│       ├── toast.templ
+│       ├── code_block.templ
+│       ├── chart.templ
+│       └── pagination.templ
+├── static/
+│   ├── css/
+│   │   ├── input.css               # Tailwind input
+│   │   └── output.css              # Tailwind compiled
+│   ├── js/
+│   │   └── app.js                  # Alpine init, Chart.js config, copy utils
+│   └── img/
+│       ├── logo.svg
+│       └── ...
+├── tailwind.config.js
+├── go.mod
+├── go.sum
+├── Makefile
+└── docker/
+    ├── Dockerfile
+    └── docker-compose.yml
 ```
 
-### 5.3 API Routes
+### 5.2 URL Structure
+
+**Public Routes (No Auth):**
 
 ```
-/api/auth/[...nextauth]  - Auth endpoints
-/api/keys                - Keys CRUD (proxy to Control Plane)
-/api/audit               - Audit log (proxy to Control Plane)
-/api/billing             - Billing (proxy to Control Plane)
-/api/webhooks/stripe     - Stripe webhook handler
-/api/webhooks/crypto     - Crypto payment webhook
+GET  /                    Landing page
+GET  /login               Login page
+GET  /signup              Signup page
+GET  /auth/github         GitHub OAuth start
+GET  /auth/github/callback
+GET  /auth/google         Google OAuth start
+GET  /auth/google/callback
+GET  /docs                Documentation (redirect to external)
+GET  /pricing             Pricing page
+```
+
+**Protected Routes (Auth Required):**
+
+```
+GET  /dashboard           Overview
+GET  /keys                Keys list
+GET  /keys/new            Create key form
+POST /keys                Create key (HTMX)
+GET  /keys/{id}           Key details
+POST /keys/{id}/sign-test Sign test (HTMX partial)
+DELETE /keys/{id}         Delete key (HTMX)
+GET  /keys/workers/new    Create worker keys form
+POST /keys/workers        Create worker keys batch
+GET  /usage               Usage statistics
+GET  /audit               Audit log
+GET  /settings            Settings (redirect to /settings/profile)
+GET  /settings/profile    User profile
+GET  /settings/team       Team management
+GET  /settings/api-keys   API key management
+GET  /settings/billing    Billing & payments
+POST /settings/billing/crypto  Crypto payment setup (HTMX)
+POST /logout              Logout
 ```
 
 ---
 
-## 6. Key User Flows
+## 6. HTMX Patterns
 
-### 6.1 First-Time User Flow
+### 6.1 Core Patterns Used
+
+| Pattern              | HTMX Attribute                                          | Use Case                    |
+| -------------------- | ------------------------------------------------------- | --------------------------- |
+| **Click to load**    | `hx-get="/keys/new" hx-target="#modal"`                 | Open create key modal       |
+| **Form submit**      | `hx-post="/keys" hx-target="#keys-list"`                | Create key, update list     |
+| **Delete + remove**  | `hx-delete="/keys/123" hx-swap="outerHTML"`             | Delete key, remove from DOM |
+| **Search filter**    | `hx-get="/keys" hx-trigger="keyup changed delay:300ms"` | Filter keys list            |
+| **Infinite scroll**  | `hx-get="/audit?page=2" hx-trigger="revealed"`          | Load more audit logs        |
+| **Polling**          | `hx-get="/activity" hx-trigger="every 30s"`             | Refresh activity feed       |
+| **Out-of-band swap** | `hx-swap-oob="true"`                                    | Update multiple elements    |
+| **Push URL**         | `hx-push-url="true"`                                    | Update browser URL          |
+
+### 6.2 Example: Keys List with Search
+
+```html
+<!-- templates/pages/keys_list.templ -->
+<div class="space-y-4">
+  <!-- Search/Filter Bar -->
+  <div class="flex gap-4">
+    <input
+      type="search"
+      name="q"
+      placeholder="Search keys..."
+      hx-get="/keys"
+      hx-trigger="keyup changed delay:300ms, search"
+      hx-target="#keys-list"
+      hx-push-url="true"
+      class="..."
+    />
+
+    <select
+      name="namespace"
+      hx-get="/keys"
+      hx-trigger="change"
+      hx-target="#keys-list"
+      hx-include="[name='q']"
+    >
+      <option value="">All Namespaces</option>
+      <option value="production">production</option>
+      <option value="staging">staging</option>
+    </select>
+  </div>
+
+  <!-- Keys List (swapped by HTMX) -->
+  <div id="keys-list">@KeysList(keys)</div>
+</div>
+```
+
+### 6.3 Example: Modal Pattern
+
+```html
+<!-- Modal container (always present) -->
+<div
+  id="modal"
+  class="fixed inset-0 z-50 hidden"
+  x-data="{ open: false }"
+  x-show="open"
+  @modal-open.window="open = true"
+  @modal-close.window="open = false"
+  @keydown.escape.window="open = false"
+>
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/50" @click="open = false"></div>
+
+  <!-- Modal content (swapped by HTMX) -->
+  <div
+    id="modal-content"
+    class="relative bg-[#1a1625] rounded-xl max-w-lg mx-auto mt-20 p-6"
+  >
+    <!-- Content loaded via hx-get -->
+  </div>
+</div>
+
+<!-- Button that opens modal -->
+<button
+  hx-get="/keys/new"
+  hx-target="#modal-content"
+  @click="$dispatch('modal-open')"
+>
+  + Create Key
+</button>
+```
+
+### 6.4 Example: Toast Notifications
+
+```go
+// templates/components/toast.templ
+templ Toast(message, variant string) {
+    <div id="toast"
+         hx-swap-oob="true"
+         x-data="{ show: true }"
+         x-show="show"
+         x-init="setTimeout(() => show = false, 5000)"
+         class={ "fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg",
+                 templ.KV("bg-emerald-500/90", variant == "success"),
+                 templ.KV("bg-red-500/90", variant == "error") }>
+        <p class="text-white font-medium">{ message }</p>
+    </div>
+}
+```
+
+---
+
+## 7. Key User Flows
+
+### 7.1 First-Time User Flow
 
 ```
 Landing Page → Sign Up (OAuth/Email) → Name Org → Create First Key →
 Integration Guide → Dashboard
 ```
 
+**HTMX Flow:**
+
+1. `GET /signup` → Full page
+2. Click GitHub → Redirect to GitHub OAuth
+3. `GET /auth/github/callback` → Create user, redirect to `/onboarding`
+4. `POST /onboarding/org` (HTMX) → Create org, swap to step 2
+5. `POST /onboarding/key` (HTMX) → Create key, swap to step 3
+6. `GET /dashboard` → Full page with celebration animation
+
 **Target Time: < 5 minutes**
 
-### 6.2 Daily User Flow
+### 7.2 Daily User Flow
 
 ```
 Login → Dashboard → View Recent Activity → Sign operations (via API) →
@@ -667,14 +942,14 @@ Check Usage → Logout
 
 **Most Common Path**
 
-### 6.3 Key Management Flow
+### 7.3 Key Management Flow
 
 ```
 Keys List → Create New Key → Configure Options → Key Created →
 Copy Address/PubKey → Integrate
 ```
 
-### 6.4 Billing Flow
+### 7.4 Billing Flow
 
 ```
 Settings → Billing → View Usage → Upgrade Plan →
@@ -683,28 +958,50 @@ Select Payment (Card/Crypto) → Confirm → Done
 
 ---
 
-## 7. Mobile Responsiveness
+## 8. Mobile Responsiveness
 
-### 7.1 Breakpoints
+### 8.1 Breakpoints (Tailwind defaults)
 
 ```css
---breakpoint-sm: 640px; /* Mobile */
---breakpoint-md: 768px; /* Tablet */
---breakpoint-lg: 1024px; /* Desktop */
---breakpoint-xl: 1280px; /* Large Desktop */
+sm: 640px   /* Mobile landscape */
+md: 768px   /* Tablet */
+lg: 1024px  /* Desktop */
+xl: 1280px  /* Large desktop */
 ```
 
-### 7.2 Mobile Adaptations
+### 8.2 Mobile Adaptations
 
-- Collapsible sidebar → Bottom navigation on mobile
-- Stacked cards on mobile (single column)
+- Collapsible sidebar → Hamburger menu on mobile
+- Stacked cards on mobile (single column grid)
 - Touch-friendly tap targets (min 44px)
-- Swipe gestures for navigation
-- Simplified tables (card view on mobile)
+- Bottom sheet modals on mobile
+- Simplified tables → Card view on mobile
+- Sticky action buttons on mobile
+
+### 8.3 Responsive Sidebar Pattern
+
+```html
+<!-- Desktop sidebar -->
+<aside class="hidden lg:flex lg:w-64 lg:flex-col ...">@Sidebar()</aside>
+
+<!-- Mobile header with hamburger -->
+<header class="lg:hidden flex items-center justify-between p-4 ...">
+  <button @click="sidebarOpen = true">☰</button>
+  <span>BanhBaoRing</span>
+</header>
+
+<!-- Mobile slide-out drawer -->
+<div x-show="sidebarOpen" class="lg:hidden fixed inset-0 z-40" x-transition>
+  <div class="absolute inset-0 bg-black/50" @click="sidebarOpen = false"></div>
+  <aside class="absolute left-0 top-0 h-full w-64 bg-[#0c0a14]">
+    @Sidebar()
+  </aside>
+</div>
+```
 
 ---
 
-## 8. Success Metrics
+## 9. Success Metrics
 
 | Metric                 | Target (Month 1) | Target (Month 6) |
 | ---------------------- | ---------------- | ---------------- |
@@ -713,18 +1010,163 @@ Select Payment (Card/Crypto) → Confirm → Done
 | DAU/MAU                | 20%              | 40%              |
 | NPS Score              | 30               | 50               |
 | Support Tickets/User   | < 0.5            | < 0.2            |
-| Page Load Time         | < 3s             | < 2s             |
+| Page Load Time         | < 1.5s           | < 1s             |
 | Mobile Usage           | 20%              | 35%              |
 
 ---
 
-## 9. Internationalization (Future)
+## 10. Build & Development
 
-### 9.1 Initial Languages
+### 10.1 Development Commands
+
+```bash
+# Install templ CLI
+go install github.com/a-h/templ/cmd/templ@latest
+
+# Install Tailwind standalone (no Node required)
+curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
+chmod +x tailwindcss-macos-arm64 && mv tailwindcss-macos-arm64 ./tailwindcss
+
+# Generate templ files
+templ generate
+
+# Watch templ files
+templ generate --watch
+
+# Build Tailwind CSS
+./tailwindcss -i static/css/input.css -o static/css/output.css
+
+# Watch Tailwind
+./tailwindcss -i static/css/input.css -o static/css/output.css --watch
+
+# Run server with hot reload (using air)
+air
+```
+
+### 10.2 Makefile
+
+```makefile
+.PHONY: dev build templ css
+
+dev:
+	@make -j3 templ-watch css-watch air
+
+templ:
+	templ generate
+
+templ-watch:
+	templ generate --watch
+
+css:
+	./tailwindcss -i static/css/input.css -o static/css/output.css --minify
+
+css-watch:
+	./tailwindcss -i static/css/input.css -o static/css/output.css --watch
+
+air:
+	air
+
+build:
+	templ generate
+	./tailwindcss -i static/css/input.css -o static/css/output.css --minify
+	go build -o bin/server ./cmd/server
+
+docker:
+	docker build -t banhbaoring-dashboard .
+```
+
+### 10.3 CDN Dependencies
+
+```html
+<!-- base.templ - minimal JS dependencies -->
+<head>
+  <link rel="stylesheet" href="/static/css/output.css" />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@fontsource/outfit@5.0.0/400.min.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.0/400.min.css"
+  />
+</head>
+<body>
+  { children... }
+
+  <!-- HTMX -->
+  <script
+    src="https://unpkg.com/htmx.org@2.0.4"
+    integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
+    crossorigin="anonymous"
+  ></script>
+
+  <!-- Alpine.js -->
+  <script
+    defer
+    src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"
+  ></script>
+
+  <!-- Chart.js (only on pages that need it) -->
+  if showCharts {
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  }
+
+  <!-- Highlight.js (only on pages with code blocks) -->
+  if showCode {
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css"
+  />
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/go.min.js"></script>
+  <script>
+    hljs.highlightAll();
+  </script>
+  }
+
+  <!-- Custom JS -->
+  <script src="/static/js/app.js"></script>
+</body>
+```
+
+---
+
+## 11. Timeline
+
+| Phase   | Deliverables                              | Duration |
+| ------- | ----------------------------------------- | -------- |
+| **7.1** | Setup: templ, Tailwind, project structure | 3 days   |
+| **7.2** | Auth pages, OAuth integration             | 4 days   |
+| **7.3** | Dashboard, keys list, key details         | 5 days   |
+| **7.4** | Create key wizard, worker keys            | 3 days   |
+| **7.5** | Billing, settings pages                   | 4 days   |
+| **7.6** | Audit log, usage charts                   | 3 days   |
+| **7.7** | Mobile optimization, polish               | 3 days   |
+
+**Total: ~3.5 weeks** (faster than React/Next.js due to simpler stack)
+
+---
+
+## 12. Internationalization (Future)
+
+### 12.1 Initial Languages
 
 - English (default)
 
-### 9.2 Future Languages (Priority Order)
+### 12.2 i18n Approach
+
+Use Go's `embed` with JSON translation files:
+
+```go
+//go:embed locales/*.json
+var locales embed.FS
+
+func T(lang, key string) string {
+    // Load from embedded locales
+}
+```
+
+### 12.3 Future Languages (Priority Order)
 
 1. Chinese (Simplified)
 2. Korean
@@ -734,26 +1176,13 @@ Select Payment (Card/Crypto) → Confirm → Done
 
 ---
 
-## 10. Timeline
+## 13. Future Enhancements
 
-| Phase   | Deliverables                     | Duration |
-| ------- | -------------------------------- | -------- |
-| **6.1** | Design system, component library | 1 week   |
-| **6.2** | Auth pages, onboarding flow      | 1 week   |
-| **6.3** | Dashboard, keys management       | 2 weeks  |
-| **6.4** | Billing, settings pages          | 1 week   |
-| **6.5** | Audit log, usage analytics       | 1 week   |
-| **6.6** | Mobile optimization, polish      | 1 week   |
-
----
-
-## 11. Future Enhancements
-
-| Enhancement            | Description                 | Priority |
-| ---------------------- | --------------------------- | -------- |
-| **Dark/Light Toggle**  | User-selectable theme       | Medium   |
-| **Custom Branding**    | White-label for Enterprise  | Low      |
-| **Mobile App**         | Native iOS/Android apps     | Low      |
-| **Keyboard Shortcuts** | Power user productivity     | Medium   |
-| **Real-time Updates**  | WebSocket for live activity | High     |
-| **Onboarding Tours**   | Interactive product tours   | Medium   |
+| Enhancement            | Description                                | Priority |
+| ---------------------- | ------------------------------------------ | -------- |
+| **Dark/Light Toggle**  | User-selectable theme (Tailwind dark mode) | Medium   |
+| **Keyboard Shortcuts** | Power user productivity (`/` to search)    | Medium   |
+| **Real-time Updates**  | SSE for live activity feed                 | High     |
+| **Onboarding Tours**   | Step-by-step hints (intro.js or custom)    | Medium   |
+| **Custom Branding**    | White-label for Enterprise                 | Low      |
+| **PWA Support**        | Offline dashboard access                   | Low      |

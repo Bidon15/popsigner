@@ -566,12 +566,13 @@ CREATE TABLE usage_metrics (
 
 ### 5.1 Official SDKs
 
-| Language      | Package                         | Priority |
-| ------------- | ------------------------------- | -------- |
-| Go            | `github.com/banhbaoring/sdk-go` | P0       |
-| TypeScript/JS | `@banhbaoring/sdk`              | P0       |
-| Python        | `banhbaoring`                   | P1       |
-| Rust          | `banhbaoring-rs`                | P1       |
+> **Note:** Celestia only has official clients in Go and Rust. We prioritize these two languages.
+
+| Language | Package                         | Priority | Notes                           |
+| -------- | ------------------------------- | -------- | ------------------------------- |
+| Go       | `github.com/banhbaoring/sdk-go` | P0       | Primary - celestia-node uses Go |
+| Rust     | `banhbaoring` (crate)           | P0       | celestia-node-rs uses Rust      |
+| Python   | `banhbaoring`                   | P2       | Future - community request      |
 
 ### 5.2 SDK Example (Go)
 
@@ -656,7 +657,7 @@ results, err := client.Keys.SignBatch(ctx, banhbaoring.SignBatchRequest{
 | **5.2** | Key Management API (wraps BaoKeyring) | 2 weeks  |
 | **5.3** | Billing (Stripe integration)          | 2 weeks  |
 | **5.4** | Audit logs, Webhooks                  | 1 week   |
-| **5.5** | SDKs (Go, TypeScript)                 | 2 weeks  |
+| **5.5** | SDKs (Go, Rust)                       | 2 weeks  |
 | **5.6** | Crypto payments (USDC)                | 2 weeks  |
 
 ---

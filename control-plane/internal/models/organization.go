@@ -35,6 +35,9 @@ type OrgMember struct {
 	Role      Role       `json:"role" db:"role"`
 	InvitedBy *uuid.UUID `json:"invited_by,omitempty" db:"invited_by"`
 	JoinedAt  time.Time  `json:"joined_at" db:"joined_at"`
+
+	// Joined fields (populated by queries)
+	User *User `json:"user,omitempty"`
 }
 
 // Role represents a user's role within an organization.
@@ -46,6 +49,29 @@ const (
 	RoleOperator Role = "operator"
 	RoleViewer   Role = "viewer"
 )
+
+// RoleLevel returns the numeric level for a role (higher = more permissions).
+func RoleLevel(role Role) int {
+	levels := map[Role]int{
+		RoleOwner:    4,
+		RoleAdmin:    3,
+		RoleOperator: 2,
+		RoleViewer:   1,
+	}
+	if level, ok := levels[role]; ok {
+		return level
+	}
+	return 0
+}
+
+// ValidRole checks if a role string is valid.
+func ValidRole(role Role) bool {
+	switch role {
+	case RoleOwner, RoleAdmin, RoleOperator, RoleViewer:
+		return true
+	}
+	return false
+}
 
 // Namespace represents an environment within an organization.
 type Namespace struct {
@@ -67,5 +93,52 @@ type Invitation struct {
 	ExpiresAt  time.Time  `json:"expires_at" db:"expires_at"`
 	AcceptedAt *time.Time `json:"accepted_at,omitempty" db:"accepted_at"`
 	CreatedAt  time.Time  `json:"created_at" db:"created_at"`
+
+	// Joined fields
+	Organization *Organization `json:"organization,omitempty"`
+}
+
+// PlanLimits defines resource limits for a subscription plan.
+type PlanLimits struct {
+	Keys               int   `json:"keys"`
+	SignaturesPerMonth int64 `json:"signatures_per_month"`
+	Namespaces         int   `json:"namespaces"`
+	TeamMembers        int   `json:"team_members"`
+	AuditRetentionDays int   `json:"audit_retention_days"`
+}
+
+// PlanLimitsMap contains the limits for each plan.
+// A value of -1 means unlimited.
+var PlanLimitsMap = map[Plan]PlanLimits{
+	PlanFree: {
+		Keys:               3,
+		SignaturesPerMonth: 10000,
+		Namespaces:         1,
+		TeamMembers:        1,
+		AuditRetentionDays: 7,
+	},
+	PlanPro: {
+		Keys:               25,
+		SignaturesPerMonth: 500000,
+		Namespaces:         5,
+		TeamMembers:        10,
+		AuditRetentionDays: 90,
+	},
+	PlanEnterprise: {
+		Keys:               -1, // unlimited
+		SignaturesPerMonth: -1,
+		Namespaces:         -1,
+		TeamMembers:        -1,
+		AuditRetentionDays: 365,
+	},
+}
+
+// GetPlanLimits returns the limits for a given plan.
+func GetPlanLimits(plan Plan) PlanLimits {
+	if limits, ok := PlanLimitsMap[plan]; ok {
+		return limits
+	}
+	// Default to free plan limits
+	return PlanLimitsMap[PlanFree]
 }
 

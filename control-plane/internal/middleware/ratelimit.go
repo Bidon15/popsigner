@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/Bidon15/banhbaoring/control-plane/internal/database"
 	apierrors "github.com/Bidon15/banhbaoring/control-plane/internal/pkg/errors"
 	"github.com/Bidon15/banhbaoring/control-plane/internal/pkg/response"
@@ -169,5 +171,22 @@ func GetUserID(ctx context.Context) string {
 		return v.(string)
 	}
 	return ""
+}
+
+// GetUserIDFromContext retrieves the user ID from context as a UUID.
+// Returns uuid.Nil if not present or invalid.
+func GetUserIDFromContext(ctx context.Context) uuid.UUID {
+	if v := ctx.Value(UserIDKey); v != nil {
+		if userIDStr, ok := v.(string); ok {
+			if id, err := uuid.Parse(userIDStr); err == nil {
+				return id
+			}
+		}
+		// Also support direct UUID storage
+		if userID, ok := v.(uuid.UUID); ok {
+			return userID
+		}
+	}
+	return uuid.Nil
 }
 
