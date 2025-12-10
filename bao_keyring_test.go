@@ -1604,7 +1604,7 @@ func TestBaoKeyring_ImportKey_NotSupported(t *testing.T) {
 	defer server.Close()
 	defer func() { _ = kr.store.Close() }()
 
-	record, err := kr.ImportKey("new-key", []byte("wrapped-key"), true)
+	record, err := kr.ImportKey("new-key", "wrapped-key", true)
 	assert.Error(t, err)
 	assert.Nil(t, record)
 	assert.ErrorIs(t, err, ErrUnsupportedAlgo)
