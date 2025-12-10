@@ -357,34 +357,84 @@ func (k *BaoKeyring) NewAccountWithOptions(uid string, opts KeyOptions) (*keyrin
 	return k.metadataToRecord(meta)
 }
 
-// ImportKey imports a wrapped key.
-// This is used for secure key transfer between OpenBao instances.
-func (k *BaoKeyring) ImportKey(uid string, wrappedKey []byte, exportable bool) (*keyring.Record, error) {
-	// This would require OpenBao's import endpoint which we don't have in the client yet
-	return nil, fmt.Errorf("%w: ImportKey requires OpenBao import endpoint", ErrUnsupportedAlgo)
-}
+// ImportKey imports a key from base64-encoded raw private key bytes.
+// This is used for secure key transfer from local keyrings to OpenBao.
+func (k *BaoKeyring) ImportKey(uid string, ciphertext string, exportable bool) (*keyring.Record, error) {
+	// Check if key already exists
+	if k.store.Has(uid) {
+		return nil, fmt.Errorf("%w: %s", ErrKeyExists, uid)
+	}
 
-// ExportKey exports a key (if exportable).
-// This is used for secure key transfer between OpenBao instances.
-func (k *BaoKeyring) ExportKey(uid string) ([]byte, error) {
-	meta, err := k.store.Get(uid)
+	ctx := context.Background()
+
+	// Import key into OpenBao
+	keyInfo, err := k.client.ImportKey(ctx, uid, ciphertext, exportable)
 	if err != nil {
 		return nil, err
 	}
 
-	if !meta.Exportable {
-		return nil, fmt.Errorf("%w: %s", ErrKeyNotExportable, uid)
+	// Decode public key from hex
+	pubKeyBytes, err := hex.DecodeString(keyInfo.PublicKey)
+	if err != nil {
+		// Cleanup on failure
+		_ = k.client.DeleteKey(ctx, uid)
+		return nil, fmt.Errorf("failed to decode public key: %w", err)
 	}
 
-	// This would require OpenBao's export endpoint which we don't have in the client yet
-	return nil, fmt.Errorf("%w: ExportKey requires OpenBao export endpoint", ErrUnsupportedAlgo)
+	// Create metadata
+	meta := &KeyMetadata{
+		UID:         uid,
+		Name:        uid,
+		PubKeyBytes: pubKeyBytes,
+		PubKeyType:  "secp256k1",
+		Address:     keyInfo.Address,
+		BaoKeyPath:  fmt.Sprintf("%s/keys/%s", k.client.secp256k1Path, uid),
+		Algorithm:   AlgorithmSecp256k1,
+		Exportable:  exportable,
+		CreatedAt:   time.Now().UTC(),
+		Source:      SourceImported,
+	}
+
+	// Save to local store
+	if err := k.store.Save(meta); err != nil {
+		// Cleanup on failure
+		_ = k.client.DeleteKey(ctx, uid)
+		return nil, err
+	}
+
+	return k.metadataToRecord(meta)
 }
 
-// GetWrappingKey gets the RSA wrapping key.
-// This is used for secure key transfer between OpenBao instances.
+// ExportKey exports a key (if exportable).
+// Returns base64-encoded raw private key bytes.
+// This is used for secure key transfer from OpenBao to local keyrings.
+func (k *BaoKeyring) ExportKey(uid string) (string, error) {
+	meta, err := k.store.Get(uid)
+	if err != nil {
+		return "", err
+	}
+
+	if !meta.Exportable {
+		return "", fmt.Errorf("%w: %s", ErrKeyNotExportable, uid)
+	}
+
+	ctx := context.Background()
+	keyData, _, err := k.client.ExportKey(ctx, uid)
+	if err != nil {
+		return "", err
+	}
+
+	return keyData, nil
+}
+
+// GetWrappingKey gets the RSA wrapping key for secure key transfer.
+// Note: The current plugin implementation accepts raw base64-encoded keys
+// without RSA wrapping. This method is a placeholder for future
+// production-grade secure transfer implementation.
 func (k *BaoKeyring) GetWrappingKey() ([]byte, error) {
-	// This would require OpenBao's wrapping key endpoint
-	return nil, fmt.Errorf("%w: GetWrappingKey requires OpenBao wrapping key endpoint", ErrUnsupportedAlgo)
+	// For now, return nil to indicate no wrapping key is available.
+	// The Import function will use direct base64 encoding instead.
+	return nil, nil
 }
 
 // --- Helper methods ---
