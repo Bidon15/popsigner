@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Bidon15/banhbaoring/control-plane/internal/models"
+	"github.com/Bidon15/banhbaoring/control-plane/internal/service"
 )
 
 // mockAPIKeyService is a mock implementation of APIKeyService for testing.
@@ -17,7 +18,7 @@ type mockAPIKeyService struct {
 	validateFunc func(ctx context.Context, rawKey string) (*models.APIKey, error)
 }
 
-func (m *mockAPIKeyService) Create(ctx context.Context, orgID uuid.UUID, req interface{}) (*models.APIKey, string, error) {
+func (m *mockAPIKeyService) Create(ctx context.Context, orgID uuid.UUID, req service.CreateAPIKeyRequest) (*models.APIKey, string, error) {
 	return nil, "", nil
 }
 
