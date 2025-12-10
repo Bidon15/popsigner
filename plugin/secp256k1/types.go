@@ -2,13 +2,22 @@ package secp256k1
 
 import "time"
 
-// TODO(03B): Implement types
-
+// keyEntry represents a stored secp256k1 key in OpenBao.
+// Private keys are automatically encrypted at rest using OpenBao's seal wrap.
 type keyEntry struct {
-	PrivateKey []byte    `json:"private_key"`
-	PublicKey  []byte    `json:"public_key"`
-	Exportable bool      `json:"exportable"`
-	CreatedAt  time.Time `json:"created_at"`
-	Imported   bool      `json:"imported"`
-}
+	// PrivateKey is the raw 32-byte secp256k1 private key.
+	PrivateKey []byte `json:"private_key"`
 
+	// PublicKey is the compressed 33-byte secp256k1 public key.
+	PublicKey []byte `json:"public_key"`
+
+	// Exportable indicates whether the private key can be exported.
+	// Once set to false, this cannot be changed.
+	Exportable bool `json:"exportable"`
+
+	// CreatedAt is the timestamp when the key was created.
+	CreatedAt time.Time `json:"created_at"`
+
+	// Imported indicates whether the key was imported (vs generated).
+	Imported bool `json:"imported"`
+}
