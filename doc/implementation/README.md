@@ -1,0 +1,264 @@
+# Implementation Guide
+
+This directory contains implementation specifications for **18 agents** (1 skeleton + 17 sub-agents).
+
+---
+
+## ⚠️ CRITICAL: Celestia Fork Dependencies
+
+This project **MUST** use Celestia's forks of cosmos-sdk and tendermint. Do **NOT** use upstream versions!
+
+### Minimum Version Requirements
+
+| Package | Minimum Version | Notes |
+|---------|----------------|-------|
+| `celestia-app` | **v6.4.0** | Required for latest keyring interface |
+| `celestia-node` | **v0.28.4** | Required for DA layer integration |
+
+### Required go.mod Replace Directives
+
+```go
+replace (
+    // Celestia's cosmos-sdk fork (REQUIRED)
+    github.com/cosmos/cosmos-sdk => github.com/celestiaorg/cosmos-sdk v1.25.0-sdk-v0.50.6
+    
+    // Celestia's tendermint fork (celestia-core)
+    github.com/tendermint/tendermint => github.com/celestiaorg/celestia-core v1.41.0-tm-v0.34.29
+    github.com/cometbft/cometbft => github.com/celestiaorg/celestia-core v1.41.0-tm-v0.34.29
+    
+    // Celestia's IBC fork
+    github.com/cosmos/ibc-go/v8 => github.com/celestiaorg/ibc-go/v8 v8.5.1
+    
+    // Required transitive dependencies
+    github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+    github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+)
+```
+
+### Why This Matters
+
+| Standard Import Path | Replaced By | Reason |
+|---------------------|-------------|--------|
+| `github.com/cosmos/cosmos-sdk` | `celestiaorg/cosmos-sdk` | Celestia-specific keyring interface modifications |
+| `github.com/tendermint/tendermint` | `celestiaorg/celestia-core` | Celestia's consensus layer |
+| `github.com/cometbft/cometbft` | `celestiaorg/celestia-core` | Alternative tendermint fork |
+
+**Import paths in code stay the same** (e.g., `github.com/cosmos/cosmos-sdk/crypto/keyring`), but Go resolves them to Celestia's forks via the `replace` directives.
+
+---
+
+## ⚠️ CRITICAL: Agent 00 Must Run First!
+
+**Agent 00 (Skeleton)** creates the project structure and must complete before any other agent starts.
+
+---
+
+## Agent Overview
+
+### Agent 00: Skeleton (BLOCKING)
+
+| ID | Component | Files Created |
+|----|-----------|---------------|
+| **00** | Project Scaffolding | All directories, `go.mod`, stub files |
+
+**This agent MUST complete first. All other agents are blocked until 00 finishes.**
+
+---
+
+### Agent 01: Foundation Layer (3 sub-agents)
+
+| ID | Component | Skills | Files |
+|----|-----------|--------|-------|
+| **01A** | Types & Constants | Go types | `types.go` |
+| **01B** | Error Definitions | Go errors | `errors.go` |
+| **01C** | BaoClient HTTP | HTTP, TLS | `bao_client.go` |
+
+### Agent 02: Storage Layer (2 sub-agents)
+
+| ID | Component | Skills | Files |
+|----|-----------|--------|-------|
+| **02A** | Store Core CRUD | Concurrency | `bao_store.go` (CRUD) |
+| **02B** | Store Persistence | File I/O | `bao_store.go` (I/O) |
+
+### Agent 03: OpenBao Plugin (5 sub-agents)
+
+| ID | Component | Skills | Files |
+|----|-----------|--------|-------|
+| **03A** | Backend Factory | OpenBao SDK | `backend.go`, `main.go` |
+| **03B** | Key Paths | OpenBao paths | `path_keys.go`, `types.go` |
+| **03C** | Sign/Verify | ECDSA | `path_sign.go`, `path_verify.go` |
+| **03D** | Import/Export | RSA, wrapping | `path_import.go`, `path_export.go` |
+| **03E** | Crypto Helpers | btcec | `crypto.go` |
+
+### Agent 04: BaoKeyring (3 sub-agents)
+
+| ID | Component | Skills | Files |
+|----|-----------|--------|-------|
+| **04A** | Keyring Core | Cosmos SDK | `bao_keyring.go` (struct) |
+| **04B** | Key Operations | keyring interface | `bao_keyring.go` (keys) |
+| **04C** | Sign Operations | SHA-256 | `bao_keyring.go` (sign) |
+
+### Agent 05: Migration & CLI (4 sub-agents)
+
+| ID | Component | Skills | Files |
+|----|-----------|--------|-------|
+| **05A** | Migration Import | RSA-OAEP | `migration/import.go` |
+| **05B** | Migration Export | Security | `migration/export.go` |
+| **05C** | CLI Keys | Cobra | `cmd/banhbao/keys.go` |
+| **05D** | CLI Migration | Cobra | `cmd/banhbao/migrate.go` |
+
+---
+
+## Execution Order
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    PHASE 0: SKELETON (BLOCKING)                      │
+│                                                                     │
+│                          ┌──────────┐                               │
+│                          │    00    │                               │
+│                          │ Skeleton │                               │
+│                          └────┬─────┘                               │
+│                               │                                     │
+│                    Creates all directories & stubs                  │
+│                               │                                     │
+│                               ▼                                     │
+│              ════════════════════════════════════                   │
+│                     ALL OTHER AGENTS UNBLOCKED                      │
+└─────────────────────────────────────────────────────────────────────┘
+
+Phase 1 - Foundation (5 parallel):
+┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
+│   01A    │  │   01B    │  │   02A    │  │   02B    │  │   03E    │
+│  Types   │  │  Errors  │  │  Store   │  │  Store   │  │  Crypto  │
+│          │  │          │  │  Core    │  │  Persist │  │  Helpers │
+└──────────┘  └──────────┘  └──────────┘  └──────────┘  └──────────┘
+
+Phase 2 - Components (5 parallel):
+┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
+│   01C    │  │   03A    │  │   03B    │  │   03C    │  │   03D    │
+│  Client  │  │ Backend  │  │  Keys    │  │  Sign    │  │ Import/  │
+│   HTTP   │  │ Factory  │  │  Paths   │  │  Verify  │  │  Export  │
+└──────────┘  └──────────┘  └──────────┘  └──────────┘  └──────────┘
+
+Phase 3 - Integration (3 parallel):
+┌──────────┐  ┌──────────┐  ┌──────────┐
+│   04A    │  │   04B    │  │   04C    │
+│ Keyring  │  │ Keyring  │  │ Keyring  │
+│  Core    │  │  Keys    │  │  Sign    │
+└──────────┘  └──────────┘  └──────────┘
+
+Phase 4 - User-Facing (4 parallel):
+┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
+│   05A    │  │   05B    │  │   05C    │  │   05D    │
+│ Import   │  │ Export   │  │  CLI     │  │  CLI     │
+│ Logic    │  │ Logic    │  │  Keys    │  │ Migrate  │
+└──────────┘  └──────────┘  └──────────┘  └──────────┘
+```
+
+---
+
+## Parallelization Summary
+
+| Phase | Agents | Description |
+|-------|--------|-------------|
+| **0** | 1 (blocking) | Agent 00 - Skeleton |
+| **1** | 5 parallel | 01A, 01B, 02A, 02B, 03E |
+| **2** | 5 parallel | 01C, 03A, 03B, 03C, 03D |
+| **3** | 3 parallel | 04A, 04B, 04C |
+| **4** | 4 parallel | 05A, 05B, 05C, 05D |
+
+**Total: 18 agents** (1 blocking + 17 parallel across 4 phases)
+
+---
+
+## File → Agent Mapping
+
+| File | Agent(s) |
+|------|----------|
+| `types.go` | 01A |
+| `errors.go` | 01B |
+| `bao_client.go` | 01C |
+| `bao_store.go` | 02A, 02B |
+| `bao_keyring.go` | 04A, 04B, 04C |
+| `migration/types.go` | 05A |
+| `migration/import.go` | 05A |
+| `migration/export.go` | 05B |
+| `cmd/banhbao/main.go` | 05C |
+| `cmd/banhbao/keys.go` | 05C |
+| `cmd/banhbao/migrate.go` | 05D |
+| `plugin/secp256k1/backend.go` | 03A |
+| `plugin/secp256k1/types.go` | 03B |
+| `plugin/secp256k1/path_keys.go` | 03B |
+| `plugin/secp256k1/path_sign.go` | 03C |
+| `plugin/secp256k1/path_verify.go` | 03C |
+| `plugin/secp256k1/path_import.go` | 03D |
+| `plugin/secp256k1/path_export.go` | 03D |
+| `plugin/secp256k1/crypto.go` | 03E |
+| `plugin/cmd/plugin/main.go` | 03A |
+
+---
+
+## Documents
+
+### Agent 00: Skeleton
+- [IMPL_00_SKELETON.md](./IMPL_00_SKELETON.md) - **START HERE**
+
+### Agent 01: Foundation
+- [IMPL_01A_TYPES.md](./IMPL_01A_TYPES.md) - Types & Constants
+- [IMPL_01B_ERRORS.md](./IMPL_01B_ERRORS.md) - Error Definitions
+- [IMPL_01C_CLIENT.md](./IMPL_01C_CLIENT.md) - BaoClient HTTP
+
+### Agent 02: Storage
+- [IMPL_02A_STORE_CORE.md](./IMPL_02A_STORE_CORE.md) - Store CRUD
+- [IMPL_02B_STORE_PERSIST.md](./IMPL_02B_STORE_PERSIST.md) - Store Persistence
+
+### Agent 03: Plugin
+- [IMPL_03A_PLUGIN_BACKEND.md](./IMPL_03A_PLUGIN_BACKEND.md) - Backend Factory
+- [IMPL_03B_PLUGIN_KEYS.md](./IMPL_03B_PLUGIN_KEYS.md) - Key Paths
+- [IMPL_03C_PLUGIN_SIGN.md](./IMPL_03C_PLUGIN_SIGN.md) - Sign/Verify
+- [IMPL_03D_PLUGIN_IMPORT_EXPORT.md](./IMPL_03D_PLUGIN_IMPORT_EXPORT.md) - Import/Export
+- [IMPL_03E_PLUGIN_CRYPTO.md](./IMPL_03E_PLUGIN_CRYPTO.md) - Crypto Helpers
+
+### Agent 04: BaoKeyring
+- [IMPL_04A_KEYRING_CORE.md](./IMPL_04A_KEYRING_CORE.md) - Core Struct
+- [IMPL_04B_KEYRING_KEYS.md](./IMPL_04B_KEYRING_KEYS.md) - Key Operations
+- [IMPL_04C_KEYRING_SIGN.md](./IMPL_04C_KEYRING_SIGN.md) - Sign Operations
+
+### Agent 05: Migration & CLI
+- [IMPL_05A_MIGRATION_IMPORT.md](./IMPL_05A_MIGRATION_IMPORT.md) - Import Logic
+- [IMPL_05B_MIGRATION_EXPORT.md](./IMPL_05B_MIGRATION_EXPORT.md) - Export Logic
+- [IMPL_05C_CLI_KEYS.md](./IMPL_05C_CLI_KEYS.md) - CLI Keys Commands
+- [IMPL_05D_CLI_MIGRATE.md](./IMPL_05D_CLI_MIGRATE.md) - CLI Migration Commands
+
+### Legacy (Consolidated Agent Docs)
+- [IMPL_01_TYPES_ERRORS_CLIENT.md](./IMPL_01_TYPES_ERRORS_CLIENT.md)
+- [IMPL_02_BAO_STORE.md](./IMPL_02_BAO_STORE.md)
+- [IMPL_03_PLUGIN.md](./IMPL_03_PLUGIN.md)
+- [IMPL_04_BAO_KEYRING.md](./IMPL_04_BAO_KEYRING.md)
+- [IMPL_05_MIGRATION_CLI.md](./IMPL_05_MIGRATION_CLI.md)
+
+---
+
+## Test Requirements
+
+Each sub-agent MUST deliver:
+1. ✅ Replace `panic("TODO...")` with implementation
+2. ✅ Unit tests (>80% coverage)
+3. ✅ `go test ./...` passing
+4. ✅ `golangci-lint run` clean
+
+---
+
+## Quick Start
+
+```bash
+# 1. Agent 00 runs first
+./scripts/scaffold.sh
+
+# 2. Verify structure
+go build ./...
+cd plugin && go build ./...
+
+# 3. Deploy remaining agents (phases 1-4)
+```
