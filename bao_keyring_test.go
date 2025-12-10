@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -1594,9 +1595,28 @@ func TestBaoKeyring_SaveMultisig_NotSupported(t *testing.T) {
 	assert.ErrorIs(t, err, ErrUnsupportedAlgo)
 }
 
-// TestBaoKeyring_ImportKey_NotSupported tests ImportKey returns error.
-func TestBaoKeyring_ImportKey_NotSupported(t *testing.T) {
+// TestBaoKeyring_ImportKey_Success tests ImportKey successfully imports a key.
+func TestBaoKeyring_ImportKey_Success(t *testing.T) {
+	pubKeyHex := "02" + "0102030405060708091011121314151617181920212223242526272829303132"
+	addrHex := "0102030405060708091011121314151617181920"
+	privKeyB64 := base64.StdEncoding.EncodeToString(make([]byte, 32))
+
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v1/secp256k1/keys/new-key/import" {
+			resp := map[string]interface{}{
+				"data": map[string]interface{}{
+					"name":       "new-key",
+					"public_key": pubKeyHex,
+					"address":    addrHex,
+					"exportable": true,
+					"imported":   true,
+					"created_at": time.Now().Format(time.RFC3339),
+				},
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(resp)
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 	})
 
@@ -1604,10 +1624,10 @@ func TestBaoKeyring_ImportKey_NotSupported(t *testing.T) {
 	defer server.Close()
 	defer func() { _ = kr.store.Close() }()
 
-	record, err := kr.ImportKey("new-key", "wrapped-key", true)
-	assert.Error(t, err)
-	assert.Nil(t, record)
-	assert.ErrorIs(t, err, ErrUnsupportedAlgo)
+	record, err := kr.ImportKey("new-key", privKeyB64, true)
+	assert.NoError(t, err)
+	assert.NotNil(t, record)
+	assert.Equal(t, "new-key", record.Name)
 }
 
 // TestBaoKeyring_ExportKey_KeyNotExportable tests ExportKey returns error for non-exportable key.
@@ -1635,14 +1655,31 @@ func TestBaoKeyring_ExportKey_KeyNotExportable(t *testing.T) {
 
 	key, err := kr.ExportKey("non-exportable")
 	assert.Error(t, err)
-	assert.Nil(t, key)
+	assert.Empty(t, key)
 	assert.ErrorIs(t, err, ErrKeyNotExportable)
 }
 
-// TestBaoKeyring_ExportKey_RequiresEndpoint tests ExportKey with exportable key.
-func TestBaoKeyring_ExportKey_RequiresEndpoint(t *testing.T) {
+// TestBaoKeyring_ExportKey_Success tests ExportKey with exportable key.
+func TestBaoKeyring_ExportKey_Success(t *testing.T) {
 	pubKeyBytes := testPubKeyBytes()
+	privKeyB64 := "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" // 32 bytes of zeros, base64 encoded
+
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v1/secp256k1/export/exportable" {
+			resp := map[string]interface{}{
+				"data": map[string]interface{}{
+					"name":       "exportable",
+					"public_key": hex.EncodeToString(pubKeyBytes),
+					"address":    "cosmos1test",
+					"keys": map[string]string{
+						"1": privKeyB64,
+					},
+				},
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(resp)
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 	})
 
@@ -1657,15 +1694,14 @@ func TestBaoKeyring_ExportKey_RequiresEndpoint(t *testing.T) {
 		PubKeyBytes: pubKeyBytes,
 		Address:     "cosmos1test",
 		Algorithm:   AlgorithmSecp256k1,
-		Exportable:  true, // Exportable
+		Exportable:  true,
 		CreatedAt:   time.Now(),
 	}
 	_ = kr.store.Save(meta)
 
 	key, err := kr.ExportKey("exportable")
-	assert.Error(t, err)
-	assert.Nil(t, key)
-	assert.ErrorIs(t, err, ErrUnsupportedAlgo) // Because endpoint not implemented
+	assert.NoError(t, err)
+	assert.Equal(t, privKeyB64, key)
 }
 
 // TestBaoKeyring_ExportKey_NotFound tests ExportKey for non-existent key.
@@ -1680,12 +1716,13 @@ func TestBaoKeyring_ExportKey_NotFound(t *testing.T) {
 
 	key, err := kr.ExportKey("nonexistent")
 	assert.Error(t, err)
-	assert.Nil(t, key)
+	assert.Empty(t, key)
 	assert.ErrorIs(t, err, ErrKeyNotFound)
 }
 
-// TestBaoKeyring_GetWrappingKey_NotSupported tests GetWrappingKey returns error.
-func TestBaoKeyring_GetWrappingKey_NotSupported(t *testing.T) {
+// TestBaoKeyring_GetWrappingKey_NotYetImplemented tests GetWrappingKey returns nil for now.
+// This is a placeholder until full RSA wrapping key support is added.
+func TestBaoKeyring_GetWrappingKey_NotYetImplemented(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -1694,10 +1731,11 @@ func TestBaoKeyring_GetWrappingKey_NotSupported(t *testing.T) {
 	defer server.Close()
 	defer func() { _ = kr.store.Close() }()
 
+	// GetWrappingKey currently returns nil, nil as a placeholder
+	// Future implementation will return RSA public key for key wrapping
 	key, err := kr.GetWrappingKey()
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, key)
-	assert.ErrorIs(t, err, ErrUnsupportedAlgo)
 }
 
 // TestBaoKeyring_metadataToRecord_Success tests metadata to record conversion.
