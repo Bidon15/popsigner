@@ -11,16 +11,25 @@ This document defines the requirements for implementing a custom Cosmos-SDK `key
 | **celestia-app** | v6.4.0 |
 | **celestia-node** | v0.28.4 |
 
-### 1.1 Problem Statement
+### 1.1 Target Users
 
-Current Cosmos SDK keyring backends store private keys locally (encrypted or in plaintext), creating security risks:
+> **🎯 Maximum Focus:** Rollup developers and operators only.
+
+| User Type             | Use Case                                                       |
+| --------------------- | -------------------------------------------------------------- |
+| **Rollup Developers** | Secure key management for sequencers, provers, bridge operators |
+| **Rollup Operators**  | Production-grade key security for Celestia DA layer rollups    |
+
+### 1.2 Problem Statement
+
+Rollup teams using Cosmos SDK keyring backends face serious security risks:
 
 - Key material exposure on disk
 - Risk of key extraction from memory
 - Difficult key lifecycle management
 - No centralized audit logging
 
-### 1.2 Solution
+### 1.3 Solution
 
 Implement a remote signing keyring that:
 
@@ -28,6 +37,27 @@ Implement a remote signing keyring that:
 - Stores only public metadata locally
 - Provides full `keyring.Keyring` interface compatibility
 - Integrates seamlessly with Celestia's Go client
+- **Supports parallel worker pattern** for high-throughput blob submission
+
+### 1.4 Parallel Worker Support (Critical)
+
+> **Reference:** [Celestia Client Parallel Workers](https://github.com/celestiaorg/celestia-node/blob/main/api/client/readme.md)
+
+Celestia rollups use parallel blob submission with multiple worker accounts and fee grants:
+
+```go
+cfg := client.Config{
+    SubmitConfig: client.SubmitConfig{
+        TxWorkerAccounts: 4,  // 4 workers signing in parallel
+    },
+}
+```
+
+**BanhBaoRing MUST support:**
+- Concurrent `Sign()` calls from multiple goroutines
+- Thread-safe access to multiple keys simultaneously  
+- No head-of-line blocking between different key operations
+- High throughput (100+ signs/second)
 
 ---
 

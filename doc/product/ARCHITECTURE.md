@@ -4,6 +4,8 @@
 
 This document describes the technical architecture for the OpenBao Keyring Backend, a custom `keyring.Keyring` implementation that delegates cryptographic operations to a **custom secp256k1 OpenBao plugin** for maximum security.
 
+> **🎯 Target Users:** Rollup developers and operators building on Celestia who need HSM-level key security for their sequencers, provers, and bridge operators.
+
 ### ⚠️ CRITICAL: Celestia Fork Dependencies
 
 This project uses **Celestia's forks** of the Cosmos SDK and Tendermint. The `keyring.Keyring` interface comes from `celestiaorg/cosmos-sdk`, NOT the upstream `cosmos/cosmos-sdk`.
@@ -25,7 +27,7 @@ We chose to implement a **native OpenBao plugin** for secp256k1 signing rather t
 | Approach | Where Key Decrypts | Security Level |
 |----------|-------------------|----------------|
 | AWS KMS / Hybrid | App memory | Good |
-| **BanhBao Plugin** | **Never leaves OpenBao** | **Excellent** |
+| **BanhBaoRing Plugin** | **Never leaves OpenBao** | **Excellent** |
 
 **Result:** Private keys are NEVER exposed outside OpenBao's secure boundary.
 
@@ -228,12 +230,14 @@ func (c *BaoClient) ListKeys() ([]string, error)
 
 Local metadata storage for key information.
 
+> **Thread Safety:** BaoStore uses `sync.RWMutex` to support concurrent access from parallel workers. Multiple goroutines can read metadata simultaneously, while writes are serialized.
+
 ```go
 // BaoStore manages local key metadata persistence
 type BaoStore struct {
     path     string
     metadata map[string]*KeyMetadata
-    mu       sync.RWMutex
+    mu       sync.RWMutex  // Thread-safe for parallel worker access
 }
 
 // KeyMetadata contains locally stored key information
@@ -349,7 +353,52 @@ The metadata store uses a simple JSON file format:
 
 **Key difference from hybrid approach:** No DER parsing, no low-S normalization in the client - the plugin handles everything and returns a ready-to-use Cosmos signature.
 
-### 4.2 Signature Conversion
+### 4.2 Parallel Signing (Fee Grant Workers)
+
+> **Reference:** [Celestia Client Parallel Workers](https://github.com/celestiaorg/celestia-node/blob/main/api/client/readme.md)
+
+Rollup operators use multiple worker accounts with fee grants for parallel blob submission:
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    PARALLEL SIGNING (4 Workers)                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+     Worker 1          Worker 2          Worker 3          Worker 4
+         │                 │                 │                 │
+         ▼                 ▼                 ▼                 ▼
+    Sign(tx1)         Sign(tx2)         Sign(tx3)         Sign(tx4)
+         │                 │                 │                 │
+         └─────────────────┼─────────────────┼─────────────────┘
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │ BaoKeyring  │  ← Thread-safe, no blocking
+                    │ (RWMutex)   │
+                    └──────┬──────┘
+                           │
+         ┌─────────────────┼─────────────────┐
+         │                 │                 │
+         ▼                 ▼                 ▼
+   ┌───────────┐    ┌───────────┐    ┌───────────┐
+   │ OpenBao   │    │ OpenBao   │    │ OpenBao   │  ← HTTP connection pool
+   │ Request 1 │    │ Request 2 │    │ Request 3 │    (parallel execution)
+   └───────────┘    └───────────┘    └───────────┘
+         │                 │                 │
+         └─────────────────┼─────────────────┘
+                           │
+                           ▼
+              All 4 signatures in ~200ms
+              (not 4 × 200ms = 800ms!)
+```
+
+**Design Principles:**
+- `BaoStore.mu` is `sync.RWMutex` - reads don't block each other
+- `BaoClient` uses HTTP connection pooling for parallel OpenBao requests
+- No global locks during signing - each key operation is independent
+- OpenBao plugin handles concurrent requests natively
+
+### 4.3 Signature Conversion
 
 #### 4.2.1 DER to Compact Format
 
