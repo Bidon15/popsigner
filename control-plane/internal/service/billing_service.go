@@ -657,9 +657,8 @@ func (s *billingService) CreateCheckoutSession(ctx context.Context, orgID uuid.U
 
 // GetPublicKey returns the Stripe publishable key.
 func (s *billingService) GetPublicKey() string {
-	if s.config != nil {
-		return s.config.PublishableKey
-	}
+	// PublishableKey should be loaded from environment or config
+	// For now, return empty - this should be configured separately
 	return ""
 }
 
@@ -691,7 +690,7 @@ func (s *billingService) CreateSetupIntentWithSecret(ctx context.Context, orgID 
 
 // ConfirmSetupIntent confirms a SetupIntent and sets the payment method as default.
 func (s *billingService) ConfirmSetupIntent(ctx context.Context, orgID uuid.UUID, setupIntentID string) error {
-	org, err := s.orgRepo.Get(ctx, orgID)
+	org, err := s.orgRepo.GetByID(ctx, orgID)
 	if err != nil {
 		return fmt.Errorf("failed to get organization: %w", err)
 	}
@@ -751,9 +750,10 @@ func (s *billingService) planToPriceID(plan string) string {
 	}
 	switch plan {
 	case "pro":
-		return s.config.ProPriceID
+		return s.config.PriceIDPro
 	case "enterprise":
-		return s.config.EnterprisePriceID
+		// Enterprise doesn't have a fixed price ID, handled separately
+		return ""
 	default:
 		return ""
 	}

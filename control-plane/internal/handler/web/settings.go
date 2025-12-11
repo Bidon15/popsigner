@@ -92,7 +92,6 @@ func (h *WebHandler) SettingsProfileUpdate(w http.ResponseWriter, r *http.Reques
 	uid, _ := uuid.Parse(userID)
 
 	name := r.FormValue("name")
-	email := r.FormValue("email")
 
 	req := service.UpdateProfileRequest{
 		Name: &name,
@@ -341,7 +340,9 @@ func (h *WebHandler) SettingsTeamEditModal(w http.ResponseWriter, r *http.Reques
 	}
 
 	session, _ := h.sessionStore.Get(r, "session")
+	userID, _ := session.Values["user_id"].(string)
 	orgID, _ := session.Values["org_id"].(string)
+	uid, _ := uuid.Parse(userID)
 	oid, _ := uuid.Parse(orgID)
 
 	// Get member details

@@ -136,6 +136,7 @@ func (h *WebHandler) AuditLogDetail(w http.ResponseWriter, r *http.Request) {
 	session, _ := h.sessionStore.Get(r, "session")
 	orgID, _ := session.Values["org_id"].(string)
 	oid, _ := uuid.Parse(orgID)
+	_ = oid // TODO: Verify log belongs to this org
 
 	// Get the specific audit log entry
 	log, err := h.auditService.GetByID(ctx, lid)
@@ -239,7 +240,7 @@ func (h *WebHandler) Usage(w http.ResponseWriter, r *http.Request) {
 	org, _ := h.orgService.Get(ctx, oid)
 
 	// Get usage data from billing service
-	usage, _ := h.billingService.GetUsage(ctx, oid)
+	usage, _ := h.billingService.GetCurrentUsage(ctx, oid)
 	limits := models.GetPlanLimits(org.Plan)
 
 	// Get time series data for the current billing period

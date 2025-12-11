@@ -70,11 +70,11 @@ func (h *WebHandler) SettingsBilling(w http.ResponseWriter, r *http.Request) {
 	for _, inv := range invoices {
 		displayInvoices = append(displayInvoices, &pages.Invoice{
 			ID:          inv.ID,
-			Date:        inv.Date,
+			Date:        time.Unix(inv.Created, 0),
 			Description: inv.Description,
-			Amount:      inv.Amount,
+			Amount:      inv.AmountDue,
 			Paid:        inv.Paid,
-			DownloadURL: inv.DownloadURL,
+			DownloadURL: inv.InvoicePDF,
 		})
 	}
 

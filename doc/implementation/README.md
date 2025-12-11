@@ -1,11 +1,12 @@
 # Implementation Guide
 
-This directory contains implementation specifications for **33 agents** across 4 products:
+This directory contains implementation specifications for **41 agents** across 5 products:
 
 - **Core Library** (Phases 0-5): 19 agents
 - **Control Plane API** (Phase 6): 8 agents
 - **SDKs** (Phase 7): 2 agents
 - **Web Dashboard** (Phase 8): 4 agents
+- **Kubernetes Operator** (Phase 9): 8 agents
 
 ---
 
@@ -310,6 +311,45 @@ Phase 8.1 - Dashboard Pages (3 parallel):
 │ Auth Pages   │  │ Keys Pages   │  │ Settings     │
 │ Onboarding   │  │ HTMX         │  │ Billing      │
 └──────────────┘  └──────────────┘  └──────────────┘
+
+════════════════════════════════════════════════════════════════════════
+                     KUBERNETES OPERATOR (PHASE 9)
+════════════════════════════════════════════════════════════════════════
+
+Phase 9.0 - Operator Foundation (BLOCKING):
+                        ┌──────────┐
+                        │   13A    │
+                        │Foundation│
+                        │ CRDs     │
+                        └──────────┘
+
+Phase 9.1 - Core Controllers (2 parallel):
+┌──────────────┐  ┌──────────────┐
+│     13B      │  │     13C      │
+│   OpenBao    │  │ Data Layer  │
+│  Controller  │  │ PG + Redis  │
+└──────────────┘  └──────────────┘
+
+Phase 9.2 - App & Tenant (2 parallel):
+┌──────────────┐  ┌──────────────┐
+│     13D      │  │     13E      │
+│   App Layer  │  │   Tenant    │
+│ API+Dashboard│  │ Controller  │
+└──────────────┘  └──────────────┘
+
+Phase 9.3 - Supporting (2 parallel):
+┌──────────────┐  ┌──────────────┐
+│     13F      │  │     13G      │
+│   Backup     │  │ Monitoring  │
+│   Restore    │  │ Prometheus  │
+└──────────────┘  └──────────────┘
+
+Phase 9.4 - Release:
+                        ┌──────────┐
+                        │   13H    │
+                        │  Helm    │
+                        │  Chart   │
+                        └──────────┘
 ```
 
 ---
