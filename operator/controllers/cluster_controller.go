@@ -38,13 +38,53 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	// TODO: Implement reconciliation phases
 	// Phase 1: Prerequisites (namespace, certificates)
+	// TODO: Implement prerequisites reconciliation
+
 	// Phase 2: Data layer (PostgreSQL, Redis)
+	if err := r.reconcilePostgreSQL(ctx, cluster); err != nil {
+		log.Error(err, "Failed to reconcile PostgreSQL")
+		return ctrl.Result{}, err
+	}
+
+	if err := r.reconcileRedis(ctx, cluster); err != nil {
+		log.Error(err, "Failed to reconcile Redis")
+		return ctrl.Result{}, err
+	}
+
+	// Update database status
+	if err := r.updateDatabaseStatus(ctx, cluster); err != nil {
+		log.Error(err, "Failed to update database status")
+		return ctrl.Result{}, err
+	}
+
+	// Check if data layer is ready before proceeding
+	if !r.isDataLayerReady(ctx, cluster) {
+		log.Info("Data layer not ready, requeuing")
+		if err := r.Status().Update(ctx, cluster); err != nil {
+			log.Error(err, "Failed to update cluster status")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
+	}
+
 	// Phase 3: OpenBao (StatefulSet, unseal, plugin)
+	// TODO: Implement OpenBao reconciliation
+
 	// Phase 4: Applications (API, Dashboard)
+	// TODO: Implement API and Dashboard reconciliation
+
 	// Phase 5: Monitoring (optional)
+	// TODO: Implement monitoring reconciliation
+
 	// Phase 6: Ingress & networking
+	// TODO: Implement networking reconciliation
+
+	// Update status
+	if err := r.Status().Update(ctx, cluster); err != nil {
+		log.Error(err, "Failed to update cluster status")
+		return ctrl.Result{}, err
+	}
 
 	// Requeue after 30s for periodic reconciliation
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
