@@ -72,7 +72,21 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	// TODO: Implement OpenBao reconciliation
 
 	// Phase 4: Applications (API, Dashboard)
-	// TODO: Implement API and Dashboard reconciliation
+	if err := r.reconcileAPI(ctx, cluster); err != nil {
+		log.Error(err, "Failed to reconcile API")
+		return ctrl.Result{}, err
+	}
+
+	if err := r.reconcileDashboard(ctx, cluster); err != nil {
+		log.Error(err, "Failed to reconcile Dashboard")
+		return ctrl.Result{}, err
+	}
+
+	// Update application status
+	if err := r.updateAppsStatus(ctx, cluster); err != nil {
+		log.Error(err, "Failed to update apps status")
+		return ctrl.Result{}, err
+	}
 
 	// Phase 5: Monitoring (optional)
 	// TODO: Implement monitoring reconciliation
