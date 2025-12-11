@@ -7,8 +7,8 @@
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 REGISTRY ?= rg.nl-ams.scw.cloud/banhbao
 
-# Platform for cross-compilation (amd64 for Scaleway K8s)
-PLATFORM ?= linux/amd64
+# Platform for cross-compilation (arm64 for Scaleway K8s ARM nodes)
+PLATFORM ?= linux/arm64
 
 # Image names (simplified for Scaleway)
 OPERATOR_IMAGE := $(REGISTRY)/operator:$(VERSION)

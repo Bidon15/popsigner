@@ -29,7 +29,7 @@ spec:
             - --leader-elect={{ .Values.leaderElection.enabled }}
             - --metrics-bind-address=:{{ .Values.metrics.port }}
             - --health-probe-bind-address=:{{ .Values.health.port }}
-            - --log-level={{ .Values.logLevel }}
+            - --zap-log-level={{ .Values.logLevel }}
           ports:
             - name: metrics
               containerPort: {{ .Values.metrics.port }}
