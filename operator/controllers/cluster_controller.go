@@ -89,7 +89,10 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	// Phase 5: Monitoring (optional)
-	// TODO: Implement monitoring reconciliation
+	if err := r.reconcileMonitoring(ctx, cluster); err != nil {
+		log.Error(err, "Failed to reconcile monitoring")
+		return ctrl.Result{}, err
+	}
 
 	// Phase 6: Ingress & networking
 	// TODO: Implement networking reconciliation
