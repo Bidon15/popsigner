@@ -27,6 +27,9 @@ RUN apk add --no-cache ca-certificates wget
 # Copy binary from builder
 COPY --from=builder /server /app/server
 
+# Copy static files for web dashboard
+COPY --from=builder /app/static /app/static
+
 # Create non-root user
 RUN adduser -D -g '' appuser
 USER appuser
