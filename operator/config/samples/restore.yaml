@@ -1,0 +1,13 @@
+apiVersion: banhbaoring.io/v1
+kind: BanhBaoRingRestore
+metadata:
+  name: restore-from-backup
+  namespace: banhbaoring
+spec:
+  clusterRef:
+    name: production
+  backupRef:
+    name: daily-backup
+  options:
+    stopApplications: true
+    verifyBackup: true

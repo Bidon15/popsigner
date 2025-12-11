@@ -1,0 +1,17 @@
+apiVersion: banhbaoring.io/v1
+kind: BanhBaoRingTenant
+metadata:
+  name: acme-corp
+  namespace: banhbaoring
+spec:
+  clusterRef:
+    name: production
+  displayName: "Acme Corporation"
+  plan: pro
+  quotas:
+    keys: 25
+    signaturesPerMonth: 500000
+    namespaces: 5
+    teamMembers: 10
+  admin:
+    email: admin@acme.com

@@ -1,0 +1,71 @@
+apiVersion: banhbaoring.io/v1
+kind: BanhBaoRingCluster
+metadata:
+  name: production
+  namespace: banhbaoring
+spec:
+  domain: keys.mycompany.com
+
+  openbao:
+    replicas: 3
+    version: "2.0.0"
+    autoUnseal:
+      enabled: true
+      provider: awskms
+      awskms:
+        keyId: alias/banhbaoring-unseal
+        region: us-east-1
+    storage:
+      size: 50Gi
+      storageClass: gp3
+
+  api:
+    replicas: 2
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPU: 70
+
+  dashboard:
+    replicas: 2
+
+  database:
+    managed: true
+    replicas: 2
+    storage:
+      size: 20Gi
+      storageClass: gp3
+
+  redis:
+    managed: true
+    mode: cluster
+    replicas: 3
+
+  monitoring:
+    enabled: true
+    prometheus:
+      retention: 15d
+      storage:
+        size: 50Gi
+    grafana:
+      enabled: true
+
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"
+    retention: 30
+    destination:
+      s3:
+        bucket: banhbaoring-backups
+        region: us-east-1
+        credentials:
+          name: s3-credentials
+          key: config
+
+  billing:
+    stripe:
+      enabled: true
+      secretKeyRef:
+        name: stripe-secrets
+        key: secret-key

@@ -1,0 +1,13 @@
+apiVersion: banhbaoring.io/v1
+kind: BanhBaoRingBackup
+metadata:
+  name: daily-backup
+  namespace: banhbaoring
+spec:
+  clusterRef:
+    name: production
+  type: full
+  components:
+    - openbao
+    - database
+    - secrets
