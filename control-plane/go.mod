@@ -1,6 +1,6 @@
 module github.com/Bidon15/banhbaoring/control-plane
 
-go 1.24.0
+go 1.25
 
 require (
 	github.com/go-chi/chi/v5 v5.1.0

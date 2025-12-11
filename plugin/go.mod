@@ -1,6 +1,6 @@
 module github.com/Bidon15/banhbaoring/plugin
 
-go 1.24.0
+go 1.25
 
 require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.6
