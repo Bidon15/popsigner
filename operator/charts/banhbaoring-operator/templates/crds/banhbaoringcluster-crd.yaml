@@ -1,0 +1,622 @@
+{{- if .Values.installCRDs }}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.5
+  name: banhbaoringclusters.banhbaoring.io
+  labels:
+    {{- include "banhbaoring-operator.labels" . | nindent 4 }}
+spec:
+  group: banhbaoring.io
+  names:
+    kind: BanhBaoRingCluster
+    listKind: BanhBaoRingClusterList
+    plural: banhbaoringclusters
+    singular: banhbaoringcluster
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .status.openbao.replicas
+      name: OpenBao
+      type: string
+    - jsonPath: .status.api.replicas
+      name: API
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: BanhBaoRingCluster is the Schema for the banhbaoringclusters API
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: BanhBaoRingClusterSpec defines the desired state
+            properties:
+              api:
+                default: {}
+                description: Control Plane API configuration
+                properties:
+                  autoscaling:
+                    properties:
+                      enabled:
+                        type: boolean
+                      maxReplicas:
+                        format: int32
+                        type: integer
+                      minReplicas:
+                        format: int32
+                        type: integer
+                      targetCPU:
+                        format: int32
+                        type: integer
+                    type: object
+                  replicas:
+                    default: 2
+                    format: int32
+                    type: integer
+                  resources:
+                    properties:
+                      limits:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          x-kubernetes-int-or-string: true
+                        type: object
+                      requests:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          x-kubernetes-int-or-string: true
+                        type: object
+                    type: object
+                  version:
+                    default: 1.0.0
+                    type: string
+                type: object
+              backup:
+                default: {}
+                properties:
+                  destination:
+                    properties:
+                      gcs:
+                        properties:
+                          bucket:
+                            type: string
+                          credentials:
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                          prefix:
+                            type: string
+                        required:
+                        - bucket
+                        - credentials
+                        type: object
+                      s3:
+                        properties:
+                          bucket:
+                            type: string
+                          credentials:
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                          prefix:
+                            type: string
+                          region:
+                            type: string
+                        required:
+                        - bucket
+                        - credentials
+                        type: object
+                    type: object
+                  enabled:
+                    type: boolean
+                  retention:
+                    default: 30
+                    format: int32
+                    type: integer
+                  schedule:
+                    default: 0 2 * * *
+                    type: string
+                type: object
+              billing:
+                default: {}
+                properties:
+                  stripe:
+                    properties:
+                      enabled:
+                        type: boolean
+                      secretKeyRef:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - key
+                        - name
+                        type: object
+                      webhookSecretRef:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - key
+                        - name
+                        type: object
+                    type: object
+                type: object
+              dashboard:
+                default: {}
+                properties:
+                  replicas:
+                    default: 2
+                    format: int32
+                    type: integer
+                  resources:
+                    properties:
+                      limits:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          x-kubernetes-int-or-string: true
+                        type: object
+                      requests:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          x-kubernetes-int-or-string: true
+                        type: object
+                    type: object
+                  version:
+                    default: 1.0.0
+                    type: string
+                type: object
+              database:
+                default: {}
+                properties:
+                  connectionString:
+                    properties:
+                      key:
+                        type: string
+                      name:
+                        type: string
+                    required:
+                    - key
+                    - name
+                    type: object
+                  managed:
+                    default: true
+                    type: boolean
+                  replicas:
+                    default: 1
+                    format: int32
+                    type: integer
+                  storage:
+                    properties:
+                      size:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        default: 10Gi
+                        x-kubernetes-int-or-string: true
+                      storageClass:
+                        type: string
+                    type: object
+                  version:
+                    default: "16"
+                    type: string
+                type: object
+              domain:
+                type: string
+              monitoring:
+                default: {}
+                properties:
+                  alerting:
+                    properties:
+                      enabled:
+                        type: boolean
+                      pagerduty:
+                        properties:
+                          routingKey:
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                        required:
+                        - routingKey
+                        type: object
+                      slack:
+                        properties:
+                          webhookUrl:
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                        required:
+                        - webhookUrl
+                        type: object
+                    type: object
+                  enabled:
+                    type: boolean
+                  grafana:
+                    properties:
+                      adminPassword:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - key
+                        - name
+                        type: object
+                      enabled:
+                        type: boolean
+                    type: object
+                  prometheus:
+                    properties:
+                      retention:
+                        default: 15d
+                        type: string
+                      storage:
+                        properties:
+                          size:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            default: 10Gi
+                            x-kubernetes-int-or-string: true
+                          storageClass:
+                            type: string
+                        type: object
+                    type: object
+                type: object
+              openbao:
+                default: {}
+                properties:
+                  autoUnseal:
+                    properties:
+                      awskms:
+                        properties:
+                          credentials:
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                          keyId:
+                            type: string
+                          region:
+                            type: string
+                        required:
+                        - keyId
+                        type: object
+                      azurekv:
+                        properties:
+                          credentials:
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                          keyName:
+                            type: string
+                          tenantId:
+                            type: string
+                          vaultName:
+                            type: string
+                        required:
+                        - keyName
+                        - tenantId
+                        - vaultName
+                        type: object
+                      enabled:
+                        default: false
+                        type: boolean
+                      gcpkms:
+                        properties:
+                          credentials:
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                          cryptoKey:
+                            type: string
+                          keyRing:
+                            type: string
+                          location:
+                            type: string
+                          project:
+                            type: string
+                        required:
+                        - cryptoKey
+                        - keyRing
+                        - location
+                        - project
+                        type: object
+                      provider:
+                        enum:
+                        - awskms
+                        - gcpkms
+                        - azurekv
+                        - transit
+                        type: string
+                      transit:
+                        properties:
+                          address:
+                            type: string
+                          keyName:
+                            type: string
+                          mountPath:
+                            type: string
+                          token:
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                        required:
+                        - address
+                        - keyName
+                        - token
+                        type: object
+                    type: object
+                  plugin:
+                    properties:
+                      version:
+                        default: 1.0.0
+                        type: string
+                    type: object
+                  replicas:
+                    default: 3
+                    format: int32
+                    minimum: 1
+                    type: integer
+                  resources:
+                    properties:
+                      limits:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          x-kubernetes-int-or-string: true
+                        type: object
+                      requests:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          x-kubernetes-int-or-string: true
+                        type: object
+                    type: object
+                  storage:
+                    properties:
+                      size:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        default: 10Gi
+                        x-kubernetes-int-or-string: true
+                      storageClass:
+                        type: string
+                    type: object
+                  tls:
+                    properties:
+                      issuer:
+                        type: string
+                      secretName:
+                        type: string
+                    type: object
+                  version:
+                    default: 2.0.0
+                    type: string
+                type: object
+              redis:
+                default: {}
+                properties:
+                  managed:
+                    default: true
+                    type: boolean
+                  mode:
+                    default: standalone
+                    enum:
+                    - standalone
+                    - cluster
+                    type: string
+                  replicas:
+                    default: 1
+                    format: int32
+                    type: integer
+                  storage:
+                    properties:
+                      size:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        default: 10Gi
+                        x-kubernetes-int-or-string: true
+                      storageClass:
+                        type: string
+                    type: object
+                  version:
+                    default: "7"
+                    type: string
+                type: object
+            required:
+            - domain
+            type: object
+          status:
+            properties:
+              api:
+                properties:
+                  message:
+                    type: string
+                  ready:
+                    type: boolean
+                  replicas:
+                    type: string
+                  version:
+                    type: string
+                type: object
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              dashboard:
+                properties:
+                  message:
+                    type: string
+                  ready:
+                    type: boolean
+                  replicas:
+                    type: string
+                  version:
+                    type: string
+                type: object
+              database:
+                properties:
+                  message:
+                    type: string
+                  ready:
+                    type: boolean
+                  replicas:
+                    type: string
+                  version:
+                    type: string
+                type: object
+              endpoints:
+                properties:
+                  api:
+                    type: string
+                  dashboard:
+                    type: string
+                  grafana:
+                    type: string
+                  openbao:
+                    type: string
+                type: object
+              observedGeneration:
+                format: int64
+                type: integer
+              openbao:
+                properties:
+                  message:
+                    type: string
+                  ready:
+                    type: boolean
+                  replicas:
+                    type: string
+                  version:
+                    type: string
+                type: object
+              phase:
+                default: Pending
+                type: string
+              redis:
+                properties:
+                  message:
+                    type: string
+                  ready:
+                    type: boolean
+                  replicas:
+                    type: string
+                  version:
+                    type: string
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+{{- end }}

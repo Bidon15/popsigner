@@ -1,0 +1,33 @@
+🔔 Ring ring! BanhBaoRing Operator installed successfully!
+
+To deploy a BanhBaoRing cluster:
+
+1. Create a namespace:
+   kubectl create namespace banhbaoring
+
+2. Create required secrets:
+   kubectl create secret generic stripe-secrets \
+     --namespace banhbaoring \
+     --from-literal=secret-key=sk_live_xxx
+
+3. Deploy a cluster:
+   cat <<EOF | kubectl apply -f -
+   apiVersion: banhbaoring.io/v1
+   kind: BanhBaoRingCluster
+   metadata:
+     name: production
+     namespace: banhbaoring
+   spec:
+     domain: keys.mycompany.com
+     openbao:
+       replicas: 3
+     database:
+       managed: true
+     redis:
+       managed: true
+   EOF
+
+4. Check status:
+   kubectl get banhbaoringcluster -n banhbaoring
+
+For more information: https://banhbaoring.io/docs

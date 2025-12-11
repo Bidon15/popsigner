@@ -100,3 +100,24 @@ controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessar
 $(CONTROLLER_GEN): $(LOCALBIN)
 	@test -s $(LOCALBIN)/controller-gen && $(LOCALBIN)/controller-gen --version | grep -q $(CONTROLLER_TOOLS_VERSION) || \
 	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
+
+##@ Helm
+
+CHART_DIR := charts/banhbaoring-operator
+
+.PHONY: helm-lint
+helm-lint: ## Lint Helm chart
+	helm lint $(CHART_DIR)
+
+.PHONY: helm-template
+helm-template: ## Render Helm templates locally
+	helm template banhbaoring $(CHART_DIR) --debug
+
+.PHONY: helm-package
+helm-package: ## Package Helm chart
+	@mkdir -p dist
+	helm package $(CHART_DIR) -d dist/
+
+.PHONY: helm-push
+helm-push: helm-package ## Push Helm chart to OCI registry
+	helm push dist/banhbaoring-operator-*.tgz oci://ghcr.io/bidon15/charts

@@ -1,0 +1,188 @@
+{{- if .Values.installCRDs }}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.5
+  name: banhbaoringrestores.banhbaoring.io
+  labels:
+    {{- include "banhbaoring-operator.labels" . | nindent 4 }}
+spec:
+  group: banhbaoring.io
+  names:
+    kind: BanhBaoRingRestore
+    listKind: BanhBaoRingRestoreList
+    plural: banhbaoringrestores
+    singular: banhbaoringrestore
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .spec.backupRef.name
+      name: Backup
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: BanhBaoRingRestore is the Schema for the banhbaoringrestores API
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: BanhBaoRingRestoreSpec defines the desired state
+            properties:
+              backupRef:
+                description: Reference to backup resource
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
+              clusterRef:
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
+              components:
+                description: 'Components to restore (default: all from backup)'
+                items:
+                  type: string
+                type: array
+              options:
+                properties:
+                  stopApplications:
+                    default: true
+                    type: boolean
+                  verifyBackup:
+                    default: true
+                    type: boolean
+                type: object
+              source:
+                description: Or restore from specific location
+                properties:
+                  gcs:
+                    properties:
+                      bucket:
+                        type: string
+                      credentials:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - key
+                        - name
+                        type: object
+                      prefix:
+                        type: string
+                    required:
+                    - bucket
+                    - credentials
+                    type: object
+                  s3:
+                    properties:
+                      bucket:
+                        type: string
+                      credentials:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - key
+                        - name
+                        type: object
+                      prefix:
+                        type: string
+                      region:
+                        type: string
+                    required:
+                    - bucket
+                    - credentials
+                    type: object
+                type: object
+            required:
+            - clusterRef
+            type: object
+          status:
+            description: BanhBaoRingRestoreStatus defines the observed state
+            properties:
+              completedAt:
+                format: date-time
+                type: string
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              phase:
+                description: Pending, Stopping, Restoring, Starting, Completed, Failed
+                type: string
+              startedAt:
+                format: date-time
+                type: string
+              steps:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    status:
+                      type: string
+                  required:
+                  - name
+                  - status
+                  type: object
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+{{- end }}
