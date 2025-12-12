@@ -56,7 +56,7 @@ func DocsPage(data DocsPageData) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex gap-8\"><!-- Sidebar Navigation --><nav class=\"w-64 shrink-0 space-y-6 sticky top-6 self-start\"><div class=\"space-y-1\"><p class=\"text-xs font-semibold text-bao-muted uppercase tracking-wider px-3 mb-2\">Getting Started</p><a href=\"#overview\" class=\"block px-3 py-2 text-sm text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors\">Overview</a> <a href=\"#quickstart\" class=\"block px-3 py-2 text-sm text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors\">Quickstart</a> <a href=\"#authentication\" class=\"block px-3 py-2 text-sm text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors\">Authentication</a></div><div class=\"space-y-1\"><p class=\"text-xs font-semibold text-bao-muted uppercase tracking-wider px-3 mb-2\">Celestia Integration</p><a href=\"#celestia-client\" class=\"block px-3 py-2 text-sm text-bao-accent bg-bao-accent/10 rounded-lg\">Celestia Node Client</a> <a href=\"#blob-submission\" class=\"block px-3 py-2 text-sm text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors\">Blob Submission</a> <a href=\"#validator-signing\" class=\"block px-3 py-2 text-sm text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors\">Validator Signing</a></div><div class=\"space-y-1\"><p class=\"text-xs font-semibold text-bao-muted uppercase tracking-wider px-3 mb-2\">SDKs</p><a href=\"#go-sdk\" class=\"block px-3 py-2 text-sm text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors\">Go SDK</a> <a href=\"#rust-sdk\" class=\"block px-3 py-2 text-sm text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors\">Rust SDK</a> <a href=\"#rest-api\" class=\"block px-3 py-2 text-sm text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors\">REST API</a></div><div class=\"pt-4 border-t border-bao-border/50\"><a href=\"https://github.com/Bidon15/banhbaoring/tree/main/examples\" target=\"_blank\" class=\"flex items-center gap-2 px-3 py-2 text-sm text-bao-muted hover:text-bao-text transition-colors\"><span>📦</span> More Examples on GitHub</a></div></nav><!-- Main Content --><div class=\"flex-1 max-w-3xl space-y-12\"><!-- Overview --><section id=\"overview\" class=\"scroll-mt-6\"><h1 class=\"text-3xl font-heading font-bold text-bao-text mb-4\">BanhBaoRing Documentation</h1><p class=\"text-bao-muted leading-relaxed mb-6\">BanhBaoRing provides secure key management and signing for Celestia and Cosmos-based blockchains.  Your private keys never leave our vault - you send data to sign, we return cryptographic signatures.</p><div class=\"grid grid-cols-3 gap-4\"><div class=\"p-4 bg-bao-card/60 border border-bao-border rounded-xl\"><div class=\"text-2xl mb-2\">🔐</div><p class=\"font-medium text-bao-text\">Secure Keys</p><p class=\"text-sm text-bao-muted\">HSM-grade protection</p></div><div class=\"p-4 bg-bao-card/60 border border-bao-border rounded-xl\"><div class=\"text-2xl mb-2\">⚡</div><p class=\"font-medium text-bao-text\">Fast Signing</p><p class=\"text-sm text-bao-muted\">&lt;50ms latency</p></div><div class=\"p-4 bg-bao-card/60 border border-bao-border rounded-xl\"><div class=\"text-2xl mb-2\">🌌</div><p class=\"font-medium text-bao-text\">Celestia Native</p><p class=\"text-sm text-bao-muted\">secp256k1 support</p></div></div></section><!-- Quickstart --><section id=\"quickstart\" class=\"scroll-mt-6\"><h2 class=\"text-2xl font-heading font-bold text-bao-text mb-4\">Quickstart</h2><div class=\"space-y-4\"><div class=\"flex items-start gap-4\"><div class=\"w-8 h-8 rounded-full bg-bao-accent/20 text-bao-accent flex items-center justify-center font-bold shrink-0\">1</div><div><p class=\"font-medium text-bao-text\">Create an API Key</p><p class=\"text-sm text-bao-muted\">Go to Settings → API Keys and generate a new key</p></div></div><div class=\"flex items-start gap-4\"><div class=\"w-8 h-8 rounded-full bg-bao-accent/20 text-bao-accent flex items-center justify-center font-bold shrink-0\">2</div><div><p class=\"font-medium text-bao-text\">Create a Signing Key</p><p class=\"text-sm text-bao-muted\">Go to Keys and create a new secp256k1 key</p></div></div><div class=\"flex items-start gap-4\"><div class=\"w-8 h-8 rounded-full bg-bao-accent/20 text-bao-accent flex items-center justify-center font-bold shrink-0\">3</div><div><p class=\"font-medium text-bao-text\">Integrate with your app</p><p class=\"text-sm text-bao-muted\">Use our SDK or REST API to sign transactions</p></div></div></div></section><!-- Celestia Client Integration --><section id=\"celestia-client\" class=\"scroll-mt-6\"><h2 class=\"text-2xl font-heading font-bold text-bao-text mb-4\">🌌 Celestia Node Client Integration</h2><p class=\"text-bao-muted mb-6\">Replace the default Celestia keyring with BanhBaoRing for secure remote signing.  This example shows how to integrate with the official  <a href=\"https://github.com/celestiaorg/celestia-node/blob/main/api/client/readme.md\" target=\"_blank\" class=\"text-bao-accent hover:underline\">Celestia Node client</a>.</p><div class=\"space-y-6\"><!-- Install --><div><h3 class=\"text-lg font-medium text-bao-text mb-3\">Installation</h3>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex gap-8\"><!-- Sidebar Navigation --><nav class=\"w-64 shrink-0 space-y-6 sticky top-6 self-start\"><div class=\"space-y-1\"><p class=\"text-xs font-semibold text-bao-muted uppercase tracking-wider px-3 mb-2\">Getting Started</p><a href=\"#overview\" class=\"block px-3 py-2 text-sm text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors\">Overview</a> <a href=\"#quickstart\" class=\"block px-3 py-2 text-sm text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors\">Quickstart</a> <a href=\"#authentication\" class=\"block px-3 py-2 text-sm text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors\">Authentication</a></div><div class=\"space-y-1\"><p class=\"text-xs font-semibold text-bao-muted uppercase tracking-wider px-3 mb-2\">Celestia Integration</p><a href=\"#celestia-client\" class=\"block px-3 py-2 text-sm text-bao-accent bg-bao-accent/10 rounded-lg\">Celestia Node Client</a> <a href=\"#blob-submission\" class=\"block px-3 py-2 text-sm text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors\">Blob Submission</a></div><div class=\"space-y-1\"><p class=\"text-xs font-semibold text-bao-muted uppercase tracking-wider px-3 mb-2\">SDKs</p><a href=\"#go-sdk\" class=\"block px-3 py-2 text-sm text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors\">Go SDK</a> <a href=\"#rust-sdk\" class=\"block px-3 py-2 text-sm text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors\">Rust SDK</a> <a href=\"#rest-api\" class=\"block px-3 py-2 text-sm text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors\">REST API</a></div><div class=\"pt-4 border-t border-bao-border/50\"><a href=\"https://github.com/Bidon15/banhbaoring/tree/main/examples\" target=\"_blank\" class=\"flex items-center gap-2 px-3 py-2 text-sm text-bao-muted hover:text-bao-text transition-colors\"><span>📦</span> More Examples on GitHub</a></div></nav><!-- Main Content --><div class=\"flex-1 max-w-3xl space-y-12\"><!-- Overview --><section id=\"overview\" class=\"scroll-mt-6\"><h1 class=\"text-3xl font-heading font-bold text-bao-text mb-4\">BanhBaoRing Documentation</h1><p class=\"text-bao-muted leading-relaxed mb-6\">BanhBaoRing provides secure key management and signing for Celestia and Cosmos-based blockchains.  Your private keys never leave our vault - you send data to sign, we return cryptographic signatures.</p><div class=\"grid grid-cols-3 gap-4\"><div class=\"p-4 bg-bao-card/60 border border-bao-border rounded-xl\"><div class=\"text-2xl mb-2\">🔐</div><p class=\"font-medium text-bao-text\">Secure Keys</p><p class=\"text-sm text-bao-muted\">HSM-grade protection</p></div><div class=\"p-4 bg-bao-card/60 border border-bao-border rounded-xl\"><div class=\"text-2xl mb-2\">⚡</div><p class=\"font-medium text-bao-text\">Fast Signing</p><p class=\"text-sm text-bao-muted\">&lt;50ms latency</p></div><div class=\"p-4 bg-bao-card/60 border border-bao-border rounded-xl\"><div class=\"text-2xl mb-2\">🌌</div><p class=\"font-medium text-bao-text\">Celestia Native</p><p class=\"text-sm text-bao-muted\">secp256k1 support</p></div></div></section><!-- Quickstart --><section id=\"quickstart\" class=\"scroll-mt-6\"><h2 class=\"text-2xl font-heading font-bold text-bao-text mb-4\">Quickstart</h2><div class=\"space-y-4\"><div class=\"flex items-start gap-4\"><div class=\"w-8 h-8 rounded-full bg-bao-accent/20 text-bao-accent flex items-center justify-center font-bold shrink-0\">1</div><div><p class=\"font-medium text-bao-text\">Create an API Key</p><p class=\"text-sm text-bao-muted\">Go to Settings → API Keys and generate a new key</p></div></div><div class=\"flex items-start gap-4\"><div class=\"w-8 h-8 rounded-full bg-bao-accent/20 text-bao-accent flex items-center justify-center font-bold shrink-0\">2</div><div><p class=\"font-medium text-bao-text\">Create a Signing Key</p><p class=\"text-sm text-bao-muted\">Go to Keys and create a new secp256k1 key</p></div></div><div class=\"flex items-start gap-4\"><div class=\"w-8 h-8 rounded-full bg-bao-accent/20 text-bao-accent flex items-center justify-center font-bold shrink-0\">3</div><div><p class=\"font-medium text-bao-text\">Integrate with your app</p><p class=\"text-sm text-bao-muted\">Use our SDK or REST API to sign transactions</p></div></div></div></section><!-- Celestia Client Integration --><section id=\"celestia-client\" class=\"scroll-mt-6\"><h2 class=\"text-2xl font-heading font-bold text-bao-text mb-4\">🌌 Celestia Node Client Integration</h2><p class=\"text-bao-muted mb-6\">Our SDK provides a drop-in keyring for the  <a href=\"https://github.com/celestiaorg/celestia-node/blob/main/api/client/readme.md\" target=\"_blank\" class=\"text-bao-accent hover:underline\">Celestia Node client</a>. Just two lines to get started!</p><div class=\"space-y-6\"><!-- Install --><div><h3 class=\"text-lg font-medium text-bao-text mb-3\">Installation</h3>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -65,66 +65,7 @@ go get github.com/celestiaorg/celestia-node/api/client`).Render(ctx, templ_7745c
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><!-- Custom Keyring --><div><h3 class=\"text-lg font-medium text-bao-text mb-3\">Create BanhBaoRing Keyring</h3><p class=\"text-sm text-bao-muted mb-3\">Implement the Celestia keyring interface using BanhBaoRing as the backend:</p>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = docsCodeBlock("go", `package main
-
-import (
-    "context"
-    
-    "github.com/Bidon15/banhbaoring/sdk-go"
-    "github.com/celestiaorg/celestia-node/api/client"
-    "github.com/cosmos/cosmos-sdk/crypto/keyring"
-)
-
-// BanhBaoKeyring implements keyring.Keyring using BanhBaoRing
-type BanhBaoKeyring struct {
-    client  *banhbao.Client
-    keyName string
-    keyID   string
-}
-
-// NewBanhBaoKeyring creates a keyring backed by BanhBaoRing
-func NewBanhBaoKeyring(apiKey, keyID string) (*BanhBaoKeyring, error) {
-    client := banhbao.NewClient(apiKey)
-    
-    // Verify key exists and get info
-    key, err := client.Keys.Get(context.Background(), keyID)
-    if err != nil {
-        return nil, err
-    }
-    
-    return &BanhBaoKeyring{
-        client:  client,
-        keyName: key.Name,
-        keyID:   keyID,
-    }, nil
-}
-
-// Sign implements keyring.Keyring - signs with BanhBaoRing
-func (k *BanhBaoKeyring) Sign(name string, msg []byte) ([]byte, error) {
-    resp, err := k.client.Keys.Sign(context.Background(), k.keyID, msg)
-    if err != nil {
-        return nil, err
-    }
-    return resp.Signature, nil
-}
-
-// Key returns the public key info
-func (k *BanhBaoKeyring) Key(name string) (*keyring.Record, error) {
-    key, err := k.client.Keys.Get(context.Background(), k.keyID)
-    if err != nil {
-        return nil, err
-    }
-    // Return key record with public key
-    return keyring.NewLocalRecord(name, key.PublicKey, key.Address)
-}`).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><!-- Use with Celestia Client --><div><h3 class=\"text-lg font-medium text-bao-text mb-3\">Use with Celestia Client</h3>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><!-- Simple Example --><div><h3 class=\"text-lg font-medium text-bao-text mb-3\">Complete Example</h3><p class=\"text-sm text-bao-muted mb-3\">The SDK includes a ready-to-use <code class=\"text-bao-accent\">CelestiaKeyring</code> - no boilerplate needed:</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -134,45 +75,49 @@ import (
     "context"
     "log"
     
+    "github.com/Bidon15/banhbaoring/sdk-go"
     "github.com/celestiaorg/celestia-node/api/client"
     "github.com/celestiaorg/celestia-node/blob"
-    "github.com/celestiaorg/celestia-app/v2/pkg/namespace"
+    "github.com/celestiaorg/celestia-app/v3/pkg/namespace"
 )
 
 func main() {
-    // Create BanhBaoRing keyring
-    kr, err := NewBanhBaoKeyring(
-        "your-banhbao-api-key",
-        "your-key-id",  // e.g., "344399b0-1234-5678-9abc-def012345678"
+    // Create BanhBaoRing keyring (one line!)
+    kr, err := banhbaoring.NewCelestiaKeyring(
+        "your-api-key",
+        "your-key-id",  // From the dashboard
     )
     if err != nil {
         log.Fatal(err)
     }
+    
+    log.Printf("Using key: %s", kr.KeyName())
+    log.Printf("Celestia address: %s", kr.CelestiaAddress())
 
-    // Configure Celestia client with BanhBaoRing keyring
+    // Configure Celestia client
     cfg := client.Config{
         ReadConfig: client.ReadConfig{
             BridgeDAAddr: "http://localhost:26658",
             DAAuthToken:  "your_celestia_auth_token",
         },
         SubmitConfig: client.SubmitConfig{
-            DefaultKeyName: kr.keyName,
+            DefaultKeyName: kr.KeyName(),
             Network:        "mocha-4",  // or "celestia" for mainnet
             CoreGRPCConfig: client.CoreGRPCConfig{
-                Addr:       "celestia-consensus.example.com:9090",
+                Addr:       "consensus.celestia-mocha.com:9090",
                 TLSEnabled: true,
             },
         },
     }
 
-    // Create client with BanhBaoRing keyring
+    // Create Celestia client with BanhBaoRing signing
     celestiaClient, err := client.New(context.Background(), cfg, kr)
     if err != nil {
         log.Fatal(err)
     }
 
-    // Submit a blob - signing happens via BanhBaoRing!
-    ns := namespace.MustNewV0([]byte("my_app"))
+    // Submit a blob - BanhBaoRing signs automatically!
+    ns := namespace.MustNewV0([]byte("my_rollup"))
     myBlob, _ := blob.NewBlob(0, ns, []byte("Hello from BanhBaoRing!"), nil)
     
     height, err := celestiaClient.Blob.Submit(context.Background(), []*blob.Blob{myBlob}, nil)
@@ -185,7 +130,7 @@ func main() {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></div></section><!-- Blob Submission --><section id=\"blob-submission\" class=\"scroll-mt-6\"><h2 class=\"text-2xl font-heading font-bold text-bao-text mb-4\">Blob Submission</h2><p class=\"text-bao-muted mb-6\">Submit data blobs to Celestia with signatures from BanhBaoRing.  Your private keys stay secure while your app submits data.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><!-- What's Happening --><div class=\"p-4 bg-bao-card/60 border border-bao-border rounded-xl\"><h4 class=\"font-medium text-bao-text mb-2\">What happens under the hood:</h4><ol class=\"text-sm text-bao-muted space-y-1 list-decimal list-inside\"><li>Your app sends blob data to Celestia client</li><li>Celestia client creates a transaction</li><li>Transaction is sent to BanhBaoRing for signing (your key stays secure)</li><li>Signed transaction is broadcast to Celestia network</li></ol></div></div></section><!-- Blob Submission --><section id=\"blob-submission\" class=\"scroll-mt-6\"><h2 class=\"text-2xl font-heading font-bold text-bao-text mb-4\">Blob Submission</h2><p class=\"text-bao-muted mb-6\">Submit data blobs to Celestia with signatures from BanhBaoRing.  Your private keys stay secure while your app submits data.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -209,7 +154,7 @@ func submitBlob(client *celestia.Client, baoKey *banhbao.Key, data []byte) (uint
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</section><!-- Validator Signing --><section id=\"validator-signing\" class=\"scroll-mt-6\"><h2 class=\"text-2xl font-heading font-bold text-bao-text mb-4\">Validator Signing</h2><p class=\"text-bao-muted mb-6\">Use BanhBaoRing as a remote signer for your Celestia validator.  Keep your validator key secure while still participating in consensus.</p><div class=\"p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl mb-4\"><p class=\"text-amber-400 text-sm\">⚠️ <strong>Coming Soon:</strong> Direct validator integration via PrivVal protocol.  For now, use the SDK for application-level signing.</p></div></section><!-- Go SDK --><section id=\"go-sdk\" class=\"scroll-mt-6\"><h2 class=\"text-2xl font-heading font-bold text-bao-text mb-4\">Go SDK</h2>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</section><!-- Go SDK --><section id=\"go-sdk\" class=\"scroll-mt-6\"><h2 class=\"text-2xl font-heading font-bold text-bao-text mb-4\">Go SDK</h2>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -217,7 +162,7 @@ func submitBlob(client *celestia.Client, baoKey *banhbao.Key, data []byte) (uint
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"mt-4\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"mt-4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -241,7 +186,7 @@ fmt.Println("Address:", info.CelestiaAddress)`).Render(ctx, templ_7745c5c3_Buffe
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div></section><!-- Rust SDK --><section id=\"rust-sdk\" class=\"scroll-mt-6\"><h2 class=\"text-2xl font-heading font-bold text-bao-text mb-4\">Rust SDK</h2>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div></section><!-- Rust SDK --><section id=\"rust-sdk\" class=\"scroll-mt-6\"><h2 class=\"text-2xl font-heading font-bold text-bao-text mb-4\">Rust SDK</h2>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -250,7 +195,7 @@ banhbaoring = "0.1"`).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div class=\"mt-4\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"mt-4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -275,7 +220,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></section><!-- REST API --><section id=\"rest-api\" class=\"scroll-mt-6\"><h2 class=\"text-2xl font-heading font-bold text-bao-text mb-4\">REST API</h2><p class=\"text-bao-muted mb-4\">All endpoints require an API key in the Authorization header.</p><div class=\"space-y-6\"><div><h3 class=\"text-lg font-medium text-bao-text mb-2\">Create Key</h3>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div></section><!-- REST API --><section id=\"rest-api\" class=\"scroll-mt-6\"><h2 class=\"text-2xl font-heading font-bold text-bao-text mb-4\">REST API</h2><p class=\"text-bao-muted mb-4\">All endpoints require an API key in the Authorization header.</p><div class=\"space-y-6\"><div><h3 class=\"text-lg font-medium text-bao-text mb-2\">Create Key</h3>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -286,7 +231,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div><div><h3 class=\"text-lg font-medium text-bao-text mb-2\">Sign Data</h3>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div><div><h3 class=\"text-lg font-medium text-bao-text mb-2\">Sign Data</h3>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -297,7 +242,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div><div><h3 class=\"text-lg font-medium text-bao-text mb-2\">Get Key Info</h3>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div><div><h3 class=\"text-lg font-medium text-bao-text mb-2\">Get Key Info</h3>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -306,7 +251,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div></div></section><!-- Footer --><section class=\"pt-8 border-t border-bao-border/50\"><div class=\"flex items-center justify-between\"><div><p class=\"text-bao-muted text-sm\">Need help? Found a bug?</p><a href=\"https://github.com/Bidon15/banhbaoring/issues\" target=\"_blank\" class=\"text-bao-accent hover:underline text-sm\">Open an issue on GitHub →</a></div><a href=\"https://github.com/Bidon15/banhbaoring\" target=\"_blank\" class=\"px-4 py-2 bg-bao-border/50 text-bao-text rounded-lg hover:bg-bao-border transition-colors text-sm\">⭐ Star on GitHub</a></div></section></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div></div></section><!-- Footer --><section class=\"pt-8 border-t border-bao-border/50\"><div class=\"flex items-center justify-between\"><div><p class=\"text-bao-muted text-sm\">Need help? Found a bug?</p><a href=\"https://github.com/Bidon15/banhbaoring/issues\" target=\"_blank\" class=\"text-bao-accent hover:underline text-sm\">Open an issue on GitHub →</a></div><a href=\"https://github.com/Bidon15/banhbaoring\" target=\"_blank\" class=\"px-4 py-2 bg-bao-border/50 text-bao-text rounded-lg hover:bg-bao-border transition-colors text-sm\">⭐ Star on GitHub</a></div></section></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -349,7 +294,7 @@ func docsCodeBlock(lang string, code string) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<pre class=\"p-4 bg-bao-bg border border-bao-border rounded-xl text-sm overflow-x-auto\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<pre class=\"p-4 bg-bao-bg border border-bao-border rounded-xl text-sm overflow-x-auto\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -358,7 +303,7 @@ func docsCodeBlock(lang string, code string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<code class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<code class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -371,20 +316,20 @@ func docsCodeBlock(lang string, code string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(code)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 396, Col: 148}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 338, Col: 148}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</code></pre>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</code></pre>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
