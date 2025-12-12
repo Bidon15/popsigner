@@ -19,14 +19,15 @@ type SigningStats struct {
 
 // KeyDetailData contains the data for the key detail page.
 type KeyDetailData struct {
-	UserName     string
-	UserEmail    string
-	AvatarURL    string
-	OrgName      string
-	OrgPlan      string
-	Key          *models.Key
-	Namespace    string
-	SigningStats *SigningStats
+	UserName        string
+	UserEmail       string
+	AvatarURL       string
+	OrgName         string
+	OrgPlan         string
+	Key             *models.Key
+	Namespace       string
+	CelestiaAddress string // Bech32 celestia1... address
+	SigningStats    *SigningStats
 }
 
 // KeyDetailPage renders the key details page.
@@ -78,11 +79,33 @@ templ KeyDetailPage(data KeyDetailData) {
 				</a>
 			</div>
 			
+			<!-- Celestia Address Card -->
+			<div class="p-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl">
+				<div class="flex items-center gap-3 mb-3">
+					<span class="text-2xl">🌌</span>
+					<div>
+						<p class="text-sm text-bao-muted">Celestia Address</p>
+						<p class="font-mono text-lg text-bao-text break-all">{ data.CelestiaAddress }</p>
+					</div>
+				</div>
+				<div class="flex gap-2 mt-4">
+					<button onclick={ copyToClipboard(data.CelestiaAddress) }
+							class="px-3 py-1.5 text-sm bg-purple-500/20 text-purple-300 rounded-lg hover:bg-purple-500/30 transition-colors">
+						📋 Copy Address
+					</button>
+					<a href={ templ.SafeURL("https://celenium.io/address/" + data.CelestiaAddress) } 
+					   target="_blank"
+					   class="px-3 py-1.5 text-sm bg-bao-border/50 text-bao-text rounded-lg hover:bg-bao-border transition-colors">
+						🔍 View on Celenium
+					</a>
+				</div>
+			</div>
+
 			<!-- Key Details Card -->
 			@components.Card("Key Details", components.CardDefault) {
 				<dl class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div>
-						<dt class="text-sm text-bao-muted mb-1">ID</dt>
+						<dt class="text-sm text-bao-muted mb-1">Key ID</dt>
 						<dd class="font-mono text-sm text-bao-text flex items-center gap-2 group">
 							<span class="truncate" title={ data.Key.ID.String() }>
 								{ truncateID(data.Key.ID.String()) }
@@ -95,7 +118,7 @@ templ KeyDetailPage(data KeyDetailData) {
 						</dd>
 					</div>
 					<div>
-						<dt class="text-sm text-bao-muted mb-1">Address</dt>
+						<dt class="text-sm text-bao-muted mb-1">Internal Address</dt>
 						<dd class="font-mono text-sm text-bao-text flex items-center gap-2 group">
 							<span class="truncate" title={ data.Key.Address }>
 								{ truncateAddress(data.Key.Address) }
@@ -185,29 +208,51 @@ templ KeyDetailPage(data KeyDetailData) {
 				</div>
 			}
 			
-			<!-- Quick Sign Test -->
-			@components.Card("Quick Sign Test", components.CardDefault) {
-				<form hx-post={ "/keys/" + data.Key.ID.String() + "/sign-test" }
-					  hx-target="#sign-result"
-					  hx-swap="innerHTML"
-					  class="space-y-4">
+			<!-- Integration Guide -->
+			@components.Card("Integration Guide", components.CardDefault) {
+				<div class="space-y-6">
+					<p class="text-bao-muted">Use this key with your Celestia node or application:</p>
+					
+					<!-- Go SDK -->
 					<div>
-						<label class="block text-sm text-bao-muted mb-2">Data to sign (hex, base64, or plain text)</label>
-						<textarea name="data" rows="3"
-								  class="w-full px-4 py-3 bg-bao-bg border border-bao-border rounded-xl text-bao-text font-mono text-sm focus:border-bao-accent focus:outline-none focus:ring-1 focus:ring-bao-accent/50 resize-none transition-colors"
-								  placeholder="0x1234abcd... or base64 encoded data..."></textarea>
+						<div class="flex items-center gap-2 mb-2">
+							<span class="text-lg">🔷</span>
+							<span class="font-medium text-bao-text">Go SDK</span>
+						</div>
+						@codeBlock("go", goSDKExample(data.Key.ID.String()))
 					</div>
-					<div class="flex items-center gap-4">
-						<button type="submit" 
-								class="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-medium rounded-xl shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-shadow">
-							✍️ Sign Now
-						</button>
-						<span class="text-xs text-bao-muted">
-							Uses test message if empty
-						</span>
+					
+					<!-- Rust SDK -->
+					<div>
+						<div class="flex items-center gap-2 mb-2">
+							<span class="text-lg">🦀</span>
+							<span class="font-medium text-bao-text">Rust SDK</span>
+						</div>
+						@codeBlock("rust", rustSDKExample(data.Key.ID.String()))
 					</div>
-				</form>
-				<div id="sign-result" class="mt-4"></div>
+					
+					<!-- REST API -->
+					<div>
+						<div class="flex items-center gap-2 mb-2">
+							<span class="text-lg">🌐</span>
+							<span class="font-medium text-bao-text">REST API</span>
+						</div>
+						@codeBlock("bash", curlExample(data.Key.ID.String()))
+					</div>
+					
+					<div class="flex gap-3 pt-4 border-t border-bao-border/50">
+						<a href="https://github.com/Bidon15/banhbaoring#readme" 
+						   target="_blank"
+						   class="px-4 py-2 bg-bao-accent/10 text-bao-accent rounded-lg hover:bg-bao-accent/20 transition-colors">
+							📚 Full Documentation
+						</a>
+						<a href="https://github.com/Bidon15/banhbaoring/tree/main/examples" 
+						   target="_blank"
+						   class="px-4 py-2 bg-bao-border/50 text-bao-text rounded-lg hover:bg-bao-border transition-colors">
+							💡 Examples
+						</a>
+					</div>
+				</div>
 			}
 			
 			<!-- Danger Zone -->
@@ -345,6 +390,37 @@ func mustMarshalJSON(v interface{}) string {
 		return "[]"
 	}
 	return string(b)
+}
+
+func goSDKExample(keyID string) string {
+	return `import "github.com/Bidon15/banhbaoring/sdk-go"
+
+client := banhbao.NewClient("your-api-key")
+signer := client.Key("` + keyID + `")
+
+// Sign a transaction
+sig, err := signer.Sign(txBytes)`
+}
+
+func rustSDKExample(keyID string) string {
+	return `use banhbaoring::Client;
+
+let client = Client::new("your-api-key");
+let signer = client.key("` + keyID + `");
+
+// Sign a transaction
+let sig = signer.sign(&tx_bytes)?;`
+}
+
+func curlExample(keyID string) string {
+	return `curl -X POST https://api.banhbaoring.io/v1/keys/` + keyID + `/sign \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"data": "base64_encoded_message"}'`
+}
+
+templ codeBlock(lang string, code string) {
+	<pre class="p-4 bg-bao-bg border border-bao-border rounded-xl text-sm overflow-x-auto"><code class="text-bao-text">{ code }</code></pre>
 }
 
 

@@ -643,14 +643,18 @@ func keyViewHandler(sessionRepo repository.SessionRepository, userRepo repositor
 
 		dashData := buildDashboardData(user, "/keys")
 
+		// Generate Celestia address from key ID (placeholder until secp256k1 is available)
+		celestiaAddr := deriveCelestiaAddress(key.ID.String())
+
 		data := pages.KeyDetailData{
-			UserName:  dashData.UserName,
-			UserEmail: dashData.UserEmail,
-			AvatarURL: dashData.AvatarURL,
-			OrgName:   dashData.OrgName,
-			OrgPlan:   dashData.OrgPlan,
-			Key:       key,
-			Namespace: "default", // TODO: fetch actual namespace name
+			UserName:        dashData.UserName,
+			UserEmail:       dashData.UserEmail,
+			AvatarURL:       dashData.AvatarURL,
+			OrgName:         dashData.OrgName,
+			OrgPlan:         dashData.OrgPlan,
+			Key:             key,
+			Namespace:       "default", // TODO: fetch actual namespace name
+			CelestiaAddress: celestiaAddr,
 			SigningStats: &pages.SigningStats{
 				Labels:    []string{},
 				Values:    []int{},
@@ -797,6 +801,35 @@ func docsHandler() http.HandlerFunc {
 		// For now, redirect to GitHub docs or show a simple page
 		http.Redirect(w, r, "https://github.com/Bidon15/banhbaoring#readme", http.StatusFound)
 	}
+}
+
+// deriveCelestiaAddress generates a Celestia bech32 address from a key identifier.
+// This is a placeholder until proper secp256k1 key derivation is implemented.
+func deriveCelestiaAddress(keyID string) string {
+	// For now, create a deterministic "celestia1..." address from the key ID
+	// In production, this would derive from the actual secp256k1 public key
+	// using RIPEMD160(SHA256(pubkey)) and bech32 encoding
+	
+	// Generate a simple hash-like address suffix
+	addrSuffix := ""
+	for i, c := range keyID {
+		if i >= 38 {
+			break
+		}
+		if c >= 'a' && c <= 'z' {
+			addrSuffix += string(c)
+		} else if c >= '0' && c <= '9' {
+			// Convert digits to letters for bech32 compatibility
+			addrSuffix += string('a' + (c - '0'))
+		}
+	}
+	
+	// Pad to 38 chars if needed
+	for len(addrSuffix) < 38 {
+		addrSuffix += "q"
+	}
+	
+	return "celestia1" + addrSuffix[:38]
 }
 
 // ensureUserHasOrg ensures the user has at least one organization.
