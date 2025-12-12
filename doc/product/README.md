@@ -1,38 +1,36 @@
-# BanhBaoRing Product Documentation
+# POPSigner Product Documentation
 
-> 🔔 **BanhBaoRing** - Named after the distinctive "ring ring!" of Vietnamese bánh bao street vendors. Just as that familiar sound signals trusted, reliable service arriving at your door, BanhBaoRing signals secure, reliable key management arriving in your infrastructure.
+> **POPSigner** — Point-of-Presence signing infrastructure. Deploy inline with execution.
 
 ---
 
 ## Product Overview
 
-BanhBaoRing is the Point of Presence signing platform for Celestia and Cosmos rollups. Deploy next to your nodes. Same region, same datacenter. Built on OpenBao. Open source.
+POPSigner is a distributed signing layer designed to live inline with execution—not behind an API queue. Deploy next to your systems. Keys remain remote. You remain sovereign.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         BANHBAORING PLATFORM                                │
+│                         POPSIGNER PLATFORM                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐             │
 │  │  Web Dashboard  │  │ Control Plane   │  │  K8s Operator   │             │
-│  │  (PRD_DASHBOARD)│  │ (PRD_CONTROL)   │  │  (PRD_OPERATOR) │             │
 │  │                 │  │                 │  │                 │             │
-│  │  User-facing UI │  │  Multi-tenant   │  │  One-command    │             │
-│  │  5-min onboard  │  │  API + Billing  │  │  deployment     │             │
+│  │  Management UI  │  │  Multi-tenant   │  │  One-command    │             │
+│  │  Key operations │  │  API + Billing  │  │  deployment     │             │
 │  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘             │
 │           │                    │                    │                       │
 │           └────────────────────┼────────────────────┘                       │
 │                                │                                            │
 │                                ▼                                            │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                    CORE LIBRARY (Phases 0-4)                        │   │
+│  │                    CORE LIBRARY                                     │   │
 │  │                                                                     │   │
 │  │  ┌─────────────┐  ┌──────────────────┐  ┌───────────────────────┐  │   │
-│  │  │ BaoKeyring  │  │ secp256k1 Plugin │  │ CLI (banhbaoring)     │  │   │
+│  │  │ BaoKeyring  │  │ secp256k1 Plugin │  │ CLI (popsigner)       │  │   │
 │  │  │ (Go lib)    │  │ (OpenBao plugin) │  │                       │  │   │
 │  │  └─────────────┘  └──────────────────┘  └───────────────────────┘  │   │
 │  │                                                                     │   │
-│  │  Documented in: ARCHITECTURE.md, PLUGIN_DESIGN.md, API_REFERENCE   │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -42,11 +40,11 @@ BanhBaoRing is the Point of Presence signing platform for Celestia and Cosmos ro
 
 ## Document Index
 
-### Core Library (Already Built - Phases 0-4)
+### Core Library
 
 | Document | Description |
 |----------|-------------|
-| [PRD.md](./PRD.md) | Original product requirements for core library |
+| [PRD.md](./PRD.md) | Product requirements for core library |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Technical architecture & component design |
 | [PLUGIN_DESIGN.md](./PLUGIN_DESIGN.md) | OpenBao secp256k1 plugin specification |
 | [API_REFERENCE.md](./API_REFERENCE.md) | Plugin API endpoints reference |
@@ -54,76 +52,80 @@ BanhBaoRing is the Point of Presence signing platform for Celestia and Cosmos ro
 | [MIGRATION.md](./MIGRATION.md) | Key migration procedures |
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Kubernetes deployment guide |
 
-### SaaS Platform (New - Phases 5-7)
+### Platform Components
 
-| Document | Description | Status |
-|----------|-------------|--------|
-| [PRD_CONTROL_PLANE.md](./PRD_CONTROL_PLANE.md) | Multi-tenant API, billing (Stripe) | 📝 PRD Ready |
-| [PRD_DASHBOARD.md](./PRD_DASHBOARD.md) | Web dashboard, UX, 5-min onboarding | 📝 PRD Ready |
-| [PRD_OPERATOR.md](./PRD_OPERATOR.md) | K8s operator for one-command deployment | 📝 PRD Ready |
+| Document | Description |
+|----------|-------------|
+| [PRD_CONTROL_PLANE.md](./PRD_CONTROL_PLANE.md) | Multi-tenant API, billing |
+| [PRD_DASHBOARD.md](./PRD_DASHBOARD.md) | Web dashboard, UX |
+| [PRD_OPERATOR.md](./PRD_OPERATOR.md) | K8s operator for deployment |
 
-### Design & Visual Identity
+### Design
 
-| Document | Description | Status |
-|----------|-------------|--------|
-| [DESIGN_SYSTEM.md](../design/DESIGN_SYSTEM.md) | Brand identity, color palette, typography, components, landing page wireframes | 📝 Ready |
+| Document | Description |
+|----------|-------------|
+| [DESIGN_SYSTEM.md](../design/DESIGN_SYSTEM.md) | Brand identity, components, layouts |
+
+---
+
+## Core Principles
+
+### 1. Inline Signing
+
+Signing happens on the execution path, not behind a queue. Your transactions don't wait.
+
+### 2. Sovereignty by Default
+
+Keys are remote, but you control them. Export at any time. Exit at any time. No lock-in, ever.
+
+### 3. Neutral Anchor
+
+Recovery data is anchored to neutral data availability. If POPSigner disappears, you don't.
 
 ---
 
 ## Platform Layers
 
-### Layer 1: Core Library ✅ (Phases 0-4)
-The foundation - a Go library implementing `keyring.Keyring` interface with OpenBao backend.
+### Layer 1: Core Library ✅
+
+The foundation—a Go library implementing `keyring.Keyring` interface with OpenBao backend.
 
 **Key Features:**
-- `BaoKeyring` - Drop-in replacement for Cosmos SDK keyrings
-- `secp256k1` OpenBao plugin - Native signing inside vault
-- Key migration tools - Import/export between keyrings
-- CLI tool - Command-line key management
-
-**Status:** Implementation complete (17 agents across 4 phases)
+- `BaoKeyring` — Drop-in replacement for Cosmos SDK keyrings
+- `secp256k1` OpenBao plugin — Native signing inside vault
+- Key migration tools — Import/export between keyrings
+- CLI tool — Command-line key management
 
 ---
 
-### Layer 2: Control Plane API 📝 (Phase 5)
+### Layer 2: Control Plane API
+
 Multi-tenant backend API that wraps the core library.
 
 **Key Features:**
 - Multi-tenant isolation (organizations, namespaces)
-- Authentication (OAuth, API keys, wallet connect)
+- Authentication (OAuth, API keys)
 - Role-based access control (RBAC)
-- Billing (Stripe)
-- Audit logging & compliance
+- Billing integration
+- Audit logging
 - Webhooks
 
-**Billing:**
-- Stripe integration (cards, ACH, SEPA)
-
-**Timeline:** ~9 weeks
-
 ---
 
-### Layer 3: Web Dashboard 📝 (Phase 6)
-User-facing web application for key management.
+### Layer 3: Web Dashboard
+
+Management interface for key operations.
 
 **Key Features:**
-- 5-minute onboarding flow
-- Key management UI (create, view, sign test)
+- Key management UI (create, view, export)
 - Usage analytics & audit log viewer
 - Team management
-- Billing (Stripe)
-
-**USPs:**
-- 📍 **Point of Presence** - Deploy next to your nodes. Same region, same datacenter. Zero network hops.
-- 🚀 **Deploy in minutes** - Sign up → Create key → First signature in under 5 minutes.
-- 🔓 **No vendor lock-in** - 100% open source. Built on OpenBao. Self-host or use our cloud.
-- 🧩 **Plugin architecture** - secp256k1 today, your algorithm tomorrow.
-
-**Timeline:** ~7 weeks
+- Billing
 
 ---
 
-### Layer 4: Kubernetes Operator 📝 (Phase 7)
+### Layer 4: Kubernetes Operator
+
 One-command deployment of the entire stack.
 
 **Key Features:**
@@ -131,13 +133,12 @@ One-command deployment of the entire stack.
 - Auto-unseal (AWS KMS, GCP KMS, Azure KV)
 - Built-in PostgreSQL & Redis
 - Monitoring stack (Prometheus, Grafana)
-- Automated backups to S3/GCS
-- Tenant provisioning
+- Automated backups
 
-**One-Command Deploy:**
+**Deployment Example:**
 ```yaml
-apiVersion: banhbaoring.io/v1
-kind: BanhBaoRingCluster
+apiVersion: popsigner.io/v1
+kind: POPSignerCluster
 metadata:
   name: production
 spec:
@@ -146,93 +147,56 @@ spec:
     replicas: 3
     autoUnseal:
       provider: awskms
-      keyId: alias/banhbaoring-unseal
+      keyId: alias/popsigner-unseal
 ```
-
-**Timeline:** ~8 weeks
-
----
-
-## Timeline Summary
-
-| Phase | Component | Agents | Duration |
-|-------|-----------|--------|----------|
-| 0-4 | Core Library | 18 | ✅ Complete |
-| 5 | Control Plane API | ~6 | 9 weeks |
-| 6 | Web Dashboard | ~6 | 7 weeks |
-| 7 | K8s Operator | ~4 | 8 weeks |
-| **Total** | **Full Platform** | **~34** | **~24 weeks** |
 
 ---
 
 ## Target Users
 
-> **🎯 Maximum Focus:** We serve exactly two user types. No validators. No dApp builders. Just rollups.
+| User Segment | Use Case |
+|--------------|----------|
+| **Rollup Teams** | Sequencer signing, prover operations |
+| **Execution Bots** | Market makers, arbitrage, MEV |
+| **Infrastructure Teams** | Backend services requiring signing |
 
-| User Segment          | The Pain                                              | BanhBaoRing Solution                    |
-|-----------------------|-------------------------------------------------------|----------------------------------------|
-| **Rollup Developers** | Remote signers are remote, vendor lock-in, no secp256k1 | POP deployment, same datacenter, plugins |
-| **Rollup Operators**  | Tedious local setup, vault far from nodes, config hell  | Deploy in minutes, next to your infra    |
+### What We Solve
 
-### The Pain We Solve
+- **Architectural distance** — Traditional remote signers introduce latency between execution and signing
+- **Lock-in** — Proprietary APIs make migration difficult
+- **No exit** — Keys trapped in vendor infrastructure
+- **Algorithm gaps** — Cloud KMS doesn't support secp256k1
 
-Rollup teams know this pain:
-- 🔒 **Vendor lock-in** - Stuck with AWS KMS or HashiCorp Vault enterprise pricing
-- 🧩 **No customizability** - Need secp256k1 for Cosmos? "Sorry, not supported."
-- 🐢 **Low performance** - Existing solutions can't handle 100+ signs/sec for parallel blob workers
-- 😫 **Tedious local setup** - Config files, passphrases, backup keys somewhere safe... every time
-
-**BanhBaoRing:** Open source. Plugin architecture. 100+ signs/sec. 5-minute setup. No lock-in. Your keys, your rules.
-
-### Parallel Worker Support (Critical for Celestia)
-
-> **Reference:** [Celestia Client Parallel Workers](https://github.com/celestiaorg/celestia-node/blob/main/api/client/readme.md)
-
-Celestia rollups use parallel blob submission with multiple worker accounts:
-
-```go
-cfg := client.Config{
-    SubmitConfig: client.SubmitConfig{
-        TxWorkerAccounts: 4,  // 4 parallel workers
-    },
-}
-```
-
-**BanhBaoRing supports:**
-- ⚡ Concurrent signing from multiple worker keys
-- 📦 Batch key creation (create 4 workers in one call)
-- 🚀 No head-of-line blocking (100+ signs/second)
-- 🔧 Easy worker key management in dashboard
+**POPSigner:** Open source. Plugin architecture. Sovereign by default. Exit guaranteed.
 
 ---
 
 ## Pricing Model
 
-| Plan | Monthly | Keys | Signatures | Use Case |
-|------|---------|------|------------|----------|
-| **Free** | $0 | 3 | 10K/mo | Testing, small projects |
-| **Pro** | $49 | 25 | 500K/mo | Production validators |
-| **Enterprise** | Custom | Unlimited | Unlimited | Large teams, SLA |
+| Plan | Monthly | Description |
+|------|---------|-------------|
+| **Shared POPSigner** | €49 | Shared POP infrastructure, no SLA |
+| **Priority POPSigner** | €499 | Priority lanes, region selection, 99.9% SLA |
+| **Dedicated POPSigner** | €19,999 | Region-pinned, CPU isolation, 99.99% SLA |
+
+**Self-host:** Always free. 100% open source.
 
 **Payment Options:**
-- 💳 Credit/debit cards (Stripe)
-- 🏦 Bank transfer (ACH, SEPA)
+- Credit/debit cards
+- Bank transfer (SEPA)
 
 ---
 
-## Next Steps
+## About the Name
 
-1. **Review PRDs** - Control Plane, Dashboard, Operator
-2. **Prioritize** - Which layer to build first?
-3. **Create Implementation Docs** - Break down into agent tasks
-4. **Build** - Execute with parallel agents
+POPSigner (formerly BanhBaoRing) reflects a clearer articulation of what the system is: Point-of-Presence signing infrastructure.
+
+The rename signals maturation from playful internal naming to category-defining infrastructure positioning.
 
 ---
 
 ## Quick Links
 
-- **Core Library Implementation:** [`../implementation/README.md`](../implementation/README.md)
+- **Implementation Docs:** [`../implementation/README.md`](../implementation/README.md)
 - **Design System:** [`../design/DESIGN_SYSTEM.md`](../design/DESIGN_SYSTEM.md)
-- **Dashboard Implementation:** [`../implementation/IMPL_11_DASHBOARD.md`](../implementation/IMPL_11_DASHBOARD.md)
 - **Repository:** `github.com/Bidon15/banhbaoring`
-

@@ -131,7 +131,7 @@ func main() {
 	r.Post("/keys/{id}/sign-test", keySignHandler(sessionRepo, userRepo, keyRepo, keySvc))
 	r.Get("/settings/api-keys", settingsAPIKeysHandler(sessionRepo, userRepo))
 	r.Get("/settings/profile", settingsProfileHandler(sessionRepo, userRepo))
-	r.Get("/docs", docsHandler())
+	r.Get("/docs", docsHandler(sessionRepo, userRepo))
 
 	// OAuth routes - using the service
 	r.Get("/auth/github", oauthRedirectHandler(oauthSvc, "github"))
@@ -796,11 +796,26 @@ func settingsProfileHandler(sessionRepo repository.SessionRepository, userRepo r
 	}
 }
 
-// docsHandler redirects to documentation.
-func docsHandler() http.HandlerFunc {
+// docsHandler serves the in-app documentation page.
+func docsHandler(sessionRepo repository.SessionRepository, userRepo repository.UserRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// For now, redirect to GitHub docs or show a simple page
-		http.Redirect(w, r, "https://github.com/Bidon15/banhbaoring#readme", http.StatusFound)
+		user := getAuthenticatedUser(w, r, sessionRepo, userRepo)
+		if user == nil {
+			return
+		}
+
+		dashData := buildDashboardData(user, "/docs")
+		data := pages.DocsPageData{
+			UserName:      dashData.UserName,
+			UserEmail:     dashData.UserEmail,
+			AvatarURL:     dashData.AvatarURL,
+			OrgName:       dashData.OrgName,
+			OrgPlan:       dashData.OrgPlan,
+			ActiveSection: "overview",
+		}
+
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		pages.DocsPage(data).Render(r.Context(), w)
 	}
 }
 

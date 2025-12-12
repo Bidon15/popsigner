@@ -1,23 +1,51 @@
-# 🍞 BanhBao Ring
+# POPSigner
 
-**Secure Key Management for Celestia Rollups**
+**Point-of-Presence Signing Infrastructure**
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/Bidon15/banhbaoring.svg)](https://pkg.go.dev/github.com/Bidon15/banhbaoring)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-> Your private keys **never leave** the secure boundary. Ever.
+> POPSigner is a distributed signing layer designed to live inline with execution—not behind an API queue.
 
 ---
 
-## 🚀 Get Started in 2 Minutes
+## What POPSigner Is
 
-### Option 1: BanhBao Cloud (Recommended)
+POPSigner is Point-of-Presence signing infrastructure. It deploys where your systems already run—the same region, the same rack, the same execution path.
 
-No infrastructure to deploy. Just sign up and start signing.
+**This isn't custody. This isn't MPC. This is signing at the point of execution.**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  YOUR INFRASTRUCTURE                                         │
+│                                                              │
+│  ┌──────────────┐    inline    ┌──────────────────────────┐ │
+│  │  Execution   │ ───────────▶ │  POPSigner POP           │ │
+│  │  (sequencer, │              │  (same region)           │ │
+│  │   bot, etc.) │ ◀─────────── │                          │ │
+│  └──────────────┘   signature  └──────────────────────────┘ │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Core Principles
+
+| Principle | Description |
+|-----------|-------------|
+| **Inline Signing** | Signing happens on the execution path, not behind a queue |
+| **Sovereignty by Default** | Keys are remote, but you control them. Export anytime. Exit anytime. |
+| **Neutral Anchor** | Recovery data is anchored to neutral data availability. If we disappear, you don't. |
+
+---
+
+## Quick Start
+
+### Option 1: POPSigner Cloud
+
+Deploy without infrastructure. Connect and sign.
 
 ```bash
-# 1. Get your API token at https://app.banhbao.io
-# 2. Install the SDK
+# Get your API key at https://popsigner.io
 go get github.com/Bidon15/banhbaoring
 ```
 
@@ -28,33 +56,31 @@ import (
     "context"
     "os"
     
-    "github.com/Bidon15/banhbaoring"
+    popsigner "github.com/Bidon15/banhbaoring"
 )
 
 func main() {
-    // Connect to BanhBao Cloud
-    kr, _ := banhbaoring.NewCloud(ctx, banhbaoring.CloudConfig{
-        APIToken: os.Getenv("BANHBAO_TOKEN"),  // From dashboard
-    })
+    ctx := context.Background()
+    
+    // Connect to POPSigner
+    client := popsigner.NewClient(os.Getenv("POPSIGNER_API_KEY"))
     
     // Create a key
-    kr.NewAccount("my-rollup-signer", "", "", "", nil)
+    key, _ := client.Keys.Create(ctx, popsigner.CreateKeyRequest{
+        Name: "sequencer-key",
+    })
     
-    // Sign transactions - keys never touch your servers
-    sig, pubKey, _ := kr.Sign("my-rollup-signer", txBytes, signMode)
+    // Sign inline with your execution
+    sig, _ := client.Sign.Sign(ctx, key.ID, txBytes, false)
 }
 ```
 
-**That's it.** Your keys are secured in our infrastructure. You never see them.
-
----
-
 ### Option 2: Self-Hosted
 
-Run your own OpenBao cluster for complete control.
+Run POPSigner on your own infrastructure. Full control. No dependencies.
 
 ```go
-kr, _ := banhbaoring.New(ctx, banhbaoring.Config{
+kr, _ := popsigner.New(ctx, popsigner.Config{
     BaoAddr:   "https://your-openbao.internal:8200",
     BaoToken:  os.Getenv("BAO_TOKEN"),
     StorePath: "./keyring-metadata.json",
@@ -65,206 +91,142 @@ See [Deployment Guide](doc/product/DEPLOYMENT.md) for Kubernetes setup.
 
 ---
 
-## ✨ Why BanhBao?
+## Why POPSigner
 
-```
-┌─────────────────┐          ┌─────────────────────────────┐
-│  Your Rollup    │  sign    │     BanhBao (Cloud/Self)    │
-│                 │─────────▶│                             │
-│  📝 Transaction │          │  🔒 Private key (sealed)    │
-│                 │◀─────────│                             │
-│  ✅ Signature   │          │  Key NEVER leaves here      │
-└─────────────────┘          └─────────────────────────────┘
-```
-
-| | Local Keyring | AWS/GCP KMS | **BanhBao** |
-|--|--------------|-------------|-------------|
-| **Key exposure** | On disk 😰 | Decrypted in app | **Never exposed** |
+| | Local Keyring | Cloud KMS | **POPSigner** |
+|--|--------------|-----------|---------------|
+| **Key exposure** | On disk | Decrypted in app | **Never exposed** |
 | **secp256k1** | ✅ | ❌ | ✅ |
-| **Setup time** | Minutes | Hours | **2 minutes** |
+| **Placement** | Local only | Their region | **Your region** |
 | **Self-hostable** | ✅ | ❌ | ✅ |
 | **Managed option** | ❌ | ✅ | ✅ |
+| **Exit guarantee** | N/A | ❌ | **Always** |
 
 ---
 
-## 🌐 BanhBao Cloud
+## Exit Guarantee
 
-### Features
+POPSigner is designed with exit as a first-class primitive.
 
-| Feature | Free Tier | Pro | Enterprise |
-|---------|-----------|-----|------------|
-| Keys | 3 | Unlimited | Unlimited |
-| Signatures/month | 10,000 | 1M | Unlimited |
-| Web Dashboard | ✅ | ✅ | ✅ |
-| Key Migration Tools | ✅ | ✅ | ✅ |
-| API Access | ✅ | ✅ | ✅ |
-| Audit Logs | 7 days | 90 days | 1 year |
-| SLA | - | 99.9% | 99.99% |
-| Support | Community | Email | Dedicated |
+- **Key Export**: Your keys are exportable by default. No ceremony. No approval workflow.
+- **Recovery Anchor**: Recovery data is anchored to neutral data availability infrastructure.
+- **Force Exit**: If POPSigner is unavailable for any reason, you can force recovery. This is not gated.
 
-### Dashboard Preview
+---
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  BanhBao Dashboard                              [user@email.com]│
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  Your Keys                                         [+ New Key]  │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │ 🔑 my-rollup-signer                                     │   │
-│  │    celestia1abc123...xyz789                             │   │
-│  │    Created: 2 days ago  │  Signatures: 1,247            │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │ 🔑 backup-validator                                     │   │
-│  │    celestia1def456...uvw012                             │   │
-│  │    Created: 1 week ago  │  Signatures: 89               │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-│  Quick Actions                                                  │
-│  [Create Key]  [Import Key]  [View API Token]  [Audit Logs]    │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+## Plugin Architecture
 
-### Get Started
+POPSigner ships with `secp256k1`. But the plugin architecture is the actual product.
 
-1. **Sign up** at [app.banhbao.io](https://app.banhbao.io)
-2. **Create a key** in the dashboard (or via API)
-3. **Copy your API token**
-4. **Integrate** with 3 lines of code:
+- Plugins are chain-agnostic
+- Plugins are free
+- Plugins don't require approval
 
 ```go
-kr, _ := banhbaoring.NewCloud(ctx, banhbaoring.CloudConfig{
-    APIToken: os.Getenv("BANHBAO_TOKEN"),
+// Built-in secp256k1
+sig, pubKey, _ := kr.Sign("my-key", signBytes, signMode)
+
+// Your custom algorithm tomorrow
+```
+
+---
+
+## Integration
+
+### Celestia / Cosmos SDK
+
+POPSigner implements the standard `keyring.Keyring` interface:
+
+```go
+import (
+    "github.com/celestiaorg/celestia-node/api/client"
+    popsigner "github.com/Bidon15/banhbaoring"
+)
+
+func main() {
+    ctx := context.Background()
+    
+    // POPSigner as keyring
+    kr, _ := popsigner.NewClient(os.Getenv("POPSIGNER_API_KEY"))
+    
+    // Plug into Celestia
+    celestiaClient, _ := client.NewWithKeyring(ctx, clientConfig, kr)
+    
+    // Submit blobs—signing happens inline
+    height, _ := celestiaClient.Blob.Submit(ctx, blobs, nil)
+}
+```
+
+### Parallel Workers
+
+POPSigner supports worker-native architecture for burst workloads:
+
+```go
+// Create signing workers
+keys, _ := client.Keys.CreateBatch(ctx, popsigner.CreateBatchRequest{
+    Prefix: "blob-worker",
+    Count:  4,
+})
+
+// Sign in parallel—no blocking
+results, _ := client.Sign.SignBatch(ctx, popsigner.BatchSignRequest{
+    Requests: []popsigner.SignRequest{
+        {KeyID: keys[0].ID, Data: tx1},
+        {KeyID: keys[1].ID, Data: tx2},
+        {KeyID: keys[2].ID, Data: tx3},
+        {KeyID: keys[3].ID, Data: tx4},
+    },
 })
 ```
 
 ---
 
-## 🔗 Celestia Integration
-
-Works seamlessly with the Celestia client:
-
-```go
-import (
-    "github.com/celestiaorg/celestia-node/api/client"
-    "github.com/Bidon15/banhbaoring"
-)
-
-func main() {
-    // BanhBao Cloud
-    kr, _ := banhbaoring.NewCloud(ctx, banhbaoring.CloudConfig{
-        APIToken: os.Getenv("BANHBAO_TOKEN"),
-    })
-    
-    // Plug into Celestia
-    celestiaClient, _ := client.NewWithKeyring(ctx, clientConfig, kr)
-    
-    // Submit blobs - signing happens via BanhBao
-    height, _ := celestiaClient.Blob.Submit(ctx, blobs, nil)
-    
-    fmt.Printf("Blob submitted at height %d\n", height)
-}
-```
-
-See [Integration Guide](doc/product/INTEGRATION.md) for complete examples.
-
----
-
-## 🔐 Security Model
-
-### The Problem with Other Solutions
-
-**Local Keyring:**
-```
-Your Server
-┌─────────────────────────────────────┐
-│  ~/.celestia-app/keyring-file      │
-│  ┌─────────────────────────────┐   │
-│  │ 🔓 Private Key on Disk      │ ← Attacker target
-│  └─────────────────────────────┘   │
-└─────────────────────────────────────┘
-```
-
-**AWS KMS / GCP Cloud KMS:**
-```
-Your Server                      Cloud KMS
-┌─────────────────┐  decrypt   ┌─────────────────┐
-│                 │◀───────────│  🔒 Encrypted   │
-│  🔓 Key in RAM  │            │  Key            │
-│  Sign locally   │            └─────────────────┘
-│  ⚠️ Exposed!    │
-└─────────────────┘
-```
-
-**BanhBao:**
-```
-Your Server                      BanhBao
-┌─────────────────┐  sign req  ┌─────────────────────────┐
-│                 │───────────▶│                         │
-│  📝 TX bytes    │            │  🔒 Key SEALED          │
-│                 │◀───────────│  Sign inside            │
-│  ✅ Signature   │  signature │  Key never leaves       │
-└─────────────────┘            └─────────────────────────┘
-```
-
-### Security Features
-
-- **Zero key exposure** - Private keys never leave BanhBao
-- **TLS everywhere** - All API calls encrypted
-- **Audit logging** - Every signature logged with metadata
-- **Access control** - Fine-grained API token permissions
-- **SOC 2 Type II** - Enterprise compliance (Cloud)
-
----
-
-## 🛠️ CLI Tool
+## CLI
 
 ```bash
 # Install
-go install github.com/Bidon15/banhbaoring/cmd/banhbao@latest
+go install github.com/Bidon15/banhbaoring/cmd/popsigner@latest
 
-# Configure (Cloud)
-export BANHBAO_TOKEN="your-api-token"
-
-# Or configure (Self-hosted)
-export BAO_ADDR="https://your-openbao:8200"
-export BAO_TOKEN="your-token"
+# Configure
+export POPSIGNER_API_KEY="psk_xxx"
 
 # Key management
-banhbao keys create my-validator
-banhbao keys list
-banhbao keys show my-validator
+popsigner keys create my-sequencer
+popsigner keys list
+popsigner keys show my-sequencer
 
-# Sign a file
-banhbao sign --key my-validator message.txt
+# Sign
+popsigner sign --key my-sequencer message.txt
 
 # Health check
-banhbao health
+popsigner health
 ```
 
 ---
 
-## 🔄 Migration
+## Migration
 
-Already have keys? Migrate them to BanhBao:
+### Import existing keys
 
 ```bash
-# Import from local Celestia keyring
-banhbao migrate import \
+popsigner migrate import \
   --from ~/.celestia-app/keyring-file \
   --key-name my-validator
+```
 
-# Your key is now secured in BanhBao
-# Delete local copy after verification
+### Export keys (exit guarantee)
+
+```bash
+popsigner migrate export \
+  --to ./exported-keys \
+  --key my-validator
 ```
 
 See [Migration Guide](doc/product/MIGRATION.md) for all options.
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 | Document | Description |
 |----------|-------------|
@@ -274,69 +236,49 @@ See [Migration Guide](doc/product/MIGRATION.md) for all options.
 | [Deployment Guide](doc/product/DEPLOYMENT.md) | Self-hosted Kubernetes setup |
 | [Architecture](doc/product/ARCHITECTURE.md) | Technical design |
 | [Plugin Design](doc/product/PLUGIN_DESIGN.md) | OpenBao plugin details |
-| [PRD](doc/product/PRD.md) | Product requirements |
 
 ---
 
-## 📦 Installation
+## Installation
 
 ```bash
 # Go SDK
 go get github.com/Bidon15/banhbaoring
 
 # CLI
-go install github.com/Bidon15/banhbaoring/cmd/banhbao@latest
+go install github.com/Bidon15/banhbaoring/cmd/popsigner@latest
 ```
 
 ### Requirements
 
 | Deployment | Requirements |
 |------------|--------------|
-| **Cloud** | Just an API token |
+| **Cloud** | API key only |
 | **Self-hosted** | OpenBao + secp256k1 plugin, Kubernetes 1.25+ |
 
 ---
 
-## 🧪 Local Development
+## Pricing
 
-```bash
-# Start local OpenBao (dev mode)
-docker run -d --name banhbao-dev \
-  -p 8200:8200 \
-  -e 'BAO_DEV_ROOT_TOKEN_ID=dev-token' \
-  quay.io/openbao/openbao:2.0.0 server -dev
+| Tier | Monthly | Description |
+|------|---------|-------------|
+| **Shared POPSigner** | €49 | Shared POP infrastructure. For experimentation. |
+| **Priority POPSigner** | €499 | Priority lanes, region selection, 99.9% SLA |
+| **Dedicated POPSigner** | €19,999 | Region-pinned, CPU isolation, 99.99% SLA |
 
-# Configure
-export BAO_ADDR="http://localhost:8200"
-export BAO_TOKEN="dev-token"
-
-# Test
-go test ./...
-```
+Self-host option is always free. [View pricing details →](https://popsigner.io/pricing)
 
 ---
 
-## 🗺️ Roadmap
+## About the Name
 
-| Phase | Status | Features |
-|-------|--------|----------|
-| **v0.1** | ✅ Done | Core keyring, secp256k1 plugin |
-| **v0.2** | 🚧 Now | CLI tools, migration utilities |
-| **v1.0** | 📋 Next | BanhBao Cloud launch |
-| **v1.1** | 📋 Planned | Web dashboard, team management |
-| **v2.0** | 📋 Future | Key rotation, threshold signatures |
+POPSigner (formerly BanhBaoRing) reflects a clearer articulation of what the system is: **Point-of-Presence signing infrastructure**.
+
+The rename signals a shift from playful internal naming to category-defining infrastructure positioning.
 
 ---
 
-## 💬 Community
-
-- **Discord**: [Join our server](https://discord.gg/banhbao)
-- **Twitter**: [@banhbao_io](https://twitter.com/banhbao_io)
-- **GitHub Issues**: Bug reports and feature requests
-
----
-
-## 🤝 Contributing
+## Contributing
 
 ```bash
 git clone https://github.com/Bidon15/banhbaoring.git
@@ -349,16 +291,16 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
-## 📄 License
+## License
 
 Apache License 2.0 - See [LICENSE](LICENSE) for details.
 
 ---
 
 <p align="center">
-  <b>🍞 BanhBao</b> — Enterprise key security, startup simplicity.
+  <b>POPSigner</b> — Signing at the point of execution.
   <br><br>
-  <a href="https://app.banhbao.io">Get Started Free</a> · 
-  <a href="doc/product/INTEGRATION.md">Docs</a> · 
-  <a href="https://discord.gg/banhbao">Discord</a>
+  <a href="https://popsigner.io">Deploy POPSigner</a> · 
+  <a href="doc/product/INTEGRATION.md">Documentation</a> · 
+  <a href="https://github.com/Bidon15/banhbaoring">GitHub</a>
 </p>

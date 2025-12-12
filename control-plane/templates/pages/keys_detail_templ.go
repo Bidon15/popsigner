@@ -489,7 +489,7 @@ func KeyDetailPage(data KeyDetailData) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "</div><div class=\"flex gap-3 pt-4 border-t border-bao-border/50\"><a href=\"https://github.com/Bidon15/banhbaoring#readme\" target=\"_blank\" class=\"px-4 py-2 bg-bao-accent/10 text-bao-accent rounded-lg hover:bg-bao-accent/20 transition-colors\">📚 Full Documentation</a> <a href=\"https://github.com/Bidon15/banhbaoring/tree/main/examples\" target=\"_blank\" class=\"px-4 py-2 bg-bao-border/50 text-bao-text rounded-lg hover:bg-bao-border transition-colors\">💡 Examples</a></div></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "</div><div class=\"flex gap-3 pt-4 border-t border-bao-border/50\"><a href=\"/docs\" class=\"px-4 py-2 bg-bao-accent/10 text-bao-accent rounded-lg hover:bg-bao-accent/20 transition-colors\">📚 Full Documentation</a> <a href=\"/docs#celestia-client\" class=\"px-4 py-2 bg-purple-500/10 text-purple-400 rounded-lg hover:bg-purple-500/20 transition-colors\">🌌 Celestia Integration</a> <a href=\"https://github.com/Bidon15/banhbaoring/tree/main/examples\" target=\"_blank\" class=\"px-4 py-2 bg-bao-border/50 text-bao-text rounded-lg hover:bg-bao-border transition-colors\">💡 More Examples ↗</a></div></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -522,7 +522,7 @@ func KeyDetailPage(data KeyDetailData) templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs("/keys/" + data.Key.ID.String())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 265, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 268, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -692,7 +692,7 @@ func codeBlock(lang string, code string) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(code)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 423, Col: 122}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 426, Col: 122}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {

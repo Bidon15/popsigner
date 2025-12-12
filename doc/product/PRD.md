@@ -4,6 +4,10 @@
 
 This document defines the requirements for implementing a custom Cosmos-SDK `keyring.Keyring` backend that leverages OpenBao (the open-source fork of HashiCorp Vault) Transit engine for secure `secp256k1` signing operations. The keyring integrates with Celestia's Go client for transaction signing and broadcasting without storing private keys locally.
 
+**Product Name:** POPSigner (formerly BanhBaoRing)
+
+POPSigner is Point-of-Presence signing infrastructure—a distributed signing layer designed to live inline with execution, not behind an API queue.
+
 ### Minimum Version Requirements
 
 | Package | Minimum Version |
@@ -13,63 +17,75 @@ This document defines the requirements for implementing a custom Cosmos-SDK `key
 
 ### 1.1 Target Users
 
-> **🎯 Maximum Focus:** Rollup developers and operators only.
-
-| User Type             | Use Case                                                       |
-| --------------------- | -------------------------------------------------------------- |
-| **Rollup Developers** | Secure key management for sequencers, provers, bridge operators |
-| **Rollup Operators**  | Production-grade key security for Celestia DA layer rollups    |
+| User Type | Use Case |
+| --------- | -------- |
+| **Rollup Teams** | Sequencer signing, prover operations, bridge operators |
+| **Execution Bots** | Market makers, arbitrage, MEV operations |
+| **Infrastructure Teams** | Backend services requiring inline signing |
 
 ### 1.2 Problem Statement
 
-Rollup teams using Cosmos SDK keyring backends face serious security risks:
+Teams running execution infrastructure face architectural challenges:
 
 - Key material exposure on disk
 - Risk of key extraction from memory
-- Difficult key lifecycle management
+- Signing infrastructure distant from execution
 - No centralized audit logging
+- Vendor lock-in with proprietary solutions
 
 ### 1.3 Solution
 
-Implement a remote signing keyring that:
+Implement Point-of-Presence signing infrastructure that:
 
-- Delegates all cryptographic operations to OpenBao Transit engine
+- Deploys inline with execution—same region, same rack
+- Delegates all cryptographic operations to OpenBao
 - Stores only public metadata locally
 - Provides full `keyring.Keyring` interface compatibility
-- Integrates seamlessly with Celestia's Go client
-- **Supports parallel worker pattern** for high-throughput blob submission
+- Guarantees exit—keys exportable by default
+- Supports worker-native architecture for parallel workloads
 
-### 1.4 Parallel Worker Support (Critical)
+### 1.4 Core Principles
 
-> **Reference:** [Celestia Client Parallel Workers](https://github.com/celestiaorg/celestia-node/blob/main/api/client/readme.md)
+| Principle | Description |
+|-----------|-------------|
+| **Inline Signing** | Signing happens on the execution path, not behind a queue |
+| **Sovereignty by Default** | Keys are remote, but you control them. Export anytime. Exit anytime. |
+| **Neutral Anchor** | Recovery data anchored to neutral data availability |
 
-Celestia rollups use parallel blob submission with multiple worker accounts and fee grants:
+### 1.5 Parallel Worker Support
+
+POPSigner supports worker-native architecture for burst workloads:
 
 ```go
-cfg := client.Config{
-    SubmitConfig: client.SubmitConfig{
-        TxWorkerAccounts: 4,  // 4 workers signing in parallel
-    },
-}
+// Create signing workers
+keys, _ := client.Keys.CreateBatch(ctx, CreateBatchRequest{
+    Prefix: "blob-worker",
+    Count:  4,
+})
+
+// Sign in parallel—no blocking
+results, _ := client.Sign.SignBatch(ctx, BatchSignRequest{...})
 ```
 
-**BanhBaoRing MUST support:**
+**POPSigner MUST support:**
 - Concurrent `Sign()` calls from multiple goroutines
-- Thread-safe access to multiple keys simultaneously  
+- Thread-safe access to multiple keys simultaneously
 - No head-of-line blocking between different key operations
-- High throughput (100+ signs/second)
+- Worker-native parallel signing
 
 ---
 
 ## 2. Objectives
 
-| Objective         | Description                                                   |
-| ----------------- | ------------------------------------------------------------- |
-| **Security**      | Private keys never leave OpenBao; no local key storage        |
-| **Compatibility** | Full `keyring.Keyring` interface compliance                   |
-| **Integration**   | Works with Celestia's `tx.Factory`, signing, and broadcasting |
-| **Modularity**    | Clean, reusable Go module for Celestia applications           |
-| **Auditability**  | Leverage OpenBao's audit logging for all signing operations   |
+| Objective | Description |
+| --------- | ----------- |
+| **Placement** | Deploy inline with execution—same region as your systems |
+| **Security** | Private keys never leave OpenBao; no local key storage |
+| **Sovereignty** | Exit guarantee—keys exportable by default |
+| **Compatibility** | Full `keyring.Keyring` interface compliance |
+| **Integration** | Works with Celestia's `tx.Factory`, signing, and broadcasting |
+| **Modularity** | Clean, reusable Go module for Celestia applications |
+| **Auditability** | Leverage OpenBao's audit logging for all signing operations |
 
 ---
 
@@ -77,15 +93,15 @@ cfg := client.Config{
 
 ### 3.1 Keyring Interface Compliance
 
-The backend **MUST** implement the `keyring.Keyring` interface from Celestia's cosmos-sdk fork (`github.com/celestiaorg/cosmos-sdk`). Import paths use `github.com/cosmos/cosmos-sdk/crypto/keyring` but are resolved via go.mod replace directives. Required methods:
+The backend **MUST** implement the `keyring.Keyring` interface from Celestia's cosmos-sdk fork. Required methods:
 
-| Method                                                           | Description                   | Implementation                          |
-| ---------------------------------------------------------------- | ----------------------------- | --------------------------------------- |
-| `Key(uid string) (*Record, error)`                               | Retrieve key metadata by name | Read from local metadata store          |
-| `List() ([]*Record, error)`                                      | List all available keys       | Enumerate local metadata store          |
-| `NewAccount(...)`                                                | Create new key in OpenBao     | POST to Transit, store metadata locally |
-| `Sign(uid string, msg []byte, signMode) ([]byte, PubKey, error)` | Sign message bytes            | Hash → OpenBao sign → DER to compact    |
-| `SignByAddress(...)`                                             | Sign by address lookup        | Resolve address → call Sign()           |
+| Method | Description | Implementation |
+| ------ | ----------- | -------------- |
+| `Key(uid string) (*Record, error)` | Retrieve key metadata by name | Read from local metadata store |
+| `List() ([]*Record, error)` | List all available keys | Enumerate local metadata store |
+| `NewAccount(...)` | Create new key in OpenBao | POST to Transit, store metadata locally |
+| `Sign(uid string, msg []byte, signMode) ([]byte, PubKey, error)` | Sign message bytes | Hash → OpenBao sign → DER to compact |
+| `SignByAddress(...)` | Sign by address lookup | Resolve address → call Sign() |
 
 ### 3.2 Remote Key Management
 
@@ -95,9 +111,9 @@ The backend **MUST** implement the `keyring.Keyring` interface from Celestia's c
 - **MUST** retrieve and store public key locally after generation
 - **MUST** derive and store Cosmos address (bech32) locally
 
-#### 3.2.2 Key Import (Migration TO BaoKeyring)
+#### 3.2.2 Key Import (Migration TO POPSigner)
 
-Users with existing local keyrings need to migrate their keys to OpenBao infrastructure.
+Users with existing local keyrings need to migrate their keys to POPSigner infrastructure.
 
 - **MUST** support importing keys from existing Cosmos SDK keyring backends:
   - `file` backend (encrypted keystore)
@@ -118,26 +134,24 @@ Users with existing local keyrings need to migrate their keys to OpenBao infrast
 5. Store metadata locally
 6. Optionally delete source key
 
-#### 3.2.3 Key Export (Migration FROM BaoKeyring)
+#### 3.2.3 Key Export (Exit Guarantee)
 
-Users may need to stop using BaoKeyring and export keys to local storage.
+Users may need to exit POPSigner and export keys to local storage. **This is a first-class feature, not an exception.**
 
-- **MUST** support exporting keys only if created with `exportable: true`
-- **MUST** warn users about security implications of exporting keys
+- **MUST** support exporting keys by default (exportable: true is the default)
 - **MUST** support export to standard Cosmos SDK keyring formats
-- **MUST** require explicit user confirmation before export
+- **MUST** log export events for audit purposes
 - **SHOULD** support exporting to encrypted file format
-- **SHOULD** log export events for audit purposes
 
-**Security Considerations:**
+**Exit Guarantee Principles:**
 
-- Keys created with `exportable: false` (default) CANNOT be exported
-- Exporting compromises the security model - keys become locally stored
-- Export should be a conscious, deliberate user action
+- Export is not gated by approval workflows
+- If POPSigner is unavailable, recovery data is anchored to neutral DA
+- Users can always force exit
 
 **Export Flow:**
 
-1. Read key from OpenBao Transit (requires export permission)
+1. Read key from OpenBao Transit
 2. Decrypt wrapped key material
 3. Create new entry in target keyring backend
 4. Verify export by signing test data with new keyring
@@ -160,21 +174,21 @@ The signing flow **MUST** follow this sequence:
 
 Store only non-sensitive metadata locally:
 
-| Field        | Type        | Description                                |
-| ------------ | ----------- | ------------------------------------------ |
-| `Name`       | `string`    | Key identifier (uid)                       |
-| `PubKey`     | `[]byte`    | Compressed secp256k1 public key (33 bytes) |
-| `Address`    | `string`    | Bech32-encoded Cosmos address              |
-| `BaoKeyPath` | `string`    | OpenBao Transit key path                   |
-| `Algorithm`  | `string`    | Always `"secp256k1"`                       |
-| `Exportable` | `bool`      | Whether key can be exported from OpenBao   |
-| `CreatedAt`  | `time.Time` | Key creation timestamp                     |
-| `Source`     | `string`    | Origin: `"generated"` or `"imported"`      |
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `Name` | `string` | Key identifier (uid) |
+| `PubKey` | `[]byte` | Compressed secp256k1 public key (33 bytes) |
+| `Address` | `string` | Bech32-encoded Cosmos address |
+| `BaoKeyPath` | `string` | OpenBao Transit key path |
+| `Algorithm` | `string` | Always `"secp256k1"` |
+| `Exportable` | `bool` | Whether key can be exported (default: true) |
+| `CreatedAt` | `time.Time` | Key creation timestamp |
+| `Source` | `string` | Origin: `"generated"` or `"imported"` |
 
 ### 3.5 Algorithm Support
 
 - **MUST** support `secp256k1` (Cosmos/Tendermint standard)
-- **MAY** support additional algorithms in future versions
+- **MAY** support additional algorithms via plugin architecture
 
 ---
 
@@ -182,28 +196,29 @@ Store only non-sensitive metadata locally:
 
 ### 4.1 Security
 
-| Requirement        | Description                                                       |
-| ------------------ | ----------------------------------------------------------------- |
-| **No Local Keys**  | Private keys MUST never be stored on disk or in memory            |
-| **TLS Required**   | All OpenBao communication MUST use HTTPS in production            |
+| Requirement | Description |
+| ----------- | ----------- |
+| **No Local Keys** | Private keys MUST never be stored on disk or in memory |
+| **TLS Required** | All OpenBao communication MUST use HTTPS in production |
 | **Token Security** | OpenBao tokens MUST be handled securely (env vars, not hardcoded) |
-| **Audit Trail**    | All signing operations logged by OpenBao                          |
+| **Audit Trail** | All signing operations logged by OpenBao |
 
-### 4.2 Performance
+### 4.2 Placement
 
-| Requirement        | Target                                    |
-| ------------------ | ----------------------------------------- |
-| Sign latency       | < 100ms per signature (excluding network) |
-| Connection pooling | HTTP client SHOULD reuse connections      |
-| Timeout handling   | Configurable request timeouts             |
+| Requirement | Description |
+| ----------- | ----------- |
+| **Region Selection** | Deploy POPSigner in the same region as execution infrastructure |
+| **Inline Execution** | Signing happens on the execution path |
+| **Connection pooling** | HTTP client SHOULD reuse connections |
+| **Timeout handling** | Configurable request timeouts |
 
 ### 4.3 Reliability
 
-| Requirement    | Description                               |
-| -------------- | ----------------------------------------- |
-| Error handling | Clear error messages for OpenBao failures |
-| Retry logic    | Configurable retry for transient failures |
-| Health checks  | Method to verify OpenBao connectivity     |
+| Requirement | Description |
+| ----------- | ----------- |
+| **Error handling** | Clear error messages for OpenBao failures |
+| **Retry logic** | Configurable retry for transient failures |
+| **Health checks** | Method to verify OpenBao connectivity |
 
 ### 4.4 Code Quality
 
@@ -220,44 +235,44 @@ Store only non-sensitive metadata locally:
 
 **Go Client Library:**
 
-| File             | Description                                             |
-| ---------------- | ------------------------------------------------------- |
+| File | Description |
+| ---- | ----------- |
 | `bao_keyring.go` | Main `BaoKeyring` struct implementing `keyring.Keyring` |
-| `bao_store.go`   | `BaoStore` for local metadata persistence               |
-| `bao_client.go`  | `BaoClient` HTTP wrapper for secp256k1 plugin API       |
-| `migration.go`   | Key import/export migration utilities                   |
-| `types.go`       | Shared types and constants                              |
-| `errors.go`      | Custom error types                                      |
+| `bao_store.go` | `BaoStore` for local metadata persistence |
+| `bao_client.go` | `BaoClient` HTTP wrapper for secp256k1 plugin API |
+| `migration.go` | Key import/export migration utilities |
+| `types.go` | Shared types and constants |
+| `errors.go` | Custom error types |
 
 **OpenBao secp256k1 Plugin:**
 
-| File                         | Description                                  |
-| ---------------------------- | -------------------------------------------- |
-| `plugin/cmd/plugin/main.go`  | Plugin entrypoint                            |
-| `plugin/secp256k1/backend.go`| Backend factory and registration             |
-| `plugin/secp256k1/path_keys.go` | Key creation, listing, deletion           |
-| `plugin/secp256k1/path_sign.go` | Signing operations (Cosmos format)        |
-| `plugin/secp256k1/path_import.go` | Key import from wrapped material        |
-| `plugin/secp256k1/path_export.go` | Key export (if allowed)                 |
-| `plugin/secp256k1/crypto.go` | secp256k1 crypto helpers (btcec)             |
+| File | Description |
+| ---- | ----------- |
+| `plugin/cmd/plugin/main.go` | Plugin entrypoint |
+| `plugin/secp256k1/backend.go` | Backend factory and registration |
+| `plugin/secp256k1/path_keys.go` | Key creation, listing, deletion |
+| `plugin/secp256k1/path_sign.go` | Signing operations (Cosmos format) |
+| `plugin/secp256k1/path_import.go` | Key import from wrapped material |
+| `plugin/secp256k1/path_export.go` | Key export (exit guarantee) |
+| `plugin/secp256k1/crypto.go` | secp256k1 crypto helpers (btcec) |
 
 ### 5.2 CLI Tool
 
-| File            | Description                          |
-| --------------- | ------------------------------------ |
-| `cmd/banhbao/*` | CLI tool for key and migration tasks |
+| File | Description |
+| ---- | ----------- |
+| `cmd/popsigner/*` | CLI tool for key and migration tasks |
 
 The CLI **MUST** support:
 
 1. Key creation, listing, and deletion
 2. Import from local Cosmos SDK keyrings
-3. Export to local keyring (for exportable keys)
+3. Export to local keyring (exit guarantee)
 4. Health check for OpenBao connectivity
 
 ### 5.3 Example Application
 
-| File              | Description                                 |
-| ----------------- | ------------------------------------------- |
+| File | Description |
+| ---- | ----------- |
 | `example/main.go` | Complete usage example with Celestia client |
 
 The example **MUST** demonstrate:
@@ -269,16 +284,16 @@ The example **MUST** demonstrate:
 
 ### 5.4 Documentation
 
-| File                   | Description                               |
-| ---------------------- | ----------------------------------------- |
-| `doc/PRD.md`           | This document                             |
-| `doc/ARCHITECTURE.md`  | Technical design and component details    |
-| `doc/PLUGIN_DESIGN.md` | secp256k1 plugin design and implementation|
-| `doc/API_REFERENCE.md` | OpenBao plugin API reference              |
-| `doc/INTEGRATION.md`   | Celestia integration guide                |
-| `doc/MIGRATION.md`     | Key migration guide (import/export)       |
-| `doc/DEPLOYMENT.md`    | Kubernetes deployment and operations      |
-| `README.md`            | Quick start and usage instructions        |
+| File | Description |
+| ---- | ----------- |
+| `doc/PRD.md` | This document |
+| `doc/ARCHITECTURE.md` | Technical design and component details |
+| `doc/PLUGIN_DESIGN.md` | secp256k1 plugin design and implementation |
+| `doc/API_REFERENCE.md` | OpenBao plugin API reference |
+| `doc/INTEGRATION.md` | Celestia integration guide |
+| `doc/MIGRATION.md` | Key migration guide (import/export) |
+| `doc/DEPLOYMENT.md` | Kubernetes deployment and operations |
+| `README.md` | Quick start and usage instructions |
 
 ---
 
@@ -286,13 +301,13 @@ The example **MUST** demonstrate:
 
 ### 6.1 Technical Constraints
 
-| Constraint            | Description                                                           |
-| --------------------- | --------------------------------------------------------------------- |
-| **OpenBao Only**      | Use OpenBao API paths; no HashiCorp Vault BSL dependencies            |
-| **Celestia Versions** | celestia-app ≥ v6.4.0, celestia-node ≥ v0.28.4                         |
-| **Go 1.21+**          | Modern Go version for generics and improved error handling            |
-| **Cosmos SDK**        | Compatible with cosmos-sdk keyring interface version used by Celestia |
-| **Kubernetes**        | OpenBao deployment requires Kubernetes 1.25+ cluster                  |
+| Constraint | Description |
+| ---------- | ----------- |
+| **OpenBao Only** | Use OpenBao API paths; no HashiCorp Vault BSL dependencies |
+| **Celestia Versions** | celestia-app ≥ v6.4.0, celestia-node ≥ v0.28.4 |
+| **Go 1.21+** | Modern Go version for generics and improved error handling |
+| **Cosmos SDK** | Compatible with cosmos-sdk keyring interface version used by Celestia |
+| **Kubernetes** | OpenBao deployment requires Kubernetes 1.25+ cluster |
 
 ### 6.2 Signature Format
 
@@ -304,11 +319,11 @@ All signatures **MUST** match Cosmos expected format:
 
 ### 6.3 OpenBao Requirements
 
-| Requirement          | Details                                                          |
-| -------------------- | ---------------------------------------------------------------- |
-| secp256k1 plugin     | Custom plugin providing native secp256k1 signing                 |
-| Plugin path          | Mounted at `/secp256k1`                                          |
-| Permissions          | `create`, `read`, `update` on secp256k1/keys; `update` on sign   |
+| Requirement | Details |
+| ----------- | ------- |
+| secp256k1 plugin | Custom plugin providing native secp256k1 signing |
+| Plugin path | Mounted at `/secp256k1` |
+| Permissions | `create`, `read`, `update` on secp256k1/keys; `update` on sign |
 
 ### 6.4 Architecture Decision: Native Plugin
 
@@ -317,15 +332,12 @@ All signatures **MUST** match Cosmos expected format:
 | Approach | Security | Key Exposure |
 |----------|----------|--------------|
 | Hybrid (AWS KMS style) | Good | Key decrypted in app memory |
-| **Native Plugin (BanhBao)** | **Excellent** | **Key NEVER leaves OpenBao** |
+| **Native Plugin (POPSigner)** | **Excellent** | **Key NEVER leaves OpenBao** |
 
 **Rationale:**
 - Private keys remain sealed inside OpenBao at all times
 - Only signatures are returned to callers
-- Maximum security for production rollups
-- Vault-grade security (HSM optional for future)
-
-**Portability:** Users who prefer AWS KMS or GCP Cloud KMS can fork the client library and implement a hybrid approach. The `keyring.Keyring` interface remains the same.
+- Maximum security for production infrastructure
 
 ---
 
@@ -335,8 +347,8 @@ All signatures **MUST** match Cosmos expected format:
 
 ```go
 require (
-    github.com/celestiaorg/celestia-app/v4 v4.0.0 // minimum v6.4.0
-    github.com/celestiaorg/celestia-node v0.28.4  // minimum v0.28.4
+    github.com/celestiaorg/celestia-app/v4 v4.0.0
+    github.com/celestiaorg/celestia-node v0.28.4
     github.com/cosmos/cosmos-sdk v0.50.13
     github.com/cosmos/cosmos-sdk/crypto/keyring
 )
@@ -344,11 +356,11 @@ require (
 
 ### 7.2 External Services
 
-| Service              | Purpose                                       |
-| -------------------- | --------------------------------------------- |
-| OpenBao Server       | Transit engine for key management and signing |
-| Celestia Bridge Node | For blob submission (read operations)         |
-| Celestia Core Node   | For transaction broadcasting                  |
+| Service | Purpose |
+| ------- | ------- |
+| OpenBao Server | Transit engine for key management and signing |
+| Celestia Bridge Node | For blob submission (read operations) |
+| Celestia Core Node | For transaction broadcasting |
 
 ---
 
@@ -362,7 +374,7 @@ require (
 - [ ] Sign arbitrary bytes and verify signature
 - [ ] Sign Cosmos transaction and broadcast successfully
 - [ ] Import key from local file keyring to OpenBao
-- [ ] Export key from OpenBao to local file keyring
+- [ ] Export key from OpenBao to local file keyring (exit guarantee)
 - [ ] Batch import multiple keys
 
 ### 8.2 Integration Tests
@@ -379,96 +391,19 @@ require (
 
 ---
 
-## 9. User Interface Considerations
+## 9. Plugin Architecture
 
-### 9.1 Web Application (Optional Enhancement)
+POPSigner ships with `secp256k1`. But the plugin architecture is the actual product.
 
-A web-based UI could provide user-friendly key management for non-technical users.
+### 9.1 Plugin Principles
 
-#### 9.1.1 Potential Features
+- Plugins are chain-agnostic
+- Plugins are free
+- Plugins don't require approval
 
-| Feature              | Description                                      | Priority |
-| -------------------- | ------------------------------------------------ | -------- |
-| Key Creation         | Create new keys via web form                     | High     |
-| Key Dashboard        | View all keys, addresses, and status             | High     |
-| Migration Wizard     | Guided import from local keyring                 | Medium   |
-| Export Wizard        | Guided export with security warnings             | Medium   |
-| Signing Portal       | Sign transactions via web interface              | Low      |
-| API Token Management | Generate/revoke tokens for Go client integration | High     |
+### 9.2 Creating Custom Plugins
 
-#### 9.1.2 Architecture with Web UI
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         User Interfaces                             │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ┌─────────────────┐            ┌─────────────────────────────────┐│
-│  │   Web App (UI)  │            │     Go Application              ││
-│  │   (Browser)     │            │     (celestia-node integration) ││
-│  └────────┬────────┘            └────────────────┬────────────────┘│
-│           │                                      │                  │
-│           ▼                                      ▼                  │
-│  ┌─────────────────────────────────────────────────────────────────┐│
-│  │                    BanhBao API Service                          ││
-│  │  ┌───────────────┐  ┌───────────────┐  ┌───────────────────┐   ││
-│  │  │ REST/gRPC API │  │ Auth Service  │  │ Key Management    │   ││
-│  │  └───────┬───────┘  └───────────────┘  └─────────┬─────────┘   ││
-│  └──────────┼───────────────────────────────────────┼──────────────┘│
-│             │                                       │               │
-│             ▼                                       ▼               │
-│  ┌─────────────────────────────────────────────────────────────────┐│
-│  │                      OpenBao Server                             ││
-│  │                      Transit Engine                             ││
-│  └─────────────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-#### 9.1.3 Go Client Integration with Web-Created Keys
-
-Users who create keys via web UI need to access them from Go code:
-
-```go
-// After creating key "my-key" in web UI, use in Go:
-cfg := banhbaoring.Config{
-    BaoAddr:     "https://bao.banhbao.io",
-    BaoToken:    os.Getenv("BANHBAO_API_TOKEN"), // Token from web dashboard
-    TransitPath: "transit",
-    StorePath:   "./keyring-metadata.json",
-}
-
-kr, _ := banhbaoring.New(ctx, cfg)
-
-// Sync keys created via web UI to local metadata
-kr.SyncFromRemote(ctx)
-
-// Now use the key
-sig, pubKey, _ := kr.Sign("my-key", signBytes, signMode)
-```
-
-#### 9.1.4 Decision: UI Scope
-
-**Recommendation:** Start with CLI tooling and Go library only. Web UI can be added as a Phase 2 enhancement based on user demand.
-
-| Phase   | Deliverables                        |
-| ------- | ----------------------------------- |
-| Phase 1 | Go library, CLI migration tools     |
-| Phase 2 | Web dashboard, API service          |
-| Phase 3 | Mobile app, advanced key management |
-
-### 9.2 CLI Tools
-
-For Phase 1, provide CLI tools for key management:
-
-| Command                                    | Description                    |
-| ------------------------------------------ | ------------------------------ |
-| `banhbao keys create <name>`               | Create new key in OpenBao      |
-| `banhbao keys list`                        | List all keys                  |
-| `banhbao keys show <name>`                 | Show key details               |
-| `banhbao keys delete <name>`               | Delete key (with confirmation) |
-| `banhbao migrate import --from <path>`     | Import from local keyring      |
-| `banhbao migrate export --to <path> --key` | Export key to local file       |
-| `banhbao sign <file>`                      | Sign arbitrary file            |
+See [PLUGIN_DESIGN.md](./PLUGIN_DESIGN.md) for implementation details.
 
 ---
 
@@ -480,9 +415,7 @@ The following are explicitly **NOT** in scope for Phase 1:
 - Multi-signature support
 - Threshold signatures
 - Key sharding
-- Other signature algorithms (ed25519, sr25519)
-- Web UI (Phase 2)
-- Mobile applications (Phase 3)
+- Other signature algorithms (ed25519, sr25519) - available via plugins
 
 ---
 
@@ -497,9 +430,16 @@ The following are explicitly **NOT** in scope for Phase 1:
 
 ---
 
-## 12. Revision History
+## 12. About the Name
 
-| Version | Date       | Author | Changes                                           |
-| ------- | ---------- | ------ | ------------------------------------------------- |
-| 1.0     | 2025-01-XX | -      | Initial PRD                                       |
-| 1.1     | 2025-01-XX | -      | Added migration (import/export), UI, CLI sections |
+POPSigner (formerly BanhBaoRing) reflects a clearer articulation of what the system is: Point-of-Presence signing infrastructure.
+
+---
+
+## 13. Revision History
+
+| Version | Date | Author | Changes |
+| ------- | ---- | ------ | ------- |
+| 1.0 | 2025-01-XX | - | Initial PRD |
+| 1.1 | 2025-01-XX | - | Added migration, exit guarantee, CLI sections |
+| 2.0 | 2025-12-XX | - | Renamed to POPSigner, updated positioning |

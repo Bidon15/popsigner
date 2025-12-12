@@ -1,8 +1,8 @@
-# BanhBaoRing Rust SDK
+# POPSigner Rust SDK
 
-Official Rust SDK for the [BanhBaoRing](https://banhbaoring.io) Control Plane API.
+Official Rust SDK for the [POPSigner](https://popsigner.io) Control Plane API.
 
-BanhBaoRing provides secure key management for Celestia and Cosmos SDK applications. Keys are stored in OpenBao (Vault fork) and **never leave the secure enclave**.
+POPSigner is Point-of-Presence signing infrastructure. Keys are stored in OpenBao and **never leave the secure enclave**. You remain sovereign.
 
 ## Installation
 
@@ -10,20 +10,20 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-banhbaoring = "0.1"
+popsigner = "0.1"
 tokio = { version = "1", features = ["full"] }
 ```
 
 ## Quick Start
 
 ```rust
-use banhbaoring::{Client, CreateKeyRequest};
+use popsigner::{Client, CreateKeyRequest};
 use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a client with your API key
-    let client = Client::new("bbr_live_xxxxx");
+    let client = Client::new("psk_live_xxxxx");
     
     // Create a key
     let namespace_id = Uuid::parse_str("your-namespace-id")?;
@@ -35,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!("Created key: {} ({})", key.name, key.address);
     
-    // Sign data
+    // Sign inline with your execution
     let data = b"transaction data";
     let result = client.sign().sign(&key.id, data, false).await?;
     println!("Signature: {} bytes", result.signature.len());
@@ -49,26 +49,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 | Feature | Description |
 |---------|-------------|
 | **Authentication** | API key authentication |
-| **Key Management** | Create, get, list, delete keys |
+| **Key Management** | Create, get, list, delete, export keys |
 | **Batch Operations** | Create and sign in batches |
-| **Signing** | Sign data with secp256k1 keys |
+| **Signing** | Sign data inline with secp256k1 keys |
 | **Organizations** | Manage organizations and namespaces |
 | **Audit Logs** | Access audit logs for compliance |
+| **Exit Guarantee** | Export keys anytime—sovereignty by default |
 
-## Parallel Workers (Celestia Pattern)
+## Parallel Workers Pattern
 
-For high-throughput blob submission, use batch operations:
+For worker-native workloads, use batch operations:
 
 ```rust
-use banhbaoring::{Client, CreateBatchRequest, BatchSignRequest, BatchSignItem};
+use popsigner::{Client, CreateBatchRequest, BatchSignRequest, BatchSignItem};
 use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = Client::new("bbr_live_xxxxx");
+    let client = Client::new("psk_live_xxxxx");
     let namespace_id = Uuid::parse_str("...")?;
     
-    // Create 4 worker keys in one API call
+    // Create worker keys in one API call
     let keys = client.keys().create_batch(CreateBatchRequest {
         prefix: "blob-worker".to_string(),
         count: 4,
@@ -77,7 +78,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }).await?;
     // Creates: blob-worker-1, blob-worker-2, blob-worker-3, blob-worker-4
     
-    // Sign 4 transactions in parallel with one API call
+    // Sign transactions in parallel with one API call
     let transactions = vec![b"tx1".to_vec(), b"tx2".to_vec(), b"tx3".to_vec(), b"tx4".to_vec()];
     
     let results = client.sign().sign_batch(BatchSignRequest {
@@ -90,7 +91,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }).collect(),
     }).await?;
     
-    // All 4 signed in parallel - completes in ~200ms, not 800ms!
     println!("Signed {} transactions", results.len());
     Ok(())
 }
@@ -99,15 +99,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ## Client Configuration
 
 ```rust
-use banhbaoring::{Client, ClientConfig};
+use popsigner::{Client, ClientConfig};
 use std::time::Duration;
 
 // Default configuration
-let client = Client::new("bbr_live_xxxxx");
+let client = Client::new("psk_live_xxxxx");
 
 // Custom configuration
-let client = Client::with_config("bbr_live_xxxxx", ClientConfig {
-    base_url: Some("https://api.staging.banhbaoring.io".to_string()),
+let client = Client::with_config("psk_live_xxxxx", ClientConfig {
+    base_url: Some("https://api.staging.popsigner.io".to_string()),
     timeout: Some(Duration::from_secs(60)),
     user_agent: Some("my-app/1.0".to_string()),
 });
@@ -115,24 +115,24 @@ let client = Client::with_config("bbr_live_xxxxx", ClientConfig {
 
 ## Error Handling
 
-All operations return `Result<T, BanhBaoRingError>`:
+All operations return `Result<T, POPSignerError>`:
 
 ```rust
-use banhbaoring::{Client, BanhBaoRingError};
+use popsigner::{Client, POPSignerError};
 
 #[tokio::main]
 async fn main() {
-    let client = Client::new("bbr_live_xxxxx");
+    let client = Client::new("psk_live_xxxxx");
     
     match client.keys().list(None).await {
         Ok(keys) => println!("Found {} keys", keys.len()),
-        Err(BanhBaoRingError::Unauthorized) => {
+        Err(POPSignerError::Unauthorized) => {
             println!("Invalid API key");
         }
-        Err(BanhBaoRingError::RateLimited) => {
-            println!("Rate limited - implement backoff");
+        Err(POPSignerError::RateLimited) => {
+            println!("Rate limited—implement backoff");
         }
-        Err(BanhBaoRingError::QuotaExceeded(msg)) => {
+        Err(POPSignerError::QuotaExceeded(msg)) => {
             println!("Quota exceeded: {}", msg);
         }
         Err(e) if e.is_retryable() => {
@@ -194,12 +194,15 @@ client.keys().list(Some(&namespace_id)).await?;
 
 // Delete a key
 client.keys().delete(&key_id).await?;
+
+// Export a key (exit guarantee)
+client.keys().export(&key_id).await?;
 ```
 
 ### SignClient
 
 ```rust
-// Sign data
+// Sign data inline
 client.sign().sign(&key_id, &data, false).await?;
 
 // Sign pre-hashed data
@@ -254,7 +257,7 @@ Run examples with:
 
 ```bash
 # Set environment variables
-export BANHBAORING_API_KEY=bbr_live_xxxxx
+export POPSIGNER_API_KEY=psk_live_xxxxx
 export NAMESPACE_ID=your-namespace-uuid
 
 # Run basic example
@@ -280,7 +283,6 @@ MIT OR Apache-2.0
 
 ## Links
 
-- [BanhBaoRing Documentation](https://docs.banhbaoring.io)
-- [API Reference](https://docs.banhbaoring.io/api)
-- [GitHub Repository](https://github.com/banhbaoring/sdk-rust)
-
+- [POPSigner Documentation](https://docs.popsigner.io)
+- [API Reference](https://docs.popsigner.io/api)
+- [GitHub Repository](https://github.com/popsigner/sdk-rust)

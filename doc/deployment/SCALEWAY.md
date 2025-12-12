@@ -1,6 +1,6 @@
-# Deploying BanhBaoRing to Scaleway Kubernetes
+# Deploying POPSigner to Scaleway Kubernetes
 
-This guide walks you through deploying the complete BanhBaoRing stack to Scaleway Kapsule (managed Kubernetes).
+This guide walks you through deploying the complete POPSigner stack to Scaleway Kapsule (managed Kubernetes).
 
 ## Prerequisites
 
@@ -21,7 +21,7 @@ This guide walks you through deploying the complete BanhBaoRing stack to Scalewa
 ```bash
 # Create a Kubernetes cluster
 scw k8s cluster create \
-  name=banhbaoring \
+  name=popsigner \
   version=1.29 \
   cni=cilium \
   pools.0.name=default \
@@ -46,13 +46,13 @@ kubectl get nodes
 ### Via Console
 
 1. Go to **Scaleway Console** → **Kubernetes** → **Create Cluster**
-2. Name: `banhbaoring`
-3. Region: `fr-par` (or closest to you)
+2. Name: `popsigner`
+3. Region: `fr-par` (or closest to your execution infrastructure)
 4. Kubernetes version: `1.29`
 5. CNI: `Cilium`
 6. Node pool:
    - Name: `default`
-   - Node type: `DEV1-M` (3 vCPU, 4GB RAM) - good for testing
+   - Node type: `DEV1-M` (3 vCPU, 4GB RAM)
    - Size: 3 nodes
    - Autoscaling: 2-5 nodes
 7. Click **Create Cluster**
@@ -64,7 +64,7 @@ kubectl get nodes
 ```bash
 # Create registry
 scw registry namespace create \
-  name=banhbaoring \
+  name=popsigner \
   region=fr-par \
   is-public=false
 
@@ -72,26 +72,26 @@ scw registry namespace create \
 scw registry login
 ```
 
-Note your registry endpoint: `rg.fr-par.scw.cloud/banhbaoring`
+Note your registry endpoint: `rg.fr-par.scw.cloud/popsigner`
 
 ---
 
 ## 3. Build and Push Images
 
 ```bash
-cd /path/to/banhbaoring
+cd /path/to/popsigner
 
 # Set your registry
-export REGISTRY=rg.fr-par.scw.cloud/banhbaoring
+export REGISTRY=rg.fr-par.scw.cloud/popsigner
 export VERSION=v0.1.0
 
 # Build images
 make docker-build
 
 # Tag for Scaleway
-docker tag ghcr.io/bidon15/banhbaoring-operator:dev $REGISTRY/operator:$VERSION
-docker tag ghcr.io/bidon15/banhbaoring-control-plane:dev $REGISTRY/control-plane:$VERSION
-docker tag ghcr.io/bidon15/banhbaoring-secp256k1:dev $REGISTRY/secp256k1-plugin:$VERSION
+docker tag ghcr.io/bidon15/popsigner-operator:dev $REGISTRY/operator:$VERSION
+docker tag ghcr.io/bidon15/popsigner-control-plane:dev $REGISTRY/control-plane:$VERSION
+docker tag ghcr.io/bidon15/popsigner-secp256k1:dev $REGISTRY/secp256k1-plugin:$VERSION
 
 # Push to Scaleway
 docker push $REGISTRY/operator:$VERSION
@@ -129,11 +129,11 @@ EOF
 
 ```bash
 # Create namespace
-kubectl create namespace banhbaoring
+kubectl create namespace popsigner
 
 # Create secrets (replace with your values!)
-kubectl create secret generic banhbaoring-config \
-  --namespace banhbaoring \
+kubectl create secret generic popsigner-config \
+  --namespace popsigner \
   --from-literal=jwt-secret="$(openssl rand -base64 32)" \
   --from-literal=oauth-github-id="YOUR_GITHUB_CLIENT_ID" \
   --from-literal=oauth-github-secret="YOUR_GITHUB_CLIENT_SECRET" \
@@ -146,24 +146,24 @@ kubectl create secret generic banhbaoring-config \
 ```bash
 # PostgreSQL credentials
 kubectl create secret generic postgresql-credentials \
-  --namespace banhbaoring \
+  --namespace popsigner \
   --from-literal=postgres-password="$(openssl rand -base64 24)" \
   --from-literal=password="$(openssl rand -base64 24)"
 
 # Redis credentials
 kubectl create secret generic redis-credentials \
-  --namespace banhbaoring \
+  --namespace popsigner \
   --from-literal=redis-password="$(openssl rand -base64 24)"
 ```
 
 ---
 
-## 6. Install BanhBaoRing Operator
+## 6. Install POPSigner Operator
 
 ```bash
-# Add Helm repo (if published) or install from local
-helm install banhbaoring-operator ./operator/charts/banhbaoring-operator \
-  --namespace banhbaoring-system \
+# Install from local charts
+helm install popsigner-operator ./operator/charts/popsigner-operator \
+  --namespace popsigner-system \
   --create-namespace \
   --set image.repository=$REGISTRY/operator \
   --set image.tag=$VERSION \
@@ -173,22 +173,22 @@ helm install banhbaoring-operator ./operator/charts/banhbaoring-operator \
   --set openbaoPluginImage.tag=$VERSION
 
 # Verify operator is running
-kubectl get pods -n banhbaoring-system
+kubectl get pods -n popsigner-system
 ```
 
 ---
 
-## 7. Deploy BanhBaoRing Cluster
+## 7. Deploy POPSigner Cluster
 
 Create the cluster resource:
 
 ```bash
 kubectl apply -f - <<EOF
-apiVersion: banhbaoring.io/v1alpha1
-kind: BanhBaoRingCluster
+apiVersion: popsigner.io/v1alpha1
+kind: POPSignerCluster
 metadata:
   name: production
-  namespace: banhbaoring
+  namespace: popsigner
 spec:
   # OpenBao Configuration
   openbao:
@@ -201,7 +201,7 @@ spec:
       # transit:
       #   address: https://external-vault.example.com
       #   mount: transit
-      #   keyName: banhbaoring-unseal
+      #   keyName: popsigner-unseal
 
   # PostgreSQL (Scaleway Managed Database recommended for production)
   database:
@@ -216,7 +216,7 @@ spec:
     # external:
     #   host: YOUR_MANAGED_DB.rdb.fr-par.scw.cloud
     #   port: 5432
-    #   database: banhbaoring
+    #   database: popsigner
     #   credentialsSecret: postgresql-external-credentials
 
   # Redis
@@ -235,7 +235,7 @@ spec:
       repository: $REGISTRY/control-plane
       tag: $VERSION
     config:
-      secretName: banhbaoring-config
+      secretName: popsigner-config
     resources:
       requests:
         cpu: 100m
@@ -278,17 +278,17 @@ kubectl apply -f - <<EOF
 apiVersion: v1
 kind: Service
 metadata:
-  name: banhbaoring-lb
-  namespace: banhbaoring
+  name: popsigner-lb
+  namespace: popsigner
   annotations:
     # Scaleway Load Balancer annotations
-    service.beta.kubernetes.io/scw-loadbalancer-type: lb-s  # Small LB
+    service.beta.kubernetes.io/scw-loadbalancer-type: lb-s
     service.beta.kubernetes.io/scw-loadbalancer-protocol-http: "true"
     service.beta.kubernetes.io/scw-loadbalancer-use-hostname: "true"
 spec:
   type: LoadBalancer
   selector:
-    app: banhbaoring-control-plane
+    app: popsigner-control-plane
   ports:
     - name: http
       port: 80
@@ -299,7 +299,7 @@ spec:
 EOF
 
 # Get Load Balancer IP
-kubectl get svc banhbaoring-lb -n banhbaoring -w
+kubectl get svc popsigner-lb -n popsigner -w
 ```
 
 ---
@@ -346,8 +346,8 @@ kubectl apply -f - <<EOF
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: banhbaoring
-  namespace: banhbaoring
+  name: popsigner
+  namespace: popsigner
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
@@ -355,28 +355,28 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - api.banhbaoring.example.com
-        - dashboard.banhbaoring.example.com
-      secretName: banhbaoring-tls
+        - api.popsigner.example.com
+        - dashboard.popsigner.example.com
+      secretName: popsigner-tls
   rules:
-    - host: api.banhbaoring.example.com
+    - host: api.popsigner.example.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: banhbaoring-control-plane
+                name: popsigner-control-plane
                 port:
                   number: 8080
-    - host: dashboard.banhbaoring.example.com
+    - host: dashboard.popsigner.example.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: banhbaoring-dashboard
+                name: popsigner-dashboard
                 port:
                   number: 3000
 EOF
@@ -392,13 +392,13 @@ After getting your domain, update OAuth apps:
 
 1. Go to https://github.com/settings/developers
 2. Edit your OAuth App
-3. Set **Authorization callback URL**: `https://api.banhbaoring.example.com/auth/github/callback`
+3. Set **Authorization callback URL**: `https://api.popsigner.example.com/auth/github/callback`
 
 ### Google
 
 1. Go to https://console.cloud.google.com/apis/credentials
 2. Edit your OAuth 2.0 Client
-3. Add **Authorized redirect URIs**: `https://api.banhbaoring.example.com/auth/google/callback`
+3. Add **Authorized redirect URIs**: `https://api.popsigner.example.com/auth/google/callback`
 
 ---
 
@@ -408,7 +408,7 @@ If not using auto-unseal, manually initialize and unseal:
 
 ```bash
 # Port-forward to OpenBao
-kubectl port-forward svc/production-openbao -n banhbaoring 8200:8200 &
+kubectl port-forward svc/production-openbao -n popsigner 8200:8200 &
 
 # Initialize
 export VAULT_ADDR=http://localhost:8200
@@ -431,16 +431,16 @@ vault status
 
 ```bash
 # Check all pods are running
-kubectl get pods -n banhbaoring
+kubectl get pods -n popsigner
 
 # Check services
-kubectl get svc -n banhbaoring
+kubectl get svc -n popsigner
 
 # Test API endpoint
-curl https://api.banhbaoring.example.com/health
+curl https://api.popsigner.example.com/health
 
 # Test dashboard
-open https://dashboard.banhbaoring.example.com
+open https://dashboard.popsigner.example.com
 ```
 
 ---
@@ -469,23 +469,23 @@ For production, consider:
 
 ```bash
 # Check pod status
-kubectl describe pod <pod-name> -n banhbaoring
+kubectl describe pod <pod-name> -n popsigner
 
 # Check logs
-kubectl logs <pod-name> -n banhbaoring
+kubectl logs <pod-name> -n popsigner
 
 # Check events
-kubectl get events -n banhbaoring --sort-by='.lastTimestamp'
+kubectl get events -n popsigner --sort-by='.lastTimestamp'
 ```
 
 ### OpenBao sealed
 
 ```bash
 # Check seal status
-kubectl exec -it production-openbao-0 -n banhbaoring -- vault status
+kubectl exec -it production-openbao-0 -n popsigner -- vault status
 
 # Unseal manually
-kubectl exec -it production-openbao-0 -n banhbaoring -- vault operator unseal
+kubectl exec -it production-openbao-0 -n popsigner -- vault operator unseal
 ```
 
 ### Database connection issues
@@ -493,7 +493,7 @@ kubectl exec -it production-openbao-0 -n banhbaoring -- vault operator unseal
 ```bash
 # Test PostgreSQL connection
 kubectl run pg-test --rm -it --image=postgres:15 -- \
-  psql "postgresql://user:pass@production-postgresql:5432/banhbaoring"
+  psql "postgresql://user:pass@production-postgresql:5432/popsigner"
 ```
 
 ---
@@ -502,13 +502,13 @@ kubectl run pg-test --rm -it --image=postgres:15 -- \
 
 ```bash
 # Delete cluster resources
-kubectl delete banhbaoringcluster production -n banhbaoring
+kubectl delete popsignercluster production -n popsigner
 
 # Uninstall operator
-helm uninstall banhbaoring-operator -n banhbaoring-system
+helm uninstall popsigner-operator -n popsigner-system
 
 # Delete namespaces
-kubectl delete namespace banhbaoring banhbaoring-system
+kubectl delete namespace popsigner popsigner-system
 
 # Delete Kapsule cluster (if no longer needed)
 scw k8s cluster delete <cluster-id>
@@ -518,7 +518,7 @@ scw k8s cluster delete <cluster-id>
 
 ## Next Steps
 
-1. **Set up monitoring alerts** - Configure Grafana alerts for key metrics
-2. **Enable backups** - Set up scheduled backups to Scaleway Object Storage
-3. **Production hardening** - Switch to managed PostgreSQL, enable auto-unseal with cloud KMS
-4. **Scale testing** - Test with parallel worker load
+1. **Set up monitoring alerts** — Configure Grafana alerts for key metrics
+2. **Enable backups** — Set up scheduled backups to Scaleway Object Storage
+3. **Production hardening** — Switch to managed PostgreSQL, enable auto-unseal with cloud KMS
+4. **Region selection** — Deploy POPSigner in the same region as your execution infrastructure
