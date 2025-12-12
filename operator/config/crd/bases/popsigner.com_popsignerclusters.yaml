@@ -1,0 +1,859 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.5
+  name: popsignerclusters.popsigner.com
+spec:
+  group: popsigner.com
+  names:
+    kind: POPSignerCluster
+    listKind: POPSignerClusterList
+    plural: popsignerclusters
+    singular: popsignercluster
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .status.openbao.replicas
+      name: OpenBao
+      type: string
+    - jsonPath: .status.api.replicas
+      name: API
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: POPSignerCluster is the Schema for the popsignerclusters
+          API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: POPSignerClusterSpec defines the desired state
+            properties:
+              api:
+                default: {}
+                description: Control Plane API configuration
+                properties:
+                  autoscaling:
+                    description: AutoscalingSpec configures horizontal pod autoscaling
+                    properties:
+                      enabled:
+                        type: boolean
+                      maxReplicas:
+                        format: int32
+                        type: integer
+                      minReplicas:
+                        format: int32
+                        type: integer
+                      targetCPU:
+                        format: int32
+                        type: integer
+                    type: object
+                  image:
+                    description: Image overrides the default image (e.g., "rg.nl-ams.scw.cloud/banhbao/control-plane")
+                    type: string
+                  replicas:
+                    default: 2
+                    format: int32
+                    type: integer
+                  resources:
+                    description: ResourceRequirements describes the compute resource
+                      requirements.
+                    properties:
+                      claims:
+                        description: |-
+                          Claims lists the names of resources, defined in spec.resourceClaims,
+                          that are used by this container.
+
+                          This field depends on the
+                          DynamicResourceAllocation feature gate.
+
+                          This field is immutable. It can only be set for containers.
+                        items:
+                          description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                          properties:
+                            name:
+                              description: |-
+                                Name must match the name of one entry in pod.spec.resourceClaims of
+                                the Pod where this field is used. It makes that resource available
+                                inside a container.
+                              type: string
+                            request:
+                              description: |-
+                                Request is the name chosen for a request in the referenced claim.
+                                If empty, everything from the claim is made available, otherwise
+                                only the result of this request.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
+                      limits:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: |-
+                          Limits describes the maximum amount of compute resources allowed.
+                          More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                        type: object
+                      requests:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: |-
+                          Requests describes the minimum amount of compute resources required.
+                          If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+                          otherwise to an implementation-defined value. Requests cannot exceed Limits.
+                          More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                        type: object
+                    type: object
+                  version:
+                    default: 1.0.0
+                    type: string
+                type: object
+              backup:
+                default: {}
+                description: Backup configuration
+                properties:
+                  destination:
+                    description: BackupDestination configures backup storage location
+                    properties:
+                      gcs:
+                        description: GCSDestination configures Google Cloud Storage
+                        properties:
+                          bucket:
+                            type: string
+                          credentials:
+                            description: SecretKeyRef references a key in a Secret
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                          prefix:
+                            type: string
+                        required:
+                        - bucket
+                        - credentials
+                        type: object
+                      s3:
+                        description: S3Destination configures S3-compatible storage
+                        properties:
+                          bucket:
+                            type: string
+                          credentials:
+                            description: SecretKeyRef references a key in a Secret
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                          prefix:
+                            type: string
+                          region:
+                            type: string
+                        required:
+                        - bucket
+                        - credentials
+                        type: object
+                    type: object
+                  enabled:
+                    type: boolean
+                  retention:
+                    default: 30
+                    description: Retention in days
+                    format: int32
+                    type: integer
+                  schedule:
+                    default: 0 2 * * *
+                    description: 'Cron schedule (default: daily at 2 AM UTC)'
+                    type: string
+                type: object
+              billing:
+                default: {}
+                description: Billing configuration
+                properties:
+                  stripe:
+                    description: StripeSpec configures Stripe integration
+                    properties:
+                      enabled:
+                        type: boolean
+                      secretKeyRef:
+                        description: SecretKeyRef references a key in a Secret
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - key
+                        - name
+                        type: object
+                      webhookSecretRef:
+                        description: SecretKeyRef references a key in a Secret
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - key
+                        - name
+                        type: object
+                    type: object
+                type: object
+              dashboard:
+                default: {}
+                description: Web Dashboard configuration
+                properties:
+                  image:
+                    description: Image overrides the default image (e.g., "rg.nl-ams.scw.cloud/banhbao/dashboard")
+                    type: string
+                  replicas:
+                    default: 2
+                    format: int32
+                    type: integer
+                  resources:
+                    description: ResourceRequirements describes the compute resource
+                      requirements.
+                    properties:
+                      claims:
+                        description: |-
+                          Claims lists the names of resources, defined in spec.resourceClaims,
+                          that are used by this container.
+
+                          This field depends on the
+                          DynamicResourceAllocation feature gate.
+
+                          This field is immutable. It can only be set for containers.
+                        items:
+                          description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                          properties:
+                            name:
+                              description: |-
+                                Name must match the name of one entry in pod.spec.resourceClaims of
+                                the Pod where this field is used. It makes that resource available
+                                inside a container.
+                              type: string
+                            request:
+                              description: |-
+                                Request is the name chosen for a request in the referenced claim.
+                                If empty, everything from the claim is made available, otherwise
+                                only the result of this request.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
+                      limits:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: |-
+                          Limits describes the maximum amount of compute resources allowed.
+                          More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                        type: object
+                      requests:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: |-
+                          Requests describes the minimum amount of compute resources required.
+                          If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+                          otherwise to an implementation-defined value. Requests cannot exceed Limits.
+                          More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                        type: object
+                    type: object
+                  version:
+                    default: 1.0.0
+                    type: string
+                type: object
+              database:
+                default: {}
+                description: Database configuration
+                properties:
+                  connectionString:
+                    description: External database connection string
+                    properties:
+                      key:
+                        type: string
+                      name:
+                        type: string
+                    required:
+                    - key
+                    - name
+                    type: object
+                  managed:
+                    default: true
+                    description: Deploy managed PostgreSQL (true) or use external
+                      (false)
+                    type: boolean
+                  replicas:
+                    default: 1
+                    format: int32
+                    type: integer
+                  storage:
+                    description: StorageSpec configures persistent storage
+                    properties:
+                      size:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        default: 10Gi
+                        pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                        x-kubernetes-int-or-string: true
+                      storageClass:
+                        description: StorageClass name
+                        type: string
+                    type: object
+                  version:
+                    default: "16"
+                    type: string
+                type: object
+              domain:
+                description: Domain for the cluster endpoints (e.g., keys.mycompany.com)
+                type: string
+              monitoring:
+                default: {}
+                description: Monitoring configuration
+                properties:
+                  alerting:
+                    description: AlertingSpec configures alerting
+                    properties:
+                      enabled:
+                        type: boolean
+                      pagerduty:
+                        description: PagerDutySpec configures PagerDuty alerting
+                        properties:
+                          routingKey:
+                            description: SecretKeyRef references a key in a Secret
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                        required:
+                        - routingKey
+                        type: object
+                      slack:
+                        description: SlackAlertSpec configures Slack alerting
+                        properties:
+                          webhookUrl:
+                            description: SecretKeyRef references a key in a Secret
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                        required:
+                        - webhookUrl
+                        type: object
+                    type: object
+                  enabled:
+                    type: boolean
+                  grafana:
+                    description: GrafanaSpec configures Grafana
+                    properties:
+                      adminPassword:
+                        description: SecretKeyRef references a key in a Secret
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - key
+                        - name
+                        type: object
+                      enabled:
+                        type: boolean
+                    type: object
+                  prometheus:
+                    description: PrometheusSpec configures Prometheus
+                    properties:
+                      retention:
+                        default: 15d
+                        type: string
+                      storage:
+                        description: StorageSpec configures persistent storage
+                        properties:
+                          size:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            default: 10Gi
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          storageClass:
+                            description: StorageClass name
+                            type: string
+                        type: object
+                    type: object
+                type: object
+              openbao:
+                default: {}
+                description: OpenBao configuration
+                properties:
+                  autoUnseal:
+                    description: Auto-unseal configuration
+                    properties:
+                      awskms:
+                        description: AWS KMS configuration
+                        properties:
+                          credentials:
+                            description: Reference to secret containing access credentials
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                          keyId:
+                            type: string
+                          region:
+                            type: string
+                        required:
+                        - keyId
+                        type: object
+                      azurekv:
+                        description: Azure Key Vault configuration
+                        properties:
+                          credentials:
+                            description: Reference to secret containing Azure credentials
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                          keyName:
+                            type: string
+                          tenantId:
+                            type: string
+                          vaultName:
+                            type: string
+                        required:
+                        - keyName
+                        - tenantId
+                        - vaultName
+                        type: object
+                      enabled:
+                        default: false
+                        description: Enable auto-unseal
+                        type: boolean
+                      gcpkms:
+                        description: GCP Cloud KMS configuration
+                        properties:
+                          credentials:
+                            description: Reference to secret containing service account
+                              key
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                          cryptoKey:
+                            type: string
+                          keyRing:
+                            type: string
+                          location:
+                            type: string
+                          project:
+                            type: string
+                        required:
+                        - cryptoKey
+                        - keyRing
+                        - location
+                        - project
+                        type: object
+                      provider:
+                        description: 'Provider type: awskms, gcpkms, azurekv, transit'
+                        enum:
+                        - awskms
+                        - gcpkms
+                        - azurekv
+                        - transit
+                        type: string
+                      transit:
+                        description: Transit (another Vault) configuration
+                        properties:
+                          address:
+                            type: string
+                          keyName:
+                            type: string
+                          mountPath:
+                            type: string
+                          token:
+                            description: SecretKeyRef references a key in a Secret
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                        required:
+                        - address
+                        - keyName
+                        - token
+                        type: object
+                    type: object
+                  plugin:
+                    description: Plugin configuration
+                    properties:
+                      version:
+                        default: 1.0.0
+                        type: string
+                    type: object
+                  replicas:
+                    default: 3
+                    format: int32
+                    minimum: 1
+                    type: integer
+                  resources:
+                    description: Resource requirements
+                    properties:
+                      claims:
+                        description: |-
+                          Claims lists the names of resources, defined in spec.resourceClaims,
+                          that are used by this container.
+
+                          This field depends on the
+                          DynamicResourceAllocation feature gate.
+
+                          This field is immutable. It can only be set for containers.
+                        items:
+                          description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                          properties:
+                            name:
+                              description: |-
+                                Name must match the name of one entry in pod.spec.resourceClaims of
+                                the Pod where this field is used. It makes that resource available
+                                inside a container.
+                              type: string
+                            request:
+                              description: |-
+                                Request is the name chosen for a request in the referenced claim.
+                                If empty, everything from the claim is made available, otherwise
+                                only the result of this request.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
+                      limits:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: |-
+                          Limits describes the maximum amount of compute resources allowed.
+                          More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                        type: object
+                      requests:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: |-
+                          Requests describes the minimum amount of compute resources required.
+                          If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+                          otherwise to an implementation-defined value. Requests cannot exceed Limits.
+                          More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                        type: object
+                    type: object
+                  storage:
+                    description: Storage configuration
+                    properties:
+                      size:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        default: 10Gi
+                        pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                        x-kubernetes-int-or-string: true
+                      storageClass:
+                        description: StorageClass name
+                        type: string
+                    type: object
+                  tls:
+                    description: TLS configuration
+                    properties:
+                      issuer:
+                        description: cert-manager issuer name
+                        type: string
+                      secretName:
+                        description: Or use existing secret
+                        type: string
+                    type: object
+                  version:
+                    default: 2.0.0
+                    type: string
+                type: object
+              redis:
+                default: {}
+                description: Redis configuration
+                properties:
+                  managed:
+                    default: true
+                    type: boolean
+                  mode:
+                    default: standalone
+                    description: standalone or cluster
+                    enum:
+                    - standalone
+                    - cluster
+                    type: string
+                  replicas:
+                    default: 1
+                    format: int32
+                    type: integer
+                  storage:
+                    description: StorageSpec configures persistent storage
+                    properties:
+                      size:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        default: 10Gi
+                        pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                        x-kubernetes-int-or-string: true
+                      storageClass:
+                        description: StorageClass name
+                        type: string
+                    type: object
+                  version:
+                    default: "7"
+                    type: string
+                type: object
+            required:
+            - domain
+            type: object
+          status:
+            description: POPSignerClusterStatus defines the observed state
+            properties:
+              api:
+                description: ComponentStatus represents the status of a cluster component
+                properties:
+                  message:
+                    type: string
+                  ready:
+                    type: boolean
+                  replicas:
+                    description: 'For StatefulSets: "2/3" format'
+                    type: string
+                  version:
+                    type: string
+                type: object
+              conditions:
+                description: Conditions
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              dashboard:
+                description: ComponentStatus represents the status of a cluster component
+                properties:
+                  message:
+                    type: string
+                  ready:
+                    type: boolean
+                  replicas:
+                    description: 'For StatefulSets: "2/3" format'
+                    type: string
+                  version:
+                    type: string
+                type: object
+              database:
+                description: ComponentStatus represents the status of a cluster component
+                properties:
+                  message:
+                    type: string
+                  ready:
+                    type: boolean
+                  replicas:
+                    description: 'For StatefulSets: "2/3" format'
+                    type: string
+                  version:
+                    type: string
+                type: object
+              endpoints:
+                description: Access endpoints
+                properties:
+                  api:
+                    type: string
+                  dashboard:
+                    type: string
+                  grafana:
+                    type: string
+                  openbao:
+                    type: string
+                type: object
+              observedGeneration:
+                description: ObservedGeneration
+                format: int64
+                type: integer
+              openbao:
+                description: Component statuses
+                properties:
+                  message:
+                    type: string
+                  ready:
+                    type: boolean
+                  replicas:
+                    description: 'For StatefulSets: "2/3" format'
+                    type: string
+                  version:
+                    type: string
+                type: object
+              phase:
+                default: Pending
+                description: 'Current phase: Pending, Initializing, Running, Degraded,
+                  Failed'
+                type: string
+              redis:
+                description: ComponentStatus represents the status of a cluster component
+                properties:
+                  message:
+                    type: string
+                  ready:
+                    type: boolean
+                  replicas:
+                    description: 'For StatefulSets: "2/3" format'
+                    type: string
+                  version:
+                    type: string
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -1,0 +1,236 @@
+package pages
+
+import (
+	"fmt"
+	"github.com/Bidon15/banhbaoring/control-plane/internal/models"
+	"github.com/Bidon15/banhbaoring/control-plane/templates/layouts"
+)
+
+// DashboardData holds all data needed for the dashboard page
+type DashboardData struct {
+	User            *models.User
+	KeyCount        int
+	SignatureCount  int
+	APICallCount    int
+	SignatureLimit  int
+}
+
+// DashboardPage renders the main dashboard for authenticated users - 80s CRT terminal aesthetic
+templ DashboardPage(data DashboardData) {
+	@layouts.Base("Dashboard", true, false) {
+		<div class="min-h-screen bg-black font-mono">
+			<!-- Header -->
+			<header class="border-b border-[#333300] bg-black sticky top-0 z-50">
+				<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+					<div class="flex items-center justify-between h-16">
+						<!-- Logo -->
+						<div class="flex items-center gap-3">
+							<a href="/dashboard" class="flex items-center gap-2 group">
+								<span class="text-[#FFB000] text-xl group-hover:drop-shadow-[0_0_10px_#FFB000] transition-all">◇</span>
+								<span class="text-lg font-bold text-[#FFB000] uppercase tracking-wider">POPSIGNER</span>
+							</a>
+						</div>
+						
+						<!-- User menu -->
+						<div class="flex items-center gap-4">
+							<span class="text-sm text-[#33FF00] uppercase">
+								{ getUserDisplayName(data.User) }
+							</span>
+							if data.User.AvatarURL != nil && *data.User.AvatarURL != "" {
+								<img src={ *data.User.AvatarURL } alt="Avatar" class="w-8 h-8 border border-[#33FF00]"/>
+							} else {
+								<div class="w-8 h-8 bg-[#33FF00] flex items-center justify-center text-black font-bold text-sm">
+									{ getInitial(data.User) }
+								</div>
+							}
+							<form action="/logout" method="POST" class="inline">
+								<button type="submit" class="text-sm text-[#666600] hover:text-[#FFB000] transition-colors uppercase cursor-pointer">
+									LOGOUT
+								</button>
+							</form>
+						</div>
+					</div>
+				</div>
+			</header>
+			
+			<!-- Main content -->
+			<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+				<!-- Welcome section -->
+				<div class="mb-8">
+					<h1 class="text-3xl font-bold text-[#FFB000] mb-2 uppercase drop-shadow-[0_0_10px_#FFB000]">
+						&gt; WELCOME, { getFirstName(data.User) }_
+					</h1>
+					<p class="text-[#33FF00]">
+						MANAGE YOUR CRYPTOGRAPHIC KEYS SECURELY
+					</p>
+				</div>
+				
+				<!-- Quick stats -->
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+					<div class="bg-black border border-[#333300] p-6 hover:border-[#FFB000]/50 transition-colors">
+						<div class="flex items-center gap-3 mb-2">
+							<span class="text-[#33FF00] text-xl">🔑</span>
+							<span class="text-[#666600] text-sm uppercase">KEYS</span>
+						</div>
+						<div class="text-2xl font-bold text-[#33FF00] drop-shadow-[0_0_8px_#33FF00]">{ fmt.Sprintf("%d", data.KeyCount) }</div>
+						if data.KeyCount == 0 {
+							<a href="/keys" class="text-sm text-[#FFB000] hover:drop-shadow-[0_0_8px_#FFB000] transition-all uppercase">
+								CREATE FIRST KEY →
+							</a>
+						} else {
+							<a href="/keys" class="text-sm text-[#FFB000] hover:drop-shadow-[0_0_8px_#FFB000] transition-all uppercase">
+								MANAGE KEYS →
+							</a>
+						}
+					</div>
+					
+					<div class="bg-black border border-[#333300] p-6 hover:border-[#33FF00]/50 transition-colors">
+						<div class="flex items-center gap-3 mb-2">
+							<span class="text-[#33FF00] text-xl">✍</span>
+							<span class="text-[#666600] text-sm uppercase">SIGNATURES (THIS MONTH)</span>
+						</div>
+						<div class="text-2xl font-bold text-[#33FF00] drop-shadow-[0_0_8px_#33FF00]">{ fmt.Sprintf("%d", data.SignatureCount) }</div>
+						<span class="text-sm text-[#666600] uppercase">OF { fmt.Sprintf("%d", data.SignatureLimit) } FREE</span>
+					</div>
+					
+					<div class="bg-black border border-[#333300] p-6 hover:border-[#33FF00]/50 transition-colors">
+						<div class="flex items-center gap-3 mb-2">
+							<span class="text-[#33FF00] text-xl">📡</span>
+							<span class="text-[#666600] text-sm uppercase">API CALLS (THIS MONTH)</span>
+						</div>
+						<div class="text-2xl font-bold text-[#33FF00] drop-shadow-[0_0_8px_#33FF00]">{ fmt.Sprintf("%d", data.APICallCount) }</div>
+						<a href="/settings/api-keys" class="text-sm text-[#FFB000] hover:drop-shadow-[0_0_8px_#FFB000] transition-all uppercase">
+							CREATE API KEY →
+						</a>
+					</div>
+				</div>
+				
+				<!-- Quick actions -->
+				<div class="mb-8">
+					<h2 class="text-xl font-bold text-[#FFB000] mb-4 uppercase">&gt; QUICK_ACTIONS</h2>
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+						<a href="/keys/new" class="bg-black border border-[#333300] p-4 hover:border-[#FFB000] group cursor-pointer transition-all">
+							<div class="flex items-center gap-3">
+								<div class="w-10 h-10 border border-[#FFB000] flex items-center justify-center group-hover:bg-[#FFB000]/10 transition-colors">
+									<span class="text-xl">🔑</span>
+								</div>
+								<div>
+									<div class="font-medium text-[#FFB000] uppercase">CREATE_KEY</div>
+									<div class="text-sm text-[#666600]">GENERATE SIGNING KEY</div>
+								</div>
+							</div>
+						</a>
+						
+						<a href="/settings/api-keys" class="bg-black border border-[#333300] p-4 hover:border-[#33FF00] group cursor-pointer transition-all">
+							<div class="flex items-center gap-3">
+								<div class="w-10 h-10 border border-[#33FF00] flex items-center justify-center group-hover:bg-[#33FF00]/10 transition-colors">
+									<span class="text-xl">🔌</span>
+								</div>
+								<div>
+									<div class="font-medium text-[#33FF00] uppercase">API_KEYS</div>
+									<div class="text-sm text-[#666600]">MANAGE ACCESS</div>
+								</div>
+							</div>
+						</a>
+						
+						<a href="/docs" class="bg-black border border-[#333300] p-4 hover:border-[#33FF00] group cursor-pointer transition-all">
+							<div class="flex items-center gap-3">
+								<div class="w-10 h-10 border border-[#33FF00] flex items-center justify-center group-hover:bg-[#33FF00]/10 transition-colors">
+									<span class="text-xl">📚</span>
+								</div>
+								<div>
+									<div class="font-medium text-[#33FF00] uppercase">DOCS</div>
+									<div class="text-sm text-[#666600]">LEARN THE API</div>
+								</div>
+							</div>
+						</a>
+						
+						<a href="/settings/profile" class="bg-black border border-[#333300] p-4 hover:border-[#33FF00] group cursor-pointer transition-all">
+							<div class="flex items-center gap-3">
+								<div class="w-10 h-10 border border-[#33FF00] flex items-center justify-center group-hover:bg-[#33FF00]/10 transition-colors">
+									<span class="text-xl">⚙️</span>
+								</div>
+								<div>
+									<div class="font-medium text-[#33FF00] uppercase">SETTINGS</div>
+									<div class="text-sm text-[#666600]">PREFERENCES</div>
+								</div>
+							</div>
+						</a>
+					</div>
+				</div>
+				
+				<!-- Getting started guide -->
+				<div class="bg-black border border-[#333300] p-6">
+					<h2 class="text-xl font-bold text-[#FFB000] mb-4 uppercase">&gt; GETTING_STARTED</h2>
+					<div class="space-y-4">
+						<div class="flex items-start gap-4">
+							<div class="w-8 h-8 bg-[#33FF00] text-black flex items-center justify-center font-bold text-sm shrink-0">
+								1
+							</div>
+							<div>
+								<h3 class="font-medium text-[#33FF00] uppercase">CREATE YOUR FIRST KEY</h3>
+								<p class="text-sm text-[#666600]">GENERATE A SECP256K1 KEY FOR SIGNING CELESTIA OR COSMOS TRANSACTIONS.</p>
+							</div>
+						</div>
+						
+						<div class="flex items-start gap-4">
+							<div class="w-8 h-8 border border-[#666600] text-[#666600] flex items-center justify-center font-bold text-sm shrink-0">
+								2
+							</div>
+							<div>
+								<h3 class="font-medium text-[#33FF00] uppercase">GENERATE AN API KEY</h3>
+								<p class="text-sm text-[#666600]">CREATE CREDENTIALS TO AUTHENTICATE YOUR APPLICATION.</p>
+							</div>
+						</div>
+						
+						<div class="flex items-start gap-4">
+							<div class="w-8 h-8 border border-[#666600] text-[#666600] flex items-center justify-center font-bold text-sm shrink-0">
+								3
+							</div>
+							<div>
+								<h3 class="font-medium text-[#33FF00] uppercase">INTEGRATE THE SDK</h3>
+								<p class="text-sm text-[#666600]">USE OUR GO OR RUST SDK TO SIGN TRANSACTIONS FROM YOUR APPLICATION.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	}
+}
+
+// Helper functions for template
+func getUserDisplayName(user *models.User) string {
+	if user.Name != nil && *user.Name != "" {
+		return *user.Name
+	}
+	return user.Email
+}
+
+func getFirstName(user *models.User) string {
+	if user.Name != nil && *user.Name != "" {
+		name := *user.Name
+		for i, c := range name {
+			if c == ' ' {
+				return name[:i]
+			}
+		}
+		return name
+	}
+	// Return part before @ in email
+	email := user.Email
+	for i, c := range email {
+		if c == '@' {
+			return email[:i]
+		}
+	}
+	return email
+}
+
+func getInitial(user *models.User) string {
+	name := getUserDisplayName(user)
+	if len(name) > 0 {
+		return string([]rune(name)[0:1])
+	}
+	return "?"
+}

@@ -1,0 +1,13 @@
+apiVersion: popsigner.com/v1
+kind: POPSignerBackup
+metadata:
+  name: daily-backup
+  namespace: popsigner
+spec:
+  clusterRef:
+    name: production
+  type: full
+  components:
+    - openbao
+    - database
+    - secrets

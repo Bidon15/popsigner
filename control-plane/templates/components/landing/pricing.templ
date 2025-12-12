@@ -1,0 +1,178 @@
+package landing
+
+// Pricing renders the pricing tiers with CRT terminal aesthetic
+templ Pricing() {
+	<section id="pricing" class="py-24 px-4 sm:px-6 lg:px-8 bg-[#0a0a0a] font-mono relative overflow-hidden">
+		<!-- Scanlines -->
+		<div class="absolute inset-0 pointer-events-none opacity-20
+		            bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.3)_2px,rgba(0,0,0,0.3)_4px)]"></div>
+		
+		<!-- Amber phosphor glow - centered on pricing cards -->
+		<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[700px] 
+		            bg-[radial-gradient(ellipse_at_center,rgba(255,176,0,0.1)_0%,transparent_60%)] 
+		            blur-2xl pointer-events-none"></div>
+		
+		<!-- Vignette -->
+		<div class="absolute inset-0 pointer-events-none 
+		            bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.4)_100%)]"></div>
+		
+		<div class="relative max-w-5xl mx-auto z-10">
+			<div class="text-center mb-16">
+				<h2 class="text-2xl sm:text-3xl md:text-4xl text-[#FFB000] mb-4 uppercase tracking-wider
+				           drop-shadow-[0_0_10px_#FFB000]">
+					&gt; PRICING_
+				</h2>
+				<p class="text-[#666600] uppercase tracking-wide">
+					WE SELL PLACEMENT, NOT TRANSACTIONS.
+				</p>
+			</div>
+
+			<div class="grid md:grid-cols-3 gap-6 lg:gap-8">
+				@PricingTier(PricingTierData{
+					Name:        "SHARED",
+					Price:       "€49",
+					Period:      "/MO",
+					Description: "SHARED POP INFRASTRUCTURE",
+					Features:    []string{"SHARED POINT-OF-PRESENCE", "NO SLA", "PLUGINS INCLUDED", "EXIT GUARANTEE"},
+					Highlighted: false,
+					CTAText:     "[ START SHARED ]",
+					CTAHref:     "/signup?plan=shared",
+				})
+
+				@PricingTier(PricingTierData{
+					Name:        "PRIORITY",
+					Price:       "€499",
+					Period:      "/MO",
+					Description: "PRODUCTION WORKLOADS",
+					Features:    []string{"PRIORITY POP LANES", "REGION SELECTION", "99.9% SLA", "SELF-SERVE SCALING"},
+					Highlighted: true,
+					CTAText:     "[ DEPLOY PRIORITY ]",
+					CTAHref:     "/signup?plan=priority",
+				})
+
+				@PricingTier(PricingTierData{
+					Name:        "DEDICATED",
+					Price:       "€19,999",
+					Period:      "/MO",
+					Description: "DEDICATED INFRASTRUCTURE",
+					Features:    []string{"REGION-PINNED POP", "CPU ISOLATION", "99.99% SLA", "MANUAL ONBOARDING"},
+					Highlighted: false,
+					CTAText:     "[ CONTACT US ]",
+					CTAHref:     "/contact",
+				})
+			</div>
+
+			<!-- Self-host callout -->
+			<div class="mt-12 text-center">
+				<p class="text-[#228B22] uppercase text-sm tracking-wide">
+					SELF-HOST FOREVER. APACHE 2.0. 
+					<a href="https://github.com/Bidon15/banhbaoring" target="_blank" rel="noopener" class="text-[#33FF00] hover:drop-shadow-[0_0_5px_#33FF00] transition-all">
+						VIEW ON GITHUB →
+					</a>
+				</p>
+			</div>
+		</div>
+	</section>
+}
+
+type PricingTierData struct {
+	Name        string
+	Price       string
+	Period      string
+	Description string
+	Features    []string
+	Highlighted bool
+	CTAText     string
+	CTAHref     string
+}
+
+templ PricingTier(data PricingTierData) {
+	<div class={ pricingCardClasses(data.Highlighted) }>
+		<div class="mb-6">
+			<div class="flex items-center gap-3 mb-4">
+				<h3 class={ tierNameClasses(data.Highlighted) }>{ data.Name }</h3>
+				if data.Highlighted {
+					<span class="bg-[#FFB000] text-black text-xs px-2 py-1 uppercase font-bold tracking-wide whitespace-nowrap">
+						RECOMMENDED
+					</span>
+				}
+			</div>
+			<div class="flex items-baseline gap-1 mb-2">
+				<span class={ priceClasses(data.Highlighted) }>{ data.Price }</span>
+				if data.Period != "" {
+					<span class={ periodClasses(data.Highlighted) }>{ data.Period }</span>
+				}
+			</div>
+			<p class={ descClasses(data.Highlighted) }>{ data.Description }</p>
+		</div>
+
+		<ul class="space-y-3 mb-8">
+			for _, feature := range data.Features {
+				<li class={ featureClasses(data.Highlighted) }>
+					<span class={ bulletClasses(data.Highlighted) }>&gt;</span>
+					{ feature }
+				</li>
+			}
+		</ul>
+
+		<a href={ templ.SafeURL(data.CTAHref) } class={ pricingCTAClasses(data.Highlighted) }>
+			{ data.CTAText }
+		</a>
+	</div>
+}
+
+func pricingCardClasses(highlighted bool) string {
+	if highlighted {
+		return "relative p-8 bg-black border-2 border-[#FFB000] shadow-[0_0_20px_rgba(255,176,0,0.3)]"
+	}
+	return "relative p-8 bg-black border border-[#1A4D1A] hover:border-[#33FF00] transition-colors"
+}
+
+func tierNameClasses(highlighted bool) string {
+	if highlighted {
+		return "text-lg text-[#FFB000] uppercase tracking-wide"
+	}
+	return "text-lg text-[#228B22] uppercase tracking-wide"
+}
+
+func priceClasses(highlighted bool) string {
+	if highlighted {
+		return "text-4xl text-[#FFB000] font-bold drop-shadow-[0_0_15px_#FFB000]"
+	}
+	return "text-4xl text-[#33FF00] font-bold drop-shadow-[0_0_8px_#33FF00]"
+}
+
+func periodClasses(highlighted bool) string {
+	if highlighted {
+		return "text-lg text-[#CC8800]"
+	}
+	return "text-lg text-[#228B22]"
+}
+
+func descClasses(highlighted bool) string {
+	if highlighted {
+		return "text-sm text-[#CC8800]"
+	}
+	return "text-sm text-[#336633]"
+}
+
+func featureClasses(highlighted bool) string {
+	if highlighted {
+		return "flex items-center gap-2 text-sm text-[#FFB000] opacity-90"
+	}
+	return "flex items-center gap-2 text-sm text-[#33FF00] opacity-80"
+}
+
+func bulletClasses(highlighted bool) string {
+	if highlighted {
+		return "text-[#FFB000]"
+	}
+	return "text-[#33FF00]"
+}
+
+func pricingCTAClasses(highlighted bool) string {
+	if highlighted {
+		return "block w-full text-center bg-[#FFB000] text-black font-bold py-3 px-6 uppercase hover:bg-[#FFCC00] hover:shadow-[0_0_20px_#FFB000] transition-all duration-200"
+	}
+	return "block w-full text-center border border-[#228B22] py-3 px-6 text-[#33FF00] uppercase hover:bg-[#33FF00] hover:text-black transition-all duration-200"
+}

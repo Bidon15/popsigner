@@ -1,0 +1,487 @@
+// Package web provides HTTP handlers for the web dashboard.
+package web
+
+import (
+	"net/http"
+	"time"
+
+	"github.com/a-h/templ"
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+
+	"github.com/Bidon15/popsigner/control-plane/internal/models"
+	"github.com/Bidon15/popsigner/control-plane/internal/service"
+	"github.com/Bidon15/popsigner/control-plane/templates/layouts"
+	"github.com/Bidon15/popsigner/control-plane/templates/pages"
+)
+
+// ============================================
+// Settings Page Handlers Implementation
+// ============================================
+
+// SettingsProfile renders the profile settings page.
+func (h *WebHandler) SettingsProfile(w http.ResponseWriter, r *http.Request) {
+	user, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	// Build dashboard data
+	dashboardData := buildDashboardData(user, org, "/settings/profile")
+
+	// Build profile page data
+	data := pages.ProfilePageData{
+		DashboardData: dashboardData,
+		Email:         user.Email,
+		Name:          safeString(user.Name),
+		AvatarURL:     safeString(user.AvatarURL),
+		EmailVerified: user.EmailVerified,
+		OAuthProvider: safeString(user.OAuthProvider),
+	}
+
+	// Render based on request type
+	if r.Header.Get("HX-Request") == "true" {
+		// HTMX partial update
+		component := pages.SettingsProfilePage(data)
+		templ.Handler(component).ServeHTTP(w, r)
+	} else {
+		component := pages.SettingsProfilePage(data)
+		templ.Handler(component).ServeHTTP(w, r)
+	}
+}
+
+// SettingsProfileUpdate handles profile update.
+func (h *WebHandler) SettingsProfileUpdate(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	user, _, err := h.getUserAndOrg(r)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Session expired", "type": "error"}}`)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	name := r.FormValue("name")
+
+	req := service.UpdateProfileRequest{
+		Name: &name,
+	}
+	_, err = h.authService.UpdateProfile(ctx, user.ID, req)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Failed to update profile", "type": "error"}}`)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("HX-Trigger", `{"toast": {"message": "Profile updated successfully", "type": "success"}}`)
+	w.WriteHeader(http.StatusOK)
+}
+
+// SettingsTeam renders the team settings page.
+func (h *WebHandler) SettingsTeam(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	user, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	// Get team members
+	members, _ := h.orgService.ListMembers(ctx, org.ID, user.ID)
+
+	// Get current user's role
+	currentRole := models.RoleViewer
+	for _, m := range members {
+		if m.UserID == user.ID {
+			currentRole = m.Role
+			break
+		}
+	}
+
+	// Get pending invitations
+	invitations, _ := h.orgService.ListPendingInvitations(ctx, org.ID, user.ID)
+
+	// Get plan limits
+	limits := models.GetPlanLimits(org.Plan)
+
+	// Build display data
+	var displayMembers []*pages.TeamMemberDisplay
+	for _, m := range members {
+		dm := &pages.TeamMemberDisplay{
+			ID:            m.UserID,
+			Name:          safeString(m.User.Name),
+			Email:         m.User.Email,
+			AvatarURL:     safeString(m.User.AvatarURL),
+			Role:          m.Role,
+			JoinedAt:      m.JoinedAt.Format("Jan 2, 2006"),
+			IsCurrentUser: m.UserID == user.ID,
+		}
+		displayMembers = append(displayMembers, dm)
+	}
+
+	dashboardData := buildDashboardData(user, org, "/settings/team")
+
+	data := pages.TeamPageData{
+		DashboardData: dashboardData,
+		Members:       displayMembers,
+		Invitations:   invitations,
+		CurrentRole:   currentRole,
+		MemberLimit:   limits.TeamMembers,
+		MemberCount:   len(members),
+	}
+
+	component := pages.SettingsTeamPage(data)
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// SettingsTeamInvite handles team member invitation.
+func (h *WebHandler) SettingsTeamInvite(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	user, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Session expired", "type": "error"}}`)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	email := r.FormValue("email")
+	role := models.Role(r.FormValue("role"))
+
+	if !models.ValidRole(role) {
+		http.Error(w, "Invalid role", http.StatusBadRequest)
+		return
+	}
+
+	_ = user // Unused but kept for future audit logging
+	_, err = h.orgService.InviteMember(ctx, org.ID, email, role, user.ID)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Failed to send invitation", "type": "error"}}`)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("HX-Trigger", `{"toast": {"message": "Invitation sent successfully", "type": "success"}}`)
+	w.WriteHeader(http.StatusOK)
+}
+
+// SettingsTeamRemove handles team member removal.
+func (h *WebHandler) SettingsTeamRemove(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	memberID := chi.URLParam(r, "id")
+	mid, err := uuid.Parse(memberID)
+	if err != nil {
+		http.Error(w, "Invalid member ID", http.StatusBadRequest)
+		return
+	}
+
+	user, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Session expired", "type": "error"}}`)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	err = h.orgService.RemoveMember(ctx, org.ID, mid, user.ID)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Failed to remove member", "type": "error"}}`)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("HX-Trigger", `{"toast": {"message": "Member removed successfully", "type": "success"}}`)
+	w.Header().Set("HX-Refresh", "true")
+	w.WriteHeader(http.StatusOK)
+}
+
+// SettingsAPIKeys renders the API keys settings page.
+func (h *WebHandler) SettingsAPIKeys(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	user, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	// Get API keys for the organization
+	apiKeys, _ := h.apiKeyService.List(ctx, org.ID)
+
+	// Check if user can create API keys
+	canCreate := true // Could be based on role
+
+	dashboardData := buildDashboardData(user, org, "/settings/api-keys")
+
+	data := pages.APIKeysPageData{
+		DashboardData: dashboardData,
+		APIKeys:       apiKeys,
+		CanCreate:     canCreate,
+	}
+
+	component := pages.SettingsAPIKeysPage(data)
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// SettingsAPIKeysCreate handles API key creation.
+func (h *WebHandler) SettingsAPIKeysCreate(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	// Get user and org properly
+	user, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		errMsg := "Session expired. Please refresh and try again."
+		if err == ErrNoOrganization {
+			errMsg = "No organization found. Please complete onboarding first."
+		}
+		component := pages.APIKeyCreateError(errMsg)
+		templ.Handler(component).ServeHTTP(w, r)
+		return
+	}
+
+	name := r.FormValue("name")
+	scopes := r.Form["scopes"]
+	expires := r.FormValue("expires")
+
+	// Validate required fields
+	if name == "" {
+		component := pages.APIKeyCreateError("Name is required")
+		templ.Handler(component).ServeHTTP(w, r)
+		return
+	}
+
+	if len(scopes) == 0 {
+		component := pages.APIKeyCreateError("Please select at least one permission")
+		templ.Handler(component).ServeHTTP(w, r)
+		return
+	}
+
+	var expiresAt *time.Time
+	if expires != "" {
+		var duration time.Duration
+		switch expires {
+		case "30d":
+			duration = 30 * 24 * time.Hour
+		case "90d":
+			duration = 90 * 24 * time.Hour
+		case "1y":
+			duration = 365 * 24 * time.Hour
+		}
+		if duration > 0 {
+			t := time.Now().Add(duration)
+			expiresAt = &t
+		}
+	}
+
+	req := service.CreateAPIKeyRequest{
+		Name:   name,
+		Scopes: scopes,
+	}
+	if expiresAt != nil {
+		days := int(time.Until(*expiresAt).Hours() / 24)
+		req.ExpiresInDays = &days
+	}
+	apiKey, key, err := h.apiKeyService.Create(ctx, org.ID, req)
+	_ = user // Unused but kept for future audit logging
+	if err != nil {
+		component := pages.APIKeyCreateError("Failed to create API key: " + err.Error())
+		templ.Handler(component).ServeHTTP(w, r)
+		return
+	}
+
+	// Return the created key result partial
+	component := pages.APIKeyCreatedResult(apiKey.Name, key)
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// SettingsTeamInviteModal renders the invite member modal.
+func (h *WebHandler) SettingsTeamInviteModal(w http.ResponseWriter, r *http.Request) {
+	component := pages.InviteMemberModal()
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// SettingsTeamEditModal renders the edit member role modal.
+func (h *WebHandler) SettingsTeamEditModal(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	memberID := chi.URLParam(r, "id")
+	mid, err := uuid.Parse(memberID)
+	if err != nil {
+		http.Error(w, "Invalid member ID", http.StatusBadRequest)
+		return
+	}
+
+	user, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		http.Error(w, "Session expired", http.StatusUnauthorized)
+		return
+	}
+
+	// Get member details
+	members, _ := h.orgService.ListMembers(ctx, org.ID, user.ID)
+	
+	var member *pages.TeamMemberDisplay
+	for _, m := range members {
+		if m.UserID == mid {
+			member = &pages.TeamMemberDisplay{
+				ID:        m.UserID,
+				Name:      safeString(m.User.Name),
+				Email:     m.User.Email,
+				AvatarURL: safeString(m.User.AvatarURL),
+				Role:      m.Role,
+				JoinedAt:  m.JoinedAt.Format("Jan 2, 2006"),
+			}
+			break
+		}
+	}
+
+	if member == nil {
+		http.Error(w, "Member not found", http.StatusNotFound)
+		return
+	}
+
+	component := pages.EditMemberRoleModal(member)
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// SettingsTeamUpdate handles team member role update.
+func (h *WebHandler) SettingsTeamUpdate(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	memberID := chi.URLParam(r, "id")
+	mid, err := uuid.Parse(memberID)
+	if err != nil {
+		http.Error(w, "Invalid member ID", http.StatusBadRequest)
+		return
+	}
+
+	user, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Session expired", "type": "error"}}`)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	role := models.Role(r.FormValue("role"))
+	if !models.ValidRole(role) {
+		http.Error(w, "Invalid role", http.StatusBadRequest)
+		return
+	}
+
+	err = h.orgService.UpdateMemberRole(ctx, org.ID, mid, role, user.ID)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Failed to update role", "type": "error"}}`)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("HX-Trigger", `{"toast": {"message": "Role updated successfully", "type": "success"}}`)
+	w.WriteHeader(http.StatusOK)
+}
+
+// SettingsAPIKeysNewModal renders the create API key modal.
+func (h *WebHandler) SettingsAPIKeysNewModal(w http.ResponseWriter, r *http.Request) {
+	// Verify user has access before showing modal
+	_, _, err := h.getUserAndOrg(r)
+	if err != nil {
+		http.Error(w, "Session expired or no organization. Please refresh the page.", http.StatusUnauthorized)
+		return
+	}
+	
+	component := pages.CreateAPIKeyModal()
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// SettingsAPIKeysDelete handles API key deletion/revocation.
+func (h *WebHandler) SettingsAPIKeysDelete(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	keyID := chi.URLParam(r, "id")
+	kid, err := uuid.Parse(keyID)
+	if err != nil {
+		http.Error(w, "Invalid key ID", http.StatusBadRequest)
+		return
+	}
+
+	_, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Session expired", "type": "error"}}`)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	err = h.apiKeyService.Revoke(ctx, org.ID, kid)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Failed to revoke API key", "type": "error"}}`)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Re-render the API keys list
+	apiKeys, _ := h.apiKeyService.List(ctx, org.ID)
+	component := pages.APIKeysList(apiKeys)
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// ============================================
+// Helper Functions
+// ============================================
+
+// buildDashboardData creates the DashboardData from user and org.
+func buildDashboardData(user *models.User, org *models.Organization, activePath string) layouts.DashboardData {
+	return layouts.DashboardData{
+		UserName:   safeString(user.Name),
+		UserEmail:  user.Email,
+		AvatarURL:  safeString(user.AvatarURL),
+		OrgName:    safeOrgName(org),
+		OrgPlan:    safeOrgPlan(org),
+		ActivePath: activePath,
+	}
+}
+
+// safeString returns the string value or empty string if nil.
+func safeString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
+// safeOrgName returns the org name or default.
+func safeOrgName(org *models.Organization) string {
+	if org == nil {
+		return "Personal"
+	}
+	return org.Name
+}
+
+// safeOrgPlan returns the org plan or default.
+func safeOrgPlan(org *models.Organization) string {
+	if org == nil {
+		return "free"
+	}
+	return string(org.Plan)
+}
+

@@ -1,0 +1,418 @@
+package pages
+
+import (
+	"github.com/Bidon15/banhbaoring/control-plane/internal/models"
+	"github.com/Bidon15/banhbaoring/control-plane/templates/layouts"
+	"strings"
+)
+
+// APIKeysPageData contains all data for the API keys settings page.
+type APIKeysPageData struct {
+	layouts.DashboardData
+	APIKeys     []*models.APIKey
+	CanCreate   bool
+}
+
+// SettingsAPIKeysPage renders the API keys settings page.
+templ SettingsAPIKeysPage(data APIKeysPageData) {
+	@layouts.Dashboard("API Keys", data.DashboardData) {
+		<div class="space-y-6">
+			<!-- Page Header -->
+			<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+				<div>
+					<h1 class="text-2xl font-bold text-[#FFB000] uppercase tracking-wide">_API_KEYS</h1>
+					<p class="text-[#666600] mt-1 text-sm">Manage programmatic access to the API</p>
+				</div>
+				if data.CanCreate {
+					<button hx-get="/settings/api-keys/new"
+							hx-target="#modal-content"
+							@click="$dispatch('modal-open')"
+							class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#FFB000] text-black font-bold uppercase 
+							       hover:bg-[#FFCC00] hover:shadow-[0_0_20px_#FFB000] transition-all duration-200">
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+						</svg>
+						[ CREATE API KEY ]
+					</button>
+				}
+			</div>
+			
+			<!-- Warning Banner - CRT Style -->
+			<div class="p-4 bg-[#FFB000]/10 border border-[#FFB000] relative">
+				<!-- Scanlines -->
+				<div class="absolute inset-0 pointer-events-none opacity-10
+				            bg-[repeating-linear-gradient(0deg,transparent,transparent_1px,rgba(0,0,0,0.3)_1px,rgba(0,0,0,0.3)_2px)]"></div>
+				<div class="relative flex items-start gap-3">
+					<span class="text-[#FFB000] text-xl drop-shadow-[0_0_5px_#FFB000]">⚠</span>
+					<div>
+						<p class="font-bold text-[#FFB000] uppercase text-sm">KEEP YOUR API KEYS SECURE</p>
+						<p class="text-sm text-[#CC8800] mt-1">
+							API keys grant access to your organization's resources. Never share them publicly or commit them to version control.
+						</p>
+					</div>
+				</div>
+			</div>
+			
+			<!-- API Keys List -->
+			<div id="api-keys-list">
+				@APIKeysList(data.APIKeys)
+			</div>
+			
+			<!-- Usage Examples - CRT Terminal Style -->
+			<div class="bg-black border border-[#333300] p-6">
+				<h3 class="text-lg font-bold text-[#FFB000] mb-4 uppercase">_USAGE_EXAMPLES</h3>
+				<div class="space-y-4">
+					<div>
+						<p class="text-sm font-bold text-[#33FF00] mb-2 uppercase">cURL</p>
+						<div class="relative bg-[#0A0A0A] border border-[#333300] p-4 overflow-x-auto">
+							<pre class="text-sm text-[#33FF00]"><code><span class="text-[#666600]">$</span> curl -H <span class="text-[#FFCC00]">"Authorization: Bearer psk_live_xxxxx"</span> \
+     https://api.popsigner.com/v1/keys</code></pre>
+						</div>
+					</div>
+					<div>
+						<p class="text-sm font-bold text-[#33FF00] mb-2 uppercase">Go SDK</p>
+						<div class="relative bg-[#0A0A0A] border border-[#333300] p-4 overflow-x-auto">
+							<pre class="text-sm text-[#33FF00]"><code><span class="text-[#FFB000]">client</span> := popsigner.<span class="text-[#FFCC00]">NewClient</span>(<span class="text-[#33FF00]">"psk_live_xxxxx"</span>)
+<span class="text-[#FFB000]">keys</span>, <span class="text-[#FFB000]">err</span> := client.Keys.<span class="text-[#FFCC00]">List</span>(ctx)</code></pre>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}
+
+// APIKeysList renders the list of API keys (for HTMX partial updates).
+templ APIKeysList(keys []*models.APIKey) {
+	<div class="bg-black border border-[#333300]">
+		if len(keys) > 0 {
+			<div class="divide-y divide-[#333300]">
+				for _, key := range keys {
+					<div class="flex items-center justify-between p-4 group hover:bg-[#0D1A0D] transition-colors">
+						<div class="flex items-center gap-4 min-w-0">
+							<div class={ apiKeyIconClass(key) }>
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+								</svg>
+							</div>
+							<div class="min-w-0">
+								<div class="flex items-center gap-2">
+									<p class="font-bold text-[#FFB000] truncate uppercase">{ key.Name }</p>
+									if !key.IsValid() {
+										<span class="px-2 py-0.5 text-xs font-bold bg-[#FF3333]/10 text-[#FF3333] border border-[#FF3333] uppercase">REVOKED</span>
+									} else if key.ExpiresAt != nil {
+										<span class="px-2 py-0.5 text-xs font-bold bg-[#FFB000]/10 text-[#FFB000] border border-[#FFB000] uppercase">
+											EXPIRES { key.ExpiresAt.Format("Jan 2") }
+										</span>
+									}
+								</div>
+								<div class="flex items-center gap-3 mt-1">
+									<p class="text-sm font-mono text-[#33FF00]">{ key.KeyPrefix }...</p>
+									<span class="text-[#333300]">│</span>
+									<p class="text-sm text-[#666600]">
+										Created { key.CreatedAt.Format("Jan 2, 2006") }
+									</p>
+									if key.LastUsedAt != nil {
+										<span class="text-[#333300]">│</span>
+										<p class="text-sm text-[#666600]">
+											Last used { key.LastUsedAt.Format("Jan 2") }
+										</p>
+									}
+								</div>
+								<!-- Scopes -->
+								<div class="flex flex-wrap gap-1.5 mt-2">
+									for _, scope := range key.Scopes {
+										<span class="px-2 py-0.5 text-xs font-mono bg-[#1A4D1A] text-[#33FF00] border border-[#228B22]">
+											{ scope }
+										</span>
+									}
+								</div>
+							</div>
+						</div>
+						
+						if key.IsValid() {
+							<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+								<button hx-delete={ "/settings/api-keys/" + key.ID.String() }
+										hx-confirm="Are you sure you want to revoke this API key? This action cannot be undone."
+										hx-target="#api-keys-list"
+										hx-swap="outerHTML"
+										class="px-3 py-1.5 text-sm font-bold text-[#FF3333] border border-[#FF3333] 
+										       hover:bg-[#FF3333]/20 hover:shadow-[0_0_10px_rgba(255,51,51,0.3)] 
+										       transition-all uppercase">
+									[ REVOKE ]
+								</button>
+							</div>
+						}
+					</div>
+				}
+			</div>
+		} else {
+			<div class="flex flex-col items-center justify-center py-16 px-4 text-center">
+				<!-- CRT Key Icon -->
+				<div class="w-20 h-20 border-2 border-[#333300] flex items-center justify-center mb-4">
+					<svg class="w-10 h-10 text-[#666600]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+					</svg>
+				</div>
+				<h3 class="text-lg font-bold text-[#FFB000] mb-2 uppercase">NO API KEYS YET</h3>
+				<p class="text-[#666600] text-sm max-w-sm mb-6">Create an API key to access the POPSigner API programmatically.</p>
+				<button hx-get="/settings/api-keys/new"
+						hx-target="#modal-content"
+						@click="$dispatch('modal-open')"
+						class="px-6 py-3 bg-[#FFB000] text-black font-bold uppercase 
+						       hover:bg-[#FFCC00] hover:shadow-[0_0_20px_#FFB000] transition-all">
+					[ CREATE API KEY ]
+				</button>
+			</div>
+		}
+	</div>
+}
+
+// CreateAPIKeyModal renders the create API key modal.
+templ CreateAPIKeyModal() {
+	<div class="max-w-lg w-full bg-black border border-[#333300]">
+		<!-- Header -->
+		<div class="flex items-center justify-between p-5 border-b border-[#333300]">
+			<h3 class="text-lg font-bold text-[#FFB000] uppercase">_CREATE_API_KEY</h3>
+			<button @click="$dispatch('modal-close')" 
+					class="p-1.5 text-[#666600] hover:text-[#FFB000] hover:bg-[#FFB000]/10 transition-colors">
+				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+				</svg>
+			</button>
+		</div>
+		
+		<!-- Body -->
+		<div class="p-5">
+			<form hx-post="/settings/api-keys"
+				  hx-target="#api-key-result"
+				  hx-swap="innerHTML"
+				  class="space-y-6"
+				  x-data="{ scopes: [] }">
+				
+				<div id="api-key-result">
+					<div>
+						<label for="name" class="block text-sm font-bold text-[#FFB000] mb-2 uppercase">
+							KEY_NAME
+						</label>
+						<input type="text"
+							   id="name"
+							   name="name"
+							   placeholder="Production server"
+							   required
+							   class="w-full px-4 py-3 bg-black border border-[#333300] text-[#33FF00] 
+							          placeholder:text-[#336633] focus:outline-none focus:border-[#33FF00] 
+							          focus:shadow-[0_0_10px_rgba(51,255,0,0.3)] transition-all font-mono"/>
+						<p class="mt-1 text-xs text-[#666600]">A descriptive name to identify this key</p>
+					</div>
+					
+					<div class="mt-6">
+						<label class="block text-sm font-bold text-[#FFB000] mb-3 uppercase">
+							PERMISSIONS <span class="text-[#FF3333]">*</span>
+						</label>
+						<div class="grid grid-cols-2 gap-3">
+							@scopeCheckbox("keys:read", "READ KEYS", "View keys and public addresses")
+							@scopeCheckbox("keys:write", "WRITE KEYS", "Create, update, and delete keys")
+							@scopeCheckbox("keys:sign", "SIGN", "Sign messages with keys")
+							@scopeCheckbox("audit:read", "READ AUDIT", "View audit logs")
+							@scopeCheckbox("billing:read", "READ BILLING", "View billing information")
+							@scopeCheckbox("webhooks:write", "MANAGE WEBHOOKS", "Create and delete webhooks")
+						</div>
+						<p class="mt-2 text-xs text-[#CC8800]">⚠ Select at least one permission</p>
+					</div>
+					
+					<div class="mt-6">
+						<label for="expires" class="block text-sm font-bold text-[#FFB000] mb-2 uppercase">
+							EXPIRATION
+						</label>
+						<select id="expires"
+								name="expires"
+								class="w-full px-4 py-3 bg-black border border-[#333300] text-[#33FF00] 
+								       focus:outline-none focus:border-[#33FF00] 
+								       focus:shadow-[0_0_10px_rgba(51,255,0,0.3)] transition-all font-mono">
+							<option value="">Never expires</option>
+							<option value="30d">30 days</option>
+							<option value="90d">90 days</option>
+							<option value="1y">1 year</option>
+						</select>
+					</div>
+					
+					<!-- Footer -->
+					<div class="flex items-center justify-end gap-3 pt-6 mt-6 border-t border-[#333300]">
+						<button type="button"
+								@click="$dispatch('modal-close')"
+								class="px-4 py-2 text-sm font-bold text-[#666600] border border-[#333300] 
+								       hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase">
+							[ CANCEL ]
+						</button>
+						<button type="submit"
+								class="px-6 py-2 bg-[#FFB000] text-black font-bold uppercase
+								       hover:bg-[#FFCC00] hover:shadow-[0_0_15px_#FFB000] transition-all">
+							[ CREATE KEY ]
+						</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+}
+
+// APIKeyCreatedResult renders the result after creating an API key.
+templ APIKeyCreatedResult(name, key string) {
+	<div class="space-y-6">
+		<div class="p-4 bg-[#33FF00]/10 border border-[#33FF00] relative">
+			<!-- Scanlines -->
+			<div class="absolute inset-0 pointer-events-none opacity-10
+			            bg-[repeating-linear-gradient(0deg,transparent,transparent_1px,rgba(0,0,0,0.3)_1px,rgba(0,0,0,0.3)_2px)]"></div>
+			<div class="relative flex items-start gap-3">
+				<span class="text-[#33FF00] text-xl drop-shadow-[0_0_5px_#33FF00]">✓</span>
+				<div>
+					<p class="font-bold text-[#33FF00] uppercase text-sm">API KEY CREATED SUCCESSFULLY</p>
+					<p class="text-sm text-[#228B22] mt-1">
+						Make sure to copy your key now. You won't be able to see it again!
+					</p>
+				</div>
+			</div>
+		</div>
+		
+		<div>
+			<label class="block text-sm font-bold text-[#FFB000] mb-2 uppercase">
+				{ name }
+			</label>
+			<div class="flex items-center gap-2">
+				<input type="text"
+					   value={ key }
+					   readonly
+					   id="new-api-key"
+					   class="flex-1 px-4 py-3 bg-[#0A0A0A] border border-[#333300] text-[#33FF00] font-mono text-sm"/>
+				<button type="button"
+						onclick="navigator.clipboard.writeText(document.getElementById('new-api-key').value); this.innerHTML = '✓ COPIED'"
+						class="px-4 py-3 bg-[#33FF00]/10 text-[#33FF00] border border-[#33FF00] 
+						       hover:bg-[#33FF00]/20 hover:shadow-[0_0_10px_rgba(51,255,0,0.3)] 
+						       transition-all font-bold uppercase">
+					[ COPY ]
+				</button>
+			</div>
+		</div>
+		
+		<!-- Footer -->
+		<div class="flex items-center justify-end gap-3 pt-6 border-t border-[#333300]">
+			<button type="button"
+					@click="$dispatch('modal-close'); htmx.trigger('#main-content', 'refresh')"
+					class="px-6 py-2 bg-[#FFB000] text-black font-bold uppercase
+					       hover:bg-[#FFCC00] hover:shadow-[0_0_15px_#FFB000] transition-all">
+				[ DONE ]
+			</button>
+		</div>
+	</div>
+}
+
+templ scopeCheckbox(scope, label, description string) {
+	<label class="flex items-start gap-3 p-3 bg-black border border-[#333300] cursor-pointer 
+	              hover:border-[#33FF00]/50 transition-colors has-[:checked]:border-[#33FF00] has-[:checked]:bg-[#33FF00]/5">
+		<input type="checkbox" 
+			   name="scopes" 
+			   value={ scope }
+			   class="mt-0.5 w-4 h-4 bg-black border-[#333300] text-[#33FF00] 
+			          focus:ring-[#33FF00] focus:ring-offset-0 accent-[#33FF00]"/>
+		<div>
+			<p class="text-sm font-bold text-[#FFB000] uppercase">{ label }</p>
+			<p class="text-xs text-[#666600]">{ description }</p>
+		</div>
+	</label>
+}
+
+// APIKeyCreateError renders an error message for the create API key form.
+templ APIKeyCreateError(message string) {
+	<div class="space-y-6">
+		<div class="p-4 bg-[#FF3333]/10 border border-[#FF3333] relative">
+			<!-- Scanlines -->
+			<div class="absolute inset-0 pointer-events-none opacity-10
+			            bg-[repeating-linear-gradient(0deg,transparent,transparent_1px,rgba(0,0,0,0.3)_1px,rgba(0,0,0,0.3)_2px)]"></div>
+			<div class="relative flex items-start gap-3">
+				<span class="text-[#FF3333] text-xl drop-shadow-[0_0_5px_#FF3333]">✗</span>
+				<div>
+					<p class="font-bold text-[#FF3333] uppercase text-sm">ERROR</p>
+					<p class="text-sm text-[#CC2222] mt-1">{ message }</p>
+				</div>
+			</div>
+		</div>
+		
+		<!-- Footer -->
+		<div class="flex items-center justify-end gap-3 pt-6 border-t border-[#333300]">
+			<button type="button"
+					@click="$dispatch('modal-close')"
+					class="px-4 py-2 text-sm font-bold text-[#666600] border border-[#333300] 
+					       hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase">
+				[ CLOSE ]
+			</button>
+			<button type="button"
+					onclick="location.reload()"
+					class="px-6 py-2 bg-[#FFB000] text-black font-bold uppercase
+					       hover:bg-[#FFCC00] hover:shadow-[0_0_15px_#FFB000] transition-all">
+				[ TRY AGAIN ]
+			</button>
+		</div>
+	</div>
+}
+
+// APIKeyCreatedSuccess renders the success message with the raw API key.
+templ APIKeyCreatedSuccess(rawKey string, prefix string) {
+	<div class="space-y-6">
+		<div class="text-center py-4">
+			<div class="text-4xl mb-4 drop-shadow-[0_0_10px_#33FF00]">✓</div>
+			<h3 class="text-xl font-bold text-[#33FF00] uppercase tracking-wide">API KEY CREATED</h3>
+			<p class="text-[#666600] text-sm mt-2">Save this key now - it won't be shown again!</p>
+		</div>
+		
+		<div class="bg-[#0A0A0A] border border-[#33FF00] p-4 relative">
+			<!-- Scanlines -->
+			<div class="absolute inset-0 pointer-events-none opacity-10
+			            bg-[repeating-linear-gradient(0deg,transparent,transparent_1px,rgba(0,0,0,0.3)_1px,rgba(0,0,0,0.3)_2px)]"></div>
+			<div class="relative">
+				<label class="block text-xs font-bold text-[#FFB000] mb-2 uppercase">YOUR API KEY</label>
+				<div class="flex items-center gap-2">
+					<code class="flex-1 font-mono text-sm text-[#33FF00] bg-black p-3 border border-[#333300] break-all select-all">{ rawKey }</code>
+					<button type="button"
+							onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent); this.textContent = 'COPIED!'; setTimeout(() => this.textContent = 'COPY', 2000)"
+							class="px-3 py-2 bg-[#33FF00] text-black font-bold uppercase text-xs
+							       hover:shadow-[0_0_10px_#33FF00] transition-all whitespace-nowrap">
+						COPY
+					</button>
+				</div>
+				<p class="mt-2 text-xs text-[#666600]">Prefix: { prefix }</p>
+			</div>
+		</div>
+		
+		<div class="p-4 bg-[#FFB000]/10 border border-[#FFB000]">
+			<p class="text-sm text-[#FFB000]">
+				<span class="font-bold">⚠ WARNING:</span> This is the only time you'll see the full API key. 
+				Make sure to copy and store it securely.
+			</p>
+		</div>
+		
+		<!-- Footer -->
+		<div class="flex items-center justify-end gap-3 pt-6 border-t border-[#333300]">
+			<button type="button"
+					onclick="location.reload()"
+					class="px-6 py-2 bg-[#33FF00] text-black font-bold uppercase
+					       hover:shadow-[0_0_15px_#33FF00] transition-all">
+				[ DONE ]
+			</button>
+		</div>
+	</div>
+}
+
+func apiKeyIconClass(key *models.APIKey) string {
+	base := "w-12 h-12 border flex items-center justify-center"
+	if !key.IsValid() {
+		return base + " border-[#FF3333] text-[#FF3333] bg-[#FF3333]/10"
+	}
+	// Check for wildcard or sign scope
+	for _, s := range key.Scopes {
+		if s == "*" || strings.Contains(s, "sign") {
+			return base + " border-[#FFB000] text-[#FFB000] bg-[#FFB000]/10"
+		}
+	}
+	return base + " border-[#33FF00] text-[#33FF00] bg-[#33FF00]/10"
+}

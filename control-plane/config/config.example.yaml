@@ -1,0 +1,65 @@
+# POPSigner Control Plane Configuration
+# Point-of-Presence signing infrastructure
+# Copy this file to config.yaml and fill in your values
+#
+# Environment variables override file values with prefix POPSIGNER_
+# Example: POPSIGNER_DATABASE_PASSWORD overrides database.password
+
+server:
+  port: 8080
+  host: "0.0.0.0"
+  read_timeout: "30s"
+  write_timeout: "30s"
+  environment: "dev"  # dev | staging | prod
+
+database:
+  host: "localhost"
+  port: 5432
+  user: "popsigner"
+  password: "popsigner"  # Change in production!
+  database: "popsigner"
+  ssl_mode: "disable"  # Use "require" in production
+  max_open_conns: 25
+  max_idle_conns: 5
+  conn_max_lifetime: "5m"
+
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  db: 0
+
+openbao:
+  address: "http://localhost:8200"
+  token: ""  # Set via POPSIGNER_OPENBAO_TOKEN env var
+  namespace: ""
+  secp256k1_path: "secp256k1"
+
+# Authentication (OAuth-only - no email/password)
+auth:
+  # Generate with: openssl rand -base64 32
+  jwt_secret: ""  # Required! Set via POPSIGNER_AUTH_JWT_SECRET
+  jwt_expiry: "24h"
+  session_expiry: "168h"  # 7 days
+
+  # OAuth Callback URL (where providers redirect after auth)
+  oauth_callback_url: "http://localhost:8080"
+  
+  # Dashboard URL (where to redirect after successful login)
+  dashboard_url: "http://localhost:3000"
+
+  # GitHub OAuth (Required)
+  # Create at: https://github.com/settings/developers
+  # Callback URL: {oauth_callback_url}/auth/github/callback
+  oauth_github_id: ""
+  oauth_github_secret: ""
+
+  # Google OAuth (Required)
+  # Create at: https://console.cloud.google.com/apis/credentials
+  # Callback URL: {oauth_callback_url}/auth/google/callback
+  oauth_google_id: ""
+  oauth_google_secret: ""
+
+# NOTE: Billing (Stripe) integration is planned for a future release.
+# For now, all users have access to full functionality.
+

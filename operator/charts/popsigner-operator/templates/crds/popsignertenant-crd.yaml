@@ -1,0 +1,96 @@
+{{- if .Values.installCRDs }}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.5
+  name: popsignertenants.popsigner.com
+  labels:
+    {{- include "popsigner-operator.labels" . | nindent 4 }}
+spec:
+  group: popsigner.com
+  names:
+    kind: POPSignerTenant
+    listKind: POPSignerTenantList
+    plural: popsignertenants
+    singular: popsignertenant
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .spec.plan
+      name: Plan
+      type: string
+    - jsonPath: .status.usage.keys
+      name: Keys
+      type: integer
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: POPSignerTenant is the Schema for the popsignertenants API
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: POPSignerTenantSpec defines the desired state
+            properties:
+              admin:
+                properties:
+                  email:
+                    type: string
+                  password:
+                    properties:
+                      key:
+                        type: string
+                      name:
+                        type: string
+                    required:
+                    - key
+                    - name
+                    type: object
+                type: object
+              clusterRef:
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
+              displayName:
+                type: string
+              plan:
+                default: free
+                enum:
+                - free
+                - starter
+                - pro
+                - enterprise
+                type: string
+              quotas:
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+              settings:
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+            required:
+            - clusterRef
+            type: object
+          status:
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+{{- end }}

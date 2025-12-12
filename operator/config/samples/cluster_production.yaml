@@ -1,0 +1,64 @@
+apiVersion: popsigner.com/v1
+kind: POPSignerCluster
+metadata:
+  name: production
+  namespace: popsigner
+spec:
+  domain: keys.mycompany.com
+  openbao:
+    replicas: 3
+    version: "2.0.0"
+    storage:
+      size: 10Gi
+      storageClass: fast-ssd
+    autoUnseal:
+      enabled: true
+      provider: awskms
+      awskms:
+        keyId: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
+        region: "us-east-1"
+        credentials:
+          name: aws-kms-credentials
+          key: credentials
+  api:
+    replicas: 3
+    autoscaling:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 10
+      targetCPU: 70
+  dashboard:
+    replicas: 0  # Served by control-plane
+  database:
+    managed: true
+    version: "16"
+    storage:
+      size: 50Gi
+      storageClass: fast-ssd
+  redis:
+    managed: true
+    mode: standalone
+    storage:
+      size: 10Gi
+  monitoring:
+    enabled: true
+    prometheus:
+      retention: "30d"
+      storage:
+        size: 100Gi
+    grafana:
+      enabled: true
+    alerting:
+      enabled: true
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"
+    retention: 30
+    destination:
+      s3:
+        bucket: my-backups
+        prefix: popsigner/
+        region: us-east-1
+        credentials:
+          name: s3-backup-credentials
+          key: credentials

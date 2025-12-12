@@ -1,0 +1,730 @@
+/* POPSigner 80s CRT Terminal Aesthetic
+   Amber + Green phosphor on black
+   Stranger Things S5 / Bloomberg 1980s vibes */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* === PHOSPHOR AMBER (Primary) === */
+  --phosphor-amber: #FFB000;
+  --phosphor-amber-bright: #FFCC00;
+  --phosphor-amber-dim: #CC8800;
+  --phosphor-amber-dark: #333300;
+  
+  /* === PHOSPHOR GREEN (Secondary) === */
+  --phosphor-green: #33FF00;
+  --phosphor-green-dim: #228B22;
+  --phosphor-green-dark: #1A4D1A;
+  --phosphor-green-bg: #0D1A0D;
+  
+  /* === TERMINAL RED (Alerts) === */
+  --terminal-red: #FF3333;
+  --terminal-red-dim: #CC2222;
+  
+  /* === CRT BACKGROUNDS === */
+  --bg-crt: #000000;
+  --bg-surface: #0A0A0A;
+  --bg-elevated: #111111;
+  --bg-glow: #0D1A0D;
+  
+  /* === TEXT (Phosphor colors) === */
+  --text-primary: #FFB000;    /* Amber */
+  --text-secondary: #33FF00;  /* Green */
+  --text-muted: #CC8800;      /* Dim amber */
+  --text-dim: #666600;        /* Very dim */
+}
+
+@layer base {
+  /* CRT Monitor base */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    background-color: var(--bg-crt);
+    color: var(--text-primary);
+    font-family: 'IBM Plex Mono', 'VT323', monospace;
+  }
+
+  /* Selection color - amber accent */
+  ::selection {
+    background-color: rgba(255, 176, 0, 0.3);
+    color: #ffffff;
+  }
+
+  /* Focus visible styles - amber */
+  :focus-visible {
+    outline: 2px solid var(--phosphor-amber);
+    outline-offset: 2px;
+  }
+
+  /* Custom scrollbar for CRT theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bg-crt);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--phosphor-amber-dark);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--phosphor-amber-dim);
+  }
+}
+
+@layer components {
+  /* ============================================
+     Phosphor Glow Utilities
+     ============================================ */
+  .glow-amber {
+    text-shadow: 0 0 8px var(--phosphor-amber);
+  }
+  .glow-green {
+    text-shadow: 0 0 8px var(--phosphor-green);
+  }
+  .glow-red {
+    text-shadow: 0 0 8px var(--terminal-red);
+  }
+
+  /* ============================================
+     CRT Scanline Overlay
+     ============================================ */
+  .crt-scanlines::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.15),
+      rgba(0, 0, 0, 0.15) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    pointer-events: none;
+  }
+
+  /* ============================================
+     Terminal Button
+     ============================================ */
+  .btn-terminal {
+    background-color: var(--phosphor-amber);
+    color: #000000;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+  }
+  .btn-terminal:hover {
+    background-color: var(--phosphor-amber-bright);
+    box-shadow: 0 0 20px var(--phosphor-amber);
+  }
+
+  /* CTA Button - Primary (Amber) */
+  .btn-cta {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3;
+    background-color: var(--phosphor-amber);
+    color: #000000;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+  }
+  .btn-cta:hover {
+    background-color: var(--phosphor-amber-bright);
+    box-shadow: 0 0 20px var(--phosphor-amber);
+  }
+
+  /* CTA Button - Ghost/Secondary */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3;
+    border: 1px solid var(--phosphor-amber-dark);
+    color: var(--phosphor-amber);
+    font-weight: 500;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover {
+    border-color: var(--phosphor-amber);
+    box-shadow: 0 0 10px rgba(255, 176, 0, 0.3);
+  }
+
+  /* ============================================
+     Terminal Card
+     ============================================ */
+  .card-crt {
+    background-color: var(--bg-crt);
+    border: 1px solid var(--phosphor-amber-dark);
+    border-radius: 0.25rem;
+  }
+  .card-crt:hover {
+    border-color: var(--phosphor-amber);
+    box-shadow: 0 0 10px rgba(255, 176, 0, 0.3);
+  }
+
+  /* Green variant */
+  .card-crt-green {
+    border-color: var(--phosphor-green-dark);
+  }
+  .card-crt-green:hover {
+    border-color: var(--phosphor-green);
+    box-shadow: 0 0 10px rgba(51, 255, 0, 0.3);
+  }
+
+  /* Terminal-style card */
+  .terminal-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--phosphor-amber-dark);
+    border-radius: 0.25rem;
+    padding: 1.5rem;
+    transition: all 0.2s;
+  }
+  .terminal-card:hover {
+    border-color: var(--phosphor-amber-dim);
+  }
+
+  /* ============================================
+     Code Blocks
+     ============================================ */
+  .code-terminal {
+    background-color: var(--bg-crt);
+    border: 1px solid var(--phosphor-amber-dark);
+    border-radius: 0.25rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.875rem;
+    overflow-x: auto;
+  }
+
+  .code-block {
+    background-color: var(--bg-crt);
+    border: 1px solid var(--phosphor-amber-dark);
+    border-radius: 0.25rem;
+    padding: 1rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.875rem;
+    overflow-x: auto;
+  }
+
+  .code-inline {
+    background-color: var(--bg-surface);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.125rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.875rem;
+    color: var(--phosphor-green);
+  }
+
+  /* ============================================
+     Section Headings
+     ============================================ */
+  .section-heading {
+    font-size: 1.875rem;
+    font-weight: bold;
+    color: var(--phosphor-amber);
+    text-shadow: 0 0 10px var(--phosphor-amber);
+  }
+
+  .section-subheading {
+    color: var(--text-muted);
+    font-size: 1.125rem;
+  }
+
+  /* ============================================
+     Feature Icon
+     ============================================ */
+  .feature-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.25rem;
+    background-color: rgba(255, 176, 0, 0.1);
+    border: 1px solid var(--phosphor-amber-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--phosphor-amber);
+  }
+
+  /* ============================================
+     Status LED Indicators
+     ============================================ */
+  .status-led {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+  }
+
+  .status-led-amber {
+    background-color: var(--phosphor-amber);
+    box-shadow: 0 0 6px var(--phosphor-amber);
+  }
+
+  .status-led-green {
+    background-color: var(--phosphor-green);
+    box-shadow: 0 0 6px var(--phosphor-green);
+  }
+
+  .status-led-red {
+    background-color: var(--terminal-red);
+    box-shadow: 0 0 6px var(--terminal-red);
+  }
+
+  /* ============================================
+     Glowing Borders
+     ============================================ */
+  .glow-border-amber {
+    box-shadow: 0 0 0 1px rgba(255, 176, 0, 0.3),
+                0 0 15px -3px rgba(255, 176, 0, 0.2);
+  }
+
+  .glow-border-green {
+    box-shadow: 0 0 0 1px rgba(51, 255, 0, 0.3),
+                0 0 15px -3px rgba(51, 255, 0, 0.2);
+  }
+
+  .glow-border-red {
+    box-shadow: 0 0 0 1px rgba(255, 51, 51, 0.3),
+                0 0 15px -3px rgba(255, 51, 51, 0.2);
+  }
+
+  /* ============================================
+     Terminal Grid Background
+     ============================================ */
+  .terminal-grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(51, 51, 0, 0.3) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(51, 51, 0, 0.3) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* ============================================
+     Custom Scrollbar
+     ============================================ */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--phosphor-amber-dark) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: var(--phosphor-amber-dark);
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: var(--phosphor-amber-dim);
+  }
+
+  /* ============================================
+     HTMX Loading States
+     ============================================ */
+  .htmx-request .htmx-indicator {
+    display: inline-flex;
+  }
+
+  .htmx-indicator {
+    display: none;
+  }
+
+  .htmx-request.htmx-indicator,
+  .htmx-request .htmx-indicator {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* ============================================
+     Skeleton Loading
+     ============================================ */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--bg-crt) 0%,
+      var(--bg-surface) 50%,
+      var(--bg-crt) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ============================================
+     Form Inputs
+     ============================================ */
+  .input {
+    @apply w-full px-4 py-2.5 rounded;
+    background-color: var(--bg-crt);
+    border: 1px solid var(--phosphor-amber-dark);
+    color: var(--phosphor-amber);
+    transition: all 0.2s;
+  }
+  .input::placeholder {
+    color: var(--text-dim);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--phosphor-amber);
+    box-shadow: 0 0 10px rgba(255, 176, 0, 0.3);
+  }
+  .input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .input-error {
+    border-color: var(--terminal-red);
+  }
+  .input-error:focus {
+    box-shadow: 0 0 10px rgba(255, 51, 51, 0.3);
+  }
+
+  /* Labels */
+  .label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--phosphor-amber);
+    margin-bottom: 0.375rem;
+  }
+
+  .label-hint {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 0.25rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  /* ============================================
+     Badges
+     ============================================ */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium;
+  }
+
+  .badge-success {
+    background-color: rgba(51, 255, 0, 0.1);
+    color: var(--phosphor-green);
+    border: 1px solid var(--phosphor-green-dark);
+  }
+
+  .badge-warning {
+    background-color: rgba(255, 176, 0, 0.1);
+    color: var(--phosphor-amber);
+    border: 1px solid var(--phosphor-amber-dark);
+  }
+
+  .badge-error {
+    background-color: rgba(255, 51, 51, 0.1);
+    color: var(--terminal-red);
+    border: 1px solid var(--terminal-red-dim);
+  }
+
+  .badge-info {
+    background-color: rgba(51, 255, 0, 0.1);
+    color: var(--phosphor-green);
+    border: 1px solid var(--phosphor-green-dark);
+  }
+
+  .badge-neutral {
+    background-color: var(--bg-surface);
+    color: var(--text-muted);
+    border: 1px solid var(--phosphor-amber-dark);
+  }
+
+  /* ============================================
+     Tables
+     ============================================ */
+  .table {
+    @apply w-full text-sm;
+  }
+
+  .table th {
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--phosphor-amber-dark);
+  }
+
+  .table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(51, 51, 0, 0.5);
+  }
+
+  .table tbody tr {
+    transition: background-color 0.2s;
+  }
+  .table tbody tr:hover {
+    background-color: var(--bg-surface);
+  }
+
+  /* ============================================
+     Dividers
+     ============================================ */
+  .divider {
+    border-top: 1px solid var(--phosphor-amber-dark);
+    margin: 1.5rem 0;
+  }
+
+  .divider-glow {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--phosphor-amber-dim), transparent);
+  }
+
+  /* ============================================
+     Page Headers
+     ============================================ */
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--phosphor-amber);
+    text-shadow: 0 0 8px var(--phosphor-amber);
+  }
+
+  .page-subtitle {
+    margin-top: 0.5rem;
+    color: var(--text-muted);
+  }
+
+  /* ============================================
+     Tabs
+     ============================================ */
+  .tabs {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--phosphor-amber-dark);
+  }
+
+  .tab {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab:hover {
+    color: var(--phosphor-amber);
+    border-color: var(--phosphor-amber-dark);
+  }
+
+  .tab-active {
+    color: var(--phosphor-amber);
+    border-color: var(--phosphor-amber);
+  }
+
+  /* ============================================
+     Dropdown Menus
+     ============================================ */
+  .dropdown-menu {
+    position: absolute;
+    right: 0;
+    margin-top: 0.5rem;
+    width: 12rem;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--phosphor-amber-dark);
+    border-radius: 0.25rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    z-index: 50;
+    padding: 0.25rem 0;
+    overflow: hidden;
+  }
+
+  .dropdown-item {
+    display: block;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    transition: all 0.2s;
+  }
+  .dropdown-item:hover {
+    color: var(--phosphor-amber);
+    background-color: rgba(255, 176, 0, 0.1);
+  }
+
+  .dropdown-divider {
+    border-top: 1px solid var(--phosphor-amber-dark);
+    margin: 0.25rem 0;
+  }
+
+  /* ============================================
+     Tooltips
+     ============================================ */
+  [data-tooltip] {
+    position: relative;
+    cursor: help;
+  }
+
+  [data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--phosphor-amber-dark);
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--phosphor-amber);
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s;
+  }
+
+  [data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+@layer utilities {
+  /* Text gradient utility - amber to green */
+  .text-gradient {
+    background: linear-gradient(to right, var(--phosphor-amber), var(--phosphor-green), var(--phosphor-amber));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-amber {
+    background: linear-gradient(to right, var(--phosphor-amber), var(--phosphor-amber-bright));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-green {
+    background: linear-gradient(to right, var(--phosphor-green), var(--phosphor-green-dim));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glow effects */
+  .glow-amber {
+    box-shadow: 0 0 20px -5px rgba(255, 176, 0, 0.4);
+  }
+
+  .glow-amber-lg {
+    box-shadow: 0 0 40px -10px rgba(255, 176, 0, 0.5);
+  }
+
+  .glow-green {
+    box-shadow: 0 0 20px -5px rgba(51, 255, 0, 0.4);
+  }
+
+  .glow-green-lg {
+    box-shadow: 0 0 40px -10px rgba(51, 255, 0, 0.5);
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Animation delays for staggered effects */
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .animation-delay-500 {
+    animation-delay: 500ms;
+  }
+
+  /* Blinking cursor */
+  .cursor-blink::after {
+    content: '▋';
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* ============================================
+     Bloomberg Terminal CRT Animations
+     ============================================ */
+  
+  /* Phosphor breathe - very subtle, slow breathing like real CRT phosphor */
+  @keyframes phosphor-breathe {
+    0%, 100% { 
+      opacity: 1; 
+      transform: translate(-50%, 0) scale(1);
+    }
+    50% { 
+      opacity: 0.85; 
+      transform: translate(-50%, 0) scale(1.02);
+    }
+  }
+
+  /* Section divider LED pulse */
+  @keyframes led-pulse {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.5; }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-in,
+    .animate-slide-up,
+    .animate-blink {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+    
+    /* Disable CRT effects for reduced motion */
+    [class*="animate-[phosphor-breathe"] {
+      animation: none !important;
+    }
+  }
+}

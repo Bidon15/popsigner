@@ -1,0 +1,33 @@
+🔐 POPSigner Operator installed successfully!
+
+To deploy a POPSigner cluster:
+
+1. Create a namespace:
+   kubectl create namespace popsigner
+
+2. Create required secrets:
+   kubectl create secret generic stripe-secrets \
+     --namespace popsigner \
+     --from-literal=secret-key=sk_live_xxx
+
+3. Deploy a cluster:
+   cat <<EOF | kubectl apply -f -
+   apiVersion: popsigner.com/v1
+   kind: POPSignerCluster
+   metadata:
+     name: production
+     namespace: popsigner
+   spec:
+     domain: keys.mycompany.com
+     openbao:
+       replicas: 3
+     database:
+       managed: true
+     redis:
+       managed: true
+   EOF
+
+4. Check status:
+   kubectl get popsignercluster -n popsigner
+
+For more information: https://popsigner.com/docs

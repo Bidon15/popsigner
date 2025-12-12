@@ -1,0 +1,74 @@
+package landing
+
+// CTA renders the final call-to-action section with CRT terminal aesthetic
+templ CTA() {
+	<section class="py-32 px-4 sm:px-6 lg:px-8 bg-[#050505] font-mono relative overflow-hidden">
+		<!-- Scanlines -->
+		<div class="absolute inset-0 pointer-events-none opacity-20
+		            bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.3)_2px,rgba(0,0,0,0.3)_4px)]"></div>
+		
+		<!-- Strong amber phosphor glow - centered -->
+		<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[700px] 
+		            bg-[radial-gradient(ellipse_at_center,rgba(255,176,0,0.15)_0%,rgba(255,176,0,0.05)_40%,transparent_70%)] 
+		            blur-2xl pointer-events-none animate-phosphor-breathe"></div>
+		
+		<!-- Green accent glow - bottom -->
+		<div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] 
+		            bg-[radial-gradient(ellipse_at_center,rgba(51,255,0,0.08)_0%,transparent_60%)] 
+		            blur-2xl pointer-events-none"></div>
+		
+		<!-- Vignette -->
+		<div class="absolute inset-0 pointer-events-none 
+		            bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.5)_100%)]"></div>
+		
+		<div class="relative max-w-4xl mx-auto text-center z-10">
+			<!-- Terminal prompt -->
+			<div class="text-[#33FF00] text-lg mb-8 drop-shadow-[0_0_10px_#33FF00]">
+				<span class="text-[#228B22]">$</span> DEPLOY SIGNING INFRASTRUCTURE
+			</div>
+			
+			<h2 class="text-3xl sm:text-4xl lg:text-5xl text-[#FFB000] uppercase tracking-wider mb-6
+			           drop-shadow-[0_0_20px_#FFB000]">
+				KEYS REMOTE.<br/>
+				SIGNING INLINE.<br/>
+				YOU SOVEREIGN.
+			</h2>
+			
+			<p class="text-lg text-[#33FF00] mb-10 opacity-80">
+				DEPLOY POPSIGNER NEXT TO YOUR INFRASTRUCTURE TODAY.
+			</p>
+			
+			<div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+				<a href="/signup" 
+				   class="inline-flex items-center justify-center gap-2 bg-[#FFB000] text-black font-bold px-12 py-5 uppercase
+				          hover:bg-[#FFCC00] hover:shadow-[0_0_25px_#FFB000]
+				          transition-all duration-150 text-lg">
+					[ DEPLOY POPSIGNER ]
+				</a>
+				<a href="/docs" 
+				   class="inline-flex items-center justify-center gap-2 border-2 border-[#33FF00] text-[#33FF00] px-8 py-5 uppercase
+				          hover:bg-[#33FF00] hover:text-black
+				          hover:shadow-[0_0_20px_#33FF00]
+				          transition-all duration-150 text-lg">
+					[ DOCUMENTATION ]
+				</a>
+			</div>
+
+			<!-- Trust badges -->
+			<div class="flex flex-wrap items-center justify-center gap-8 text-sm text-[#33FF00] uppercase">
+				<div class="flex items-center gap-2">
+					<span class="text-[#33FF00] drop-shadow-[0_0_5px_#33FF00]">▶</span>
+					<span>OPEN SOURCE</span>
+				</div>
+				<div class="flex items-center gap-2">
+					<span class="text-[#FFB000] drop-shadow-[0_0_5px_#FFB000]">▶</span>
+					<span class="text-[#FFB000]">BUILT ON OPENBAO</span>
+				</div>
+				<div class="flex items-center gap-2">
+					<span class="text-[#33FF00] drop-shadow-[0_0_5px_#33FF00]">▶</span>
+					<span>EXIT BY DEFAULT</span>
+				</div>
+			</div>
+		</div>
+	</section>
+}

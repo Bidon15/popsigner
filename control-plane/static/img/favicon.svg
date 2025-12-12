@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <!-- Main amber gradient -->
+    <linearGradient id="amberMain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fbbf24"/>
+      <stop offset="50%" style="stop-color:#f59e0b"/>
+      <stop offset="100%" style="stop-color:#d97706"/>
+    </linearGradient>
+    <!-- Highlight facet -->
+    <linearGradient id="amberLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fde68a"/>
+      <stop offset="100%" style="stop-color:#fbbf24"/>
+    </linearGradient>
+    <!-- Shadow facet -->
+    <linearGradient id="amberDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d97706"/>
+      <stop offset="100%" style="stop-color:#b45309"/>
+    </linearGradient>
+    <!-- Deep shadow -->
+    <linearGradient id="amberDeep" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#b45309"/>
+      <stop offset="100%" style="stop-color:#92400e"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Diamond shape with faceted gem appearance -->
+  <!-- Crown (top) - left highlight facet -->
+  <polygon points="50,8 25,35 50,45" fill="url(#amberLight)"/>
+  <!-- Crown (top) - right facet -->
+  <polygon points="50,8 75,35 50,45" fill="url(#amberMain)"/>
+  <!-- Crown (top) - far left -->
+  <polygon points="50,8 25,35 12,30" fill="url(#amberMain)"/>
+  <!-- Crown (top) - far right -->
+  <polygon points="50,8 75,35 88,30" fill="url(#amberDark)"/>
+  
+  <!-- Pavilion (bottom) - main left facet -->
+  <polygon points="25,35 50,45 50,92 12,30" fill="url(#amberMain)"/>
+  <!-- Pavilion (bottom) - main right facet -->
+  <polygon points="75,35 50,45 50,92 88,30" fill="url(#amberDeep)"/>
+  
+  <!-- Central sparkle highlight -->
+  <polygon points="50,20 45,35 50,45 55,35" fill="#fef3c7" opacity="0.6"/>
+  
+  <!-- Subtle outline for definition -->
+  <polygon points="50,8 12,30 25,35 50,45 75,35 88,30" 
+           fill="none" stroke="#92400e" stroke-width="1" opacity="0.4"/>
+  <polygon points="12,30 50,92 88,30 75,35 50,45 25,35" 
+           fill="none" stroke="#92400e" stroke-width="1" opacity="0.4"/>
+</svg>

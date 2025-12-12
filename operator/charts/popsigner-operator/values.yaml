@@ -1,0 +1,70 @@
+# Default values for popsigner-operator.
+
+replicaCount: 1
+
+image:
+  repository: popsigner/operator
+  pullPolicy: IfNotPresent
+  # Defaults to appVersion if not set
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+rbac:
+  # Specifies whether RBAC resources should be created
+  create: true
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Leader election configuration
+leaderElection:
+  enabled: true
+
+# Metrics configuration
+metrics:
+  enabled: true
+  port: 8080
+
+# Health probes configuration
+health:
+  port: 8081
+
+# Log level: debug, info, warn, error
+logLevel: info
+
+# Install CRDs with the chart
+installCRDs: true
+
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+
+# Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL

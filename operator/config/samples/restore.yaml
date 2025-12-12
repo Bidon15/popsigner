@@ -1,0 +1,13 @@
+apiVersion: popsigner.com/v1
+kind: POPSignerRestore
+metadata:
+  name: restore-from-backup
+  namespace: popsigner
+spec:
+  clusterRef:
+    name: production
+  backupRef:
+    name: daily-backup
+  options:
+    stopApplications: true
+    verifyBackup: true
