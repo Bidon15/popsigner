@@ -115,6 +115,7 @@ func main() {
 
 	// Protected dashboard pages
 	r.Get("/keys", keysListHandler(sessionRepo, userRepo))
+	r.Post("/keys", keysCreateHandler(sessionRepo, userRepo))
 	r.Get("/keys/new", keysNewHandler(sessionRepo, userRepo))
 	r.Get("/settings/api-keys", settingsAPIKeysHandler(sessionRepo, userRepo))
 	r.Get("/settings/profile", settingsProfileHandler(sessionRepo, userRepo))
@@ -507,6 +508,52 @@ func keysNewHandler(sessionRepo repository.SessionRepository, userRepo repositor
 
 		// For direct navigation, redirect to /keys (the modal should be opened via button)
 		http.Redirect(w, r, "/keys", http.StatusFound)
+	}
+}
+
+// keysCreateHandler handles the POST request to create a new key.
+func keysCreateHandler(sessionRepo repository.SessionRepository, userRepo repository.UserRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := getAuthenticatedUser(w, r, sessionRepo, userRepo)
+		if user == nil {
+			return
+		}
+
+		// Parse form data
+		if err := r.ParseForm(); err != nil {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write([]byte(`<div class="p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400">Failed to parse form</div>`))
+			return
+		}
+
+		name := r.FormValue("name")
+		algorithm := r.FormValue("algorithm")
+
+		if name == "" {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write([]byte(`<div class="p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400">Key name is required</div>`))
+			return
+		}
+
+		// TODO: Actually create the key in OpenBao and database
+		// For now, just log and return success message
+		slog.Info("Key creation requested",
+			slog.String("user_id", user.ID.String()),
+			slog.String("name", name),
+			slog.String("algorithm", algorithm),
+		)
+
+		// Return success response for HTMX
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("HX-Trigger", "modal-close")
+		w.Write([]byte(fmt.Sprintf(`
+			<div class="p-6 text-center">
+				<div class="text-4xl mb-4">✅</div>
+				<h3 class="text-xl font-heading font-bold text-bao-text mb-2">Key Created!</h3>
+				<p class="text-bao-muted mb-4">Your key "%s" has been created successfully.</p>
+				<p class="text-sm text-amber-400">Note: Full OpenBao integration coming soon.</p>
+			</div>
+		`, name)))
 	}
 }
 

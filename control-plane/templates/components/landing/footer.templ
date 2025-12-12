@@ -2,49 +2,58 @@ package landing
 
 // Footer renders the landing page footer
 templ Footer() {
-	<footer class="py-12 px-4 sm:px-6 lg:px-8 border-t border-terminal-border">
+	<footer class="py-16 px-4 sm:px-6 lg:px-8 border-t border-terminal-border bg-terminal-card/30">
 		<div class="max-w-6xl mx-auto">
-			<div class="grid md:grid-cols-4 gap-8 mb-8">
+			<div class="grid md:grid-cols-5 gap-8 mb-12">
 				<!-- Brand -->
-				<div class="md:col-span-1">
-					<a href="/" class="flex items-center gap-2 mb-4">
-						<span class="text-2xl">&#128276;</span>
-						<span class="font-display font-bold text-terminal-text">BanhBaoRing</span>
+				<div class="md:col-span-2">
+					<a href="/" class="flex items-center gap-2.5 mb-4 group">
+						<span class="text-3xl group-hover:scale-110 transition-transform">🔔</span>
+						<span class="text-xl font-display font-bold bg-gradient-to-r from-purple-400 to-orange-400 bg-clip-text text-transparent">BanhBaoRing</span>
 					</a>
-					<p class="text-sm text-terminal-muted">
-						Open source key management for the decentralized web.
+					<p class="text-sm text-terminal-muted mb-6 max-w-xs">
+						Point of Presence key management for sovereign rollups. Secure keys, delivered right to your infrastructure.
 					</p>
+					<!-- Newsletter signup hint -->
+					<div class="flex items-center gap-2 text-xs text-terminal-dim">
+						<span class="text-purple-400">📍</span>
+						<span>Deploy next to your nodes</span>
+					</div>
 				</div>
 
 				<!-- Product -->
 				<div>
-					<h4 class="font-display font-semibold text-terminal-text mb-4">Product</h4>
-					<ul class="space-y-2">
+					<h4 class="font-display font-semibold text-terminal-text mb-4 text-sm uppercase tracking-wider">Product</h4>
+					<ul class="space-y-3">
 						@FooterLink("Features", "#features")
 						@FooterLink("Pricing", "#pricing")
 						@FooterLink("Documentation", "/docs")
 						@FooterLink("API Reference", "/docs/api")
+						@FooterLink("Status", "/status")
+					</ul>
+				</div>
+
+				<!-- Developers -->
+				<div>
+					<h4 class="font-display font-semibold text-terminal-text mb-4 text-sm uppercase tracking-wider">Developers</h4>
+					<ul class="space-y-3">
+						@FooterLink("Getting Started", "/docs/quickstart")
+						@FooterLink("SDK (Go)", "/docs/sdk-go")
+						@FooterLink("SDK (Rust)", "/docs/sdk-rust")
+						@FooterLink("GitHub", "https://github.com/Bidon15/banhbaoring")
+						@FooterLink("Changelog", "/changelog")
 					</ul>
 				</div>
 
 				<!-- Company -->
 				<div>
-					<h4 class="font-display font-semibold text-terminal-text mb-4">Company</h4>
-					<ul class="space-y-2">
+					<h4 class="font-display font-semibold text-terminal-text mb-4 text-sm uppercase tracking-wider">Company</h4>
+					<ul class="space-y-3">
 						@FooterLink("About", "/about")
 						@FooterLink("Blog", "/blog")
-						@FooterLink("Careers", "/careers")
 						@FooterLink("Contact", "/contact")
-					</ul>
-				</div>
-
-				<!-- Legal -->
-				<div>
-					<h4 class="font-display font-semibold text-terminal-text mb-4">Legal</h4>
-					<ul class="space-y-2">
-						@FooterLink("Privacy Policy", "/privacy")
-						@FooterLink("Terms of Service", "/terms")
-						@FooterLink("Security", "/security")
+						@FooterLink("Privacy", "/privacy")
+						@FooterLink("Terms", "/terms")
 					</ul>
 				</div>
 			</div>
@@ -52,9 +61,9 @@ templ Footer() {
 			<!-- Bottom bar -->
 			<div class="pt-8 border-t border-terminal-border flex flex-col sm:flex-row items-center justify-between gap-4">
 				<p class="text-sm text-terminal-dim">
-					&copy; 2024 BanhBaoRing. Open source under MIT License.
+					&copy; 2025 BanhBaoRing. Open source under MIT License.
 				</p>
-				<div class="flex items-center gap-4">
+				<div class="flex items-center gap-2">
 					@SocialLink("GitHub", "https://github.com/Bidon15/banhbaoring")
 					@SocialLink("Discord", "https://discord.gg/banhbaoring")
 					@SocialLink("Twitter", "https://twitter.com/banhbaoring")
