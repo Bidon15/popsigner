@@ -19,9 +19,11 @@ import (
 	"github.com/Bidon15/banhbaoring/control-plane/internal/config"
 	"github.com/Bidon15/banhbaoring/control-plane/internal/database"
 	"github.com/Bidon15/banhbaoring/control-plane/internal/middleware"
+	"github.com/Bidon15/banhbaoring/control-plane/internal/models"
 	"github.com/Bidon15/banhbaoring/control-plane/internal/pkg/response"
 	"github.com/Bidon15/banhbaoring/control-plane/internal/repository"
 	"github.com/Bidon15/banhbaoring/control-plane/internal/service"
+	"github.com/Bidon15/banhbaoring/control-plane/templates/layouts"
 	"github.com/Bidon15/banhbaoring/control-plane/templates/pages"
 )
 
@@ -110,6 +112,13 @@ func main() {
 
 	// Dashboard (protected by session check)
 	r.Get("/dashboard", dashboardHandler(sessionRepo, userRepo))
+
+	// Protected dashboard pages
+	r.Get("/keys", keysListHandler(sessionRepo, userRepo))
+	r.Get("/keys/new", keysNewHandler(sessionRepo, userRepo))
+	r.Get("/settings/api-keys", settingsAPIKeysHandler(sessionRepo, userRepo))
+	r.Get("/settings/profile", settingsProfileHandler(sessionRepo, userRepo))
+	r.Get("/docs", docsHandler())
 
 	// OAuth routes - using the service
 	r.Get("/auth/github", oauthRedirectHandler(oauthSvc, "github"))
@@ -404,5 +413,154 @@ func logoutHandler(sessionRepo repository.SessionRepository) http.HandlerFunc {
 		})
 
 		http.Redirect(w, r, "/", http.StatusFound)
+	}
+}
+
+// getAuthenticatedUser returns the authenticated user from the session, or redirects to login.
+func getAuthenticatedUser(w http.ResponseWriter, r *http.Request, sessionRepo repository.SessionRepository, userRepo repository.UserRepository) *models.User {
+	cookie, err := r.Cookie(sessionCookieName)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return nil
+	}
+
+	session, err := sessionRepo.Get(r.Context(), cookie.Value)
+	if err != nil || session == nil || session.ExpiresAt.Before(time.Now()) {
+		http.SetCookie(w, &http.Cookie{
+			Name:   sessionCookieName,
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
+		})
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return nil
+	}
+
+	user, err := userRepo.GetByID(r.Context(), session.UserID)
+	if err != nil || user == nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return nil
+	}
+
+	return user
+}
+
+// buildDashboardData creates the common dashboard data from a user.
+func buildDashboardData(user *models.User, activePath string) layouts.DashboardData {
+	name := user.Email
+	if user.Name != nil && *user.Name != "" {
+		name = *user.Name
+	}
+	avatarURL := ""
+	if user.AvatarURL != nil {
+		avatarURL = *user.AvatarURL
+	}
+	return layouts.DashboardData{
+		UserName:   name,
+		UserEmail:  user.Email,
+		AvatarURL:  avatarURL,
+		OrgName:    "Personal", // TODO: Get from org membership
+		OrgPlan:    "Free",     // TODO: Get from org
+		ActivePath: activePath,
+	}
+}
+
+// keysListHandler serves the keys list page.
+func keysListHandler(sessionRepo repository.SessionRepository, userRepo repository.UserRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := getAuthenticatedUser(w, r, sessionRepo, userRepo)
+		if user == nil {
+			return
+		}
+
+		dashData := buildDashboardData(user, "/keys")
+		data := pages.KeysPageData{
+			UserName:   dashData.UserName,
+			UserEmail:  dashData.UserEmail,
+			AvatarURL:  dashData.AvatarURL,
+			OrgName:    dashData.OrgName,
+			OrgPlan:    dashData.OrgPlan,
+			Keys:       []*models.Key{},       // TODO: Fetch from repository
+			Namespaces: []*models.Namespace{}, // TODO: Fetch from repository
+		}
+
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		pages.KeysListPage(data).Render(r.Context(), w)
+	}
+}
+
+// keysNewHandler serves the create new key page.
+func keysNewHandler(sessionRepo repository.SessionRepository, userRepo repository.UserRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := getAuthenticatedUser(w, r, sessionRepo, userRepo)
+		if user == nil {
+			return
+		}
+
+		// For now, redirect to keys list with a message
+		// TODO: Implement key creation form
+		http.Redirect(w, r, "/keys", http.StatusFound)
+	}
+}
+
+// settingsAPIKeysHandler serves the API keys settings page.
+func settingsAPIKeysHandler(sessionRepo repository.SessionRepository, userRepo repository.UserRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := getAuthenticatedUser(w, r, sessionRepo, userRepo)
+		if user == nil {
+			return
+		}
+
+		data := pages.APIKeysPageData{
+			DashboardData: buildDashboardData(user, "/settings/api-keys"),
+			APIKeys:       []*models.APIKey{}, // TODO: Fetch from repository
+			CanCreate:     true,
+		}
+
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		pages.SettingsAPIKeysPage(data).Render(r.Context(), w)
+	}
+}
+
+// settingsProfileHandler serves the profile settings page.
+func settingsProfileHandler(sessionRepo repository.SessionRepository, userRepo repository.UserRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := getAuthenticatedUser(w, r, sessionRepo, userRepo)
+		if user == nil {
+			return
+		}
+
+		avatarURL := ""
+		if user.AvatarURL != nil {
+			avatarURL = *user.AvatarURL
+		}
+		name := ""
+		if user.Name != nil {
+			name = *user.Name
+		}
+		oauthProvider := ""
+		if user.OAuthProvider != nil {
+			oauthProvider = *user.OAuthProvider
+		}
+
+		data := pages.ProfilePageData{
+			DashboardData: buildDashboardData(user, "/settings/profile"),
+			Email:         user.Email,
+			Name:          name,
+			AvatarURL:     avatarURL,
+			EmailVerified: user.EmailVerified,
+			OAuthProvider: oauthProvider,
+		}
+
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		pages.SettingsProfilePage(data).Render(r.Context(), w)
+	}
+}
+
+// docsHandler redirects to documentation.
+func docsHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// For now, redirect to GitHub docs or show a simple page
+		http.Redirect(w, r, "https://github.com/Bidon15/banhbaoring#readme", http.StatusFound)
 	}
 }
