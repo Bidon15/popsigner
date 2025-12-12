@@ -680,9 +680,11 @@ func ensureUserHasOrg(ctx context.Context, user *models.User, orgRepo repository
 	// Check if user already has orgs
 	orgs, err := orgRepo.ListUserOrgs(ctx, user.ID)
 	if err != nil {
+		slog.Error("Failed to list user orgs", slog.String("user_id", user.ID.String()), slog.String("error", err.Error()))
 		return nil, err
 	}
 	if len(orgs) > 0 {
+		slog.Info("User has existing org", slog.String("user_id", user.ID.String()), slog.String("org_id", orgs[0].ID.String()))
 		return orgs[0], nil
 	}
 
@@ -696,7 +698,9 @@ func ensureUserHasOrg(ctx context.Context, user *models.User, orgRepo repository
 		Name: name,
 	}
 
+	slog.Info("Creating default org for user", slog.String("user_id", user.ID.String()), slog.String("org_name", name))
 	if err := orgRepo.Create(ctx, org, user.ID); err != nil {
+		slog.Error("Failed to create default org", slog.String("user_id", user.ID.String()), slog.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to create default org: %w", err)
 	}
 
