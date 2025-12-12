@@ -108,6 +108,12 @@ func Load() (*Config, error) {
 	v.BindEnv("auth.oauth_google_secret", "BANHBAO_AUTH_OAUTH_GOOGLE_SECRET")
 	v.BindEnv("auth.oauth_callback_url", "BANHBAO_AUTH_OAUTH_CALLBACK_URL")
 
+	// Explicitly bind OpenBao environment variables
+	v.BindEnv("openbao.address", "BANHBAO_OPENBAO_ADDRESS")
+	v.BindEnv("openbao.token", "BANHBAO_OPENBAO_TOKEN")
+	v.BindEnv("openbao.namespace", "BANHBAO_OPENBAO_NAMESPACE")
+	v.BindEnv("openbao.secp256k1_path", "BANHBAO_OPENBAO_SECP256K1_PATH")
+
 	// Read config file (optional)
 	if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
