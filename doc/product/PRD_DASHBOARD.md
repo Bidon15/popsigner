@@ -69,7 +69,7 @@
 │  │                                                                       │  │
 │  │     Name: [Celestia Infra Co.______________]                         │  │
 │  │                                                                       │  │
-│  │     Your API URL: api.popsigner.io/celestia-infra-co                 │  │
+│  │     Your API URL: api.popsigner.com/celestia-infra-co                 │  │
 │  │                                                                       │  │
 │  │     ┌─────────────────────────────────────────────┐                   │  │
 │  │     │              Continue →                      │                   │  │

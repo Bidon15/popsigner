@@ -1,17 +1,17 @@
-//! Error types for the BanhBaoRing SDK.
+//! Error types for the POPSigner SDK.
 //!
 //! This module provides a unified error type for all SDK operations,
 //! with rich error information from the API.
 
 use thiserror::Error;
 
-/// Result type for BanhBaoRing operations.
-pub type Result<T> = std::result::Result<T, BanhBaoRingError>;
+/// Result type for POPSigner operations.
+pub type Result<T> = std::result::Result<T, POPSignerError>;
 
-/// Errors that can occur when using the BanhBaoRing SDK.
+/// Errors that can occur when using the POPSigner SDK.
 #[derive(Error, Debug)]
-pub enum BanhBaoRingError {
-    /// API error from the BanhBaoRing service.
+pub enum POPSignerError {
+    /// API error from the POPSigner service.
     #[error("API error ({status_code}): [{code}] {message}")]
     Api {
         /// Error code from the API.
@@ -72,13 +72,13 @@ pub enum BanhBaoRingError {
     },
 }
 
-impl BanhBaoRingError {
+impl POPSignerError {
     /// Returns true if this is a retryable error.
     pub fn is_retryable(&self) -> bool {
         match self {
-            BanhBaoRingError::RateLimited => true,
-            BanhBaoRingError::Http(_) => true,
-            BanhBaoRingError::Api { status_code, .. } => *status_code >= 500,
+            POPSignerError::RateLimited => true,
+            POPSignerError::Http(_) => true,
+            POPSignerError::Api { status_code, .. } => *status_code >= 500,
             _ => false,
         }
     }
@@ -87,18 +87,18 @@ impl BanhBaoRingError {
     pub fn is_auth_error(&self) -> bool {
         matches!(
             self,
-            BanhBaoRingError::Unauthorized
-                | BanhBaoRingError::Api { status_code: 401, .. }
-                | BanhBaoRingError::Api { status_code: 403, .. }
+            POPSignerError::Unauthorized
+                | POPSignerError::Api { status_code: 401, .. }
+                | POPSignerError::Api { status_code: 403, .. }
         )
     }
 
     /// Returns the HTTP status code if available.
     pub fn status_code(&self) -> Option<u16> {
         match self {
-            BanhBaoRingError::Api { status_code, .. } => Some(*status_code),
-            BanhBaoRingError::Unauthorized => Some(401),
-            BanhBaoRingError::RateLimited => Some(429),
+            POPSignerError::Api { status_code, .. } => Some(*status_code),
+            POPSignerError::Unauthorized => Some(401),
+            POPSignerError::RateLimited => Some(429),
             _ => None,
         }
     }
@@ -110,7 +110,7 @@ mod tests {
 
     #[test]
     fn test_error_display() {
-        let err = BanhBaoRingError::Api {
+        let err = POPSignerError::Api {
             code: "key_not_found".to_string(),
             message: "Key does not exist".to_string(),
             status_code: 404,
@@ -123,17 +123,17 @@ mod tests {
 
     #[test]
     fn test_is_retryable() {
-        let rate_limited = BanhBaoRingError::RateLimited;
+        let rate_limited = POPSignerError::RateLimited;
         assert!(rate_limited.is_retryable());
 
-        let server_error = BanhBaoRingError::Api {
+        let server_error = POPSignerError::Api {
             code: "internal".to_string(),
             message: "Internal server error".to_string(),
             status_code: 500,
         };
         assert!(server_error.is_retryable());
 
-        let not_found = BanhBaoRingError::Api {
+        let not_found = POPSignerError::Api {
             code: "not_found".to_string(),
             message: "Not found".to_string(),
             status_code: 404,
@@ -143,10 +143,10 @@ mod tests {
 
     #[test]
     fn test_is_auth_error() {
-        let unauthorized = BanhBaoRingError::Unauthorized;
+        let unauthorized = POPSignerError::Unauthorized;
         assert!(unauthorized.is_auth_error());
 
-        let api_401 = BanhBaoRingError::Api {
+        let api_401 = POPSignerError::Api {
             code: "unauthorized".to_string(),
             message: "Invalid API key".to_string(),
             status_code: 401,
@@ -156,15 +156,14 @@ mod tests {
 
     #[test]
     fn test_status_code() {
-        let err = BanhBaoRingError::Api {
+        let err = POPSignerError::Api {
             code: "test".to_string(),
             message: "Test".to_string(),
             status_code: 500,
         };
         assert_eq!(err.status_code(), Some(500));
 
-        let decode_err = BanhBaoRingError::Decode("bad base64".to_string());
+        let decode_err = POPSignerError::Decode("bad base64".to_string());
         assert_eq!(decode_err.status_code(), None);
     }
 }
-

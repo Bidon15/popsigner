@@ -30,12 +30,12 @@ impl KeysClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::{Client, types::CreateKeyRequest};
+    /// use popsigner::{Client, types::CreateKeyRequest};
     /// use uuid::Uuid;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     let namespace_id = Uuid::parse_str("...")?;
     ///     
     ///     let key = client.keys().create(CreateKeyRequest {
@@ -56,7 +56,7 @@ impl KeysClient {
 
     /// Create multiple keys in parallel.
     ///
-    /// Optimized for Celestia's parallel worker pattern. Creates keys with
+    /// Optimized for parallel worker patterns. Creates keys with
     /// sequential names like "prefix-1", "prefix-2", etc.
     ///
     /// # Arguments
@@ -66,12 +66,12 @@ impl KeysClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::{Client, types::CreateBatchRequest};
+    /// use popsigner::{Client, types::CreateBatchRequest};
     /// use uuid::Uuid;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     let namespace_id = Uuid::parse_str("...")?;
     ///     
     ///     let keys = client.keys().create_batch(CreateBatchRequest {
@@ -107,12 +107,12 @@ impl KeysClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     /// use uuid::Uuid;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     let key_id = Uuid::parse_str("...")?;
     ///     
     ///     let key = client.keys().get(&key_id).await?;
@@ -133,12 +133,12 @@ impl KeysClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     /// use uuid::Uuid;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     
     ///     // List all keys
     ///     let all_keys = client.keys().list(None).await?;
@@ -170,12 +170,12 @@ impl KeysClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     /// use uuid::Uuid;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     let key_id = Uuid::parse_str("...")?;
     ///     
     ///     client.keys().delete(&key_id).await?;
@@ -197,12 +197,12 @@ impl KeysClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     /// use uuid::Uuid;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     let namespace_id = Uuid::parse_str("...")?;
     ///     
     ///     let key = client.keys().get_by_name(&namespace_id, "my-key").await?;
@@ -228,4 +228,3 @@ mod tests {
         // Just verify it compiles and doesn't panic
     }
 }
-

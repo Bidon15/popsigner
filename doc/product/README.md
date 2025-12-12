@@ -137,7 +137,7 @@ One-command deployment of the entire stack.
 
 **Deployment Example:**
 ```yaml
-apiVersion: popsigner.io/v1
+apiVersion: popsigner.com/v1
 kind: POPSignerCluster
 metadata:
   name: production

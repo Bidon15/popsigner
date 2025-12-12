@@ -1,4 +1,4 @@
-package banhbaoring
+package popsigner
 
 import (
 	"context"
@@ -110,7 +110,7 @@ func (r *keyResponse) toKey() *Key {
 //
 // Example:
 //
-//	key, err := client.Keys.Create(ctx, banhbaoring.CreateKeyRequest{
+//	key, err := client.Keys.Create(ctx, popsigner.CreateKeyRequest{
 //	    Name:        "sequencer-main",
 //	    NamespaceID: namespaceID,
 //	    Algorithm:   "secp256k1",
@@ -142,7 +142,7 @@ func (s *KeysService) Create(ctx context.Context, req CreateKeyRequest) (*Key, e
 //
 // Example:
 //
-//	keys, err := client.Keys.CreateBatch(ctx, banhbaoring.CreateBatchRequest{
+//	keys, err := client.Keys.CreateBatch(ctx, popsigner.CreateBatchRequest{
 //	    Prefix:      "blob-worker",
 //	    Count:       4,
 //	    NamespaceID: prodNamespace,
@@ -198,7 +198,7 @@ type ListOptions struct {
 //	keys, err := client.Keys.List(ctx, nil)
 //
 //	// List keys in a specific namespace
-//	keys, err := client.Keys.List(ctx, &banhbaoring.ListOptions{
+//	keys, err := client.Keys.List(ctx, &popsigner.ListOptions{
 //	    NamespaceID: &namespaceID,
 //	})
 func (s *KeysService) List(ctx context.Context, opts *ListOptions) ([]*Key, error) {
@@ -232,7 +232,7 @@ func (s *KeysService) Delete(ctx context.Context, keyID uuid.UUID) error {
 //
 // Example:
 //
-//	key, err := client.Keys.Import(ctx, banhbaoring.ImportKeyRequest{
+//	key, err := client.Keys.Import(ctx, popsigner.ImportKeyRequest{
 //	    Name:        "imported-key",
 //	    NamespaceID: namespaceID,
 //	    PrivateKey:  base64PrivateKey,
@@ -267,4 +267,3 @@ func (s *KeysService) Export(ctx context.Context, keyID uuid.UUID) (*ExportKeyRe
 	}
 	return &resp, nil
 }
-

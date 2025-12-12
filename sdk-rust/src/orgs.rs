@@ -25,11 +25,11 @@ impl OrgsClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     
     ///     let org = client.orgs().get_current().await?;
     ///     println!("Organization: {} ({})", org.name, org.plan);
@@ -45,11 +45,11 @@ impl OrgsClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     
     ///     let namespaces = client.orgs().list_namespaces().await?;
     ///     for ns in namespaces {
@@ -71,12 +71,12 @@ impl OrgsClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     /// use uuid::Uuid;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     let namespace_id = Uuid::parse_str("...")?;
     ///     
     ///     let ns = client.orgs().get_namespace(&namespace_id).await?;
@@ -99,11 +99,11 @@ impl OrgsClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     
     ///     let ns = client.orgs().create_namespace("production").await?;
     ///     println!("Created namespace: {} ({})", ns.name, ns.id);
@@ -132,12 +132,12 @@ impl OrgsClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     /// use uuid::Uuid;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     let namespace_id = Uuid::parse_str("...")?;
     ///     
     ///     client.orgs().delete_namespace(&namespace_id).await?;
@@ -163,4 +163,3 @@ mod tests {
         // Just verify it compiles and doesn't panic
     }
 }
-

@@ -45,7 +45,7 @@ POPSigner is Point-of-Presence signing infrastructure. It deploys where your sys
 Deploy without infrastructure. Connect and sign.
 
 ```bash
-# Get your API key at https://popsigner.io
+# Get your API key at https://popsigner.com
 go get github.com/Bidon15/banhbaoring
 ```
 
@@ -266,7 +266,7 @@ go install github.com/Bidon15/banhbaoring/cmd/popsigner@latest
 | **Priority POPSigner** | €499 | Priority lanes, region selection, 99.9% SLA |
 | **Dedicated POPSigner** | €19,999 | Region-pinned, CPU isolation, 99.99% SLA |
 
-Self-host option is always free. [View pricing details →](https://popsigner.io/pricing)
+Self-host option is always free. [View pricing details →](https://popsigner.com/pricing)
 
 ---
 
@@ -300,7 +300,7 @@ Apache License 2.0 - See [LICENSE](LICENSE) for details.
 <p align="center">
   <b>POPSigner</b> — Signing at the point of execution.
   <br><br>
-  <a href="https://popsigner.io">Deploy POPSigner</a> · 
+  <a href="https://popsigner.com">Deploy POPSigner</a> · 
   <a href="doc/product/INTEGRATION.md">Documentation</a> · 
   <a href="https://github.com/Bidon15/banhbaoring">GitHub</a>
 </p>

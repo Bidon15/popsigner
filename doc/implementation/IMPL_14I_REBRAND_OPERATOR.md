@@ -17,7 +17,7 @@ Rename the Kubernetes operator from `banhbaoring` to `popsigner`, including CRDs
 ### API Group Change
 
 ```
-banhbaoring.io  →  popsigner.io
+banhbaoring.io  →  popsigner.com
 ```
 
 ### Files to Rename
@@ -30,7 +30,7 @@ operator/api/v1/banhbaoringrestore_types.go    →  popsignerrestore_types.go
 
 operator/charts/banhbaoring-operator/          →  popsigner-operator/
 
-config/crd/bases/banhbaoring.io_*.yaml         →  popsigner.io_*.yaml
+config/crd/bases/banhbaoring.io_*.yaml         →  popsigner.com_*.yaml
 ```
 
 ---
@@ -68,7 +68,7 @@ var (
 package v1
 
 var (
-    GroupVersion = schema.GroupVersion{Group: "popsigner.io", Version: "v1"}
+    GroupVersion = schema.GroupVersion{Group: "popsigner.com", Version: "v1"}
     SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}
 )
 ```
@@ -171,7 +171,7 @@ const (
     LabelAppValue  = "popsigner"
     LabelComponent = "app.kubernetes.io/component"
     
-    AnnotationTenant = "popsigner.io/tenant"
+    AnnotationTenant = "popsigner.com/tenant"
 )
 ```
 
@@ -223,7 +223,7 @@ controlPlane:
 Replace all occurrences:
 - `banhbaoring` → `popsigner`
 - `BanhBaoRing` → `POPSigner`
-- `banhbaoring.io` → `popsigner.io`
+- `banhbaoring.io` → `popsigner.com`
 
 ### Part 6: Update Config Files
 
@@ -250,7 +250,7 @@ apiVersion: banhbaoring.io/v1alpha1
 kind: BanhBaoRingCluster
 
 # After
-apiVersion: popsigner.io/v1alpha1
+apiVersion: popsigner.com/v1alpha1
 kind: POPSignerCluster
 ```
 
@@ -358,5 +358,5 @@ Verification:
 
 ## Output
 
-After completion, the operator is fully rebranded to POPSigner with new API group `popsigner.io`.
+After completion, the operator is fully rebranded to POPSigner with new API group `popsigner.com`.
 

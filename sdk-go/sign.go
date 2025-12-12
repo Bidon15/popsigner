@@ -1,4 +1,4 @@
-package banhbaoring
+package popsigner
 
 import (
 	"context"
@@ -95,8 +95,8 @@ func (s *SignService) Sign(ctx context.Context, keyID uuid.UUID, data []byte, pr
 //
 // Example:
 //
-//	results, err := client.Sign.SignBatch(ctx, banhbaoring.BatchSignRequest{
-//	    Requests: []banhbaoring.SignRequest{
+//	results, err := client.Sign.SignBatch(ctx, popsigner.BatchSignRequest{
+//	    Requests: []popsigner.SignRequest{
 //	        {KeyID: worker1, Data: tx1},
 //	        {KeyID: worker2, Data: tx2},
 //	        {KeyID: worker3, Data: tx3},
@@ -162,4 +162,3 @@ type SignWithOptions struct {
 	// Prehashed indicates if the data is already hashed.
 	Prehashed bool
 }
-

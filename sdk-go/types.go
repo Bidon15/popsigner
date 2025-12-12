@@ -1,8 +1,8 @@
-// Package banhbaoring provides the official Go SDK for the BanhBaoRing Control Plane API.
+// Package popsigner provides the official Go SDK for the POPSigner Control Plane API.
 //
-// BanhBaoRing is a secure key management and signing service backed by OpenBao,
-// designed for blockchain applications like Celestia sequencers.
-package banhbaoring
+// POPSigner is Point-of-Presence signing infrastructure.
+// Deploy inline with execution. Keys remain remote. You remain sovereign.
+package popsigner
 
 import (
 	"time"
@@ -128,13 +128,12 @@ type AuditLog struct {
 
 // PlanLimits represents the limits for an organization's plan.
 type PlanLimits struct {
-	MaxKeys             int `json:"max_keys"`
-	MaxNamespaces       int `json:"max_namespaces"`
-	MaxMembers          int `json:"max_members"`
-	MaxSignsPerMonth    int `json:"max_signs_per_month"`
-	CurrentKeys         int `json:"current_keys"`
-	CurrentNamespaces   int `json:"current_namespaces"`
-	CurrentMembers      int `json:"current_members"`
+	MaxKeys               int `json:"max_keys"`
+	MaxNamespaces         int `json:"max_namespaces"`
+	MaxMembers            int `json:"max_members"`
+	MaxSignsPerMonth      int `json:"max_signs_per_month"`
+	CurrentKeys           int `json:"current_keys"`
+	CurrentNamespaces     int `json:"current_namespaces"`
+	CurrentMembers        int `json:"current_members"`
 	CurrentSignsThisMonth int `json:"current_signs_this_month"`
 }
-

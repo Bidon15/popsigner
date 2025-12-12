@@ -1,9 +1,9 @@
-//! BanhBaoRing API client.
+//! POPSigner API client.
 //!
-//! The main entry point for interacting with the BanhBaoRing Control Plane API.
+//! The main entry point for interacting with the POPSigner Control Plane API.
 
 use crate::audit::AuditClient;
-use crate::error::{BanhBaoRingError, Result};
+use crate::error::{POPSignerError, Result};
 use crate::keys::KeysClient;
 use crate::orgs::OrgsClient;
 use crate::sign::SignClient;
@@ -11,21 +11,21 @@ use reqwest::{header, Client as HttpClient};
 use serde::Deserialize;
 use std::time::Duration;
 
-const DEFAULT_BASE_URL: &str = "https://api.banhbaoring.io";
+const DEFAULT_BASE_URL: &str = "https://api.popsigner.io";
 const DEFAULT_TIMEOUT_SECS: u64 = 30;
 
-/// BanhBaoRing API client.
+/// POPSigner API client.
 ///
 /// # Example
 ///
 /// ```rust,no_run
-/// use banhbaoring::Client;
-/// use banhbaoring::types::CreateKeyRequest;
+/// use popsigner::Client;
+/// use popsigner::types::CreateKeyRequest;
 /// use uuid::Uuid;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let client = Client::new("bbr_live_xxxxx");
+///     let client = Client::new("psk_live_xxxxx");
 ///     
 ///     // Create a key
 ///     let namespace_id = Uuid::parse_str("...")?;
@@ -51,7 +51,7 @@ pub struct Client {
 /// Configuration options for the client.
 #[derive(Debug, Clone)]
 pub struct ClientConfig {
-    /// Base URL for the API (default: https://api.banhbaoring.io).
+    /// Base URL for the API (default: https://api.popsigner.io).
     pub base_url: Option<String>,
     /// Request timeout (default: 30 seconds).
     pub timeout: Option<Duration>,
@@ -70,18 +70,18 @@ impl Default for ClientConfig {
 }
 
 impl Client {
-    /// Create a new BanhBaoRing client with default configuration.
+    /// Create a new POPSigner client with default configuration.
     ///
     /// # Arguments
     ///
-    /// * `api_key` - Your BanhBaoRing API key (e.g., "bbr_live_xxxxx")
+    /// * `api_key` - Your POPSigner API key (e.g., "psk_live_xxxxx")
     ///
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     ///
-    /// let client = Client::new("bbr_live_xxxxx");
+    /// let client = Client::new("psk_live_xxxxx");
     /// ```
     pub fn new(api_key: impl Into<String>) -> Self {
         Self::with_config(api_key, ClientConfig::default())
@@ -92,21 +92,21 @@ impl Client {
         &self.base_url
     }
 
-    /// Create a new BanhBaoRing client with custom configuration.
+    /// Create a new POPSigner client with custom configuration.
     ///
     /// # Arguments
     ///
-    /// * `api_key` - Your BanhBaoRing API key
+    /// * `api_key` - Your POPSigner API key
     /// * `config` - Client configuration options
     ///
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::{Client, ClientConfig};
+    /// use popsigner::{Client, ClientConfig};
     /// use std::time::Duration;
     ///
-    /// let client = Client::with_config("bbr_live_xxxxx", ClientConfig {
-    ///     base_url: Some("https://api.staging.banhbaoring.io".to_string()),
+    /// let client = Client::with_config("psk_live_xxxxx", ClientConfig {
+    ///     base_url: Some("https://api.staging.popsigner.io".to_string()),
     ///     timeout: Some(Duration::from_secs(60)),
     ///     user_agent: Some("my-app/1.0".to_string()),
     /// });
@@ -117,7 +117,7 @@ impl Client {
             .unwrap_or(Duration::from_secs(DEFAULT_TIMEOUT_SECS));
         let user_agent = config
             .user_agent
-            .unwrap_or_else(|| format!("banhbaoring-rust/{}", env!("CARGO_PKG_VERSION")));
+            .unwrap_or_else(|| format!("popsigner-rust/{}", env!("CARGO_PKG_VERSION")));
 
         let http = HttpClient::builder()
             .timeout(timeout)
@@ -139,9 +139,9 @@ impl Client {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     ///
-    /// let client = Client::new("bbr_live_xxxxx");
+    /// let client = Client::new("psk_live_xxxxx");
     /// let keys_client = client.keys();
     /// ```
     pub fn keys(&self) -> KeysClient {
@@ -153,9 +153,9 @@ impl Client {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     ///
-    /// let client = Client::new("bbr_live_xxxxx");
+    /// let client = Client::new("psk_live_xxxxx");
     /// let sign_client = client.sign();
     /// ```
     pub fn sign(&self) -> SignClient {
@@ -167,9 +167,9 @@ impl Client {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     ///
-    /// let client = Client::new("bbr_live_xxxxx");
+    /// let client = Client::new("psk_live_xxxxx");
     /// let orgs_client = client.orgs();
     /// ```
     pub fn orgs(&self) -> OrgsClient {
@@ -181,9 +181,9 @@ impl Client {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     ///
-    /// let client = Client::new("bbr_live_xxxxx");
+    /// let client = Client::new("psk_live_xxxxx");
     /// let audit_client = client.audit();
     /// ```
     pub fn audit(&self) -> AuditClient {
@@ -255,15 +255,15 @@ impl Client {
         }
     }
 
-    async fn parse_error(&self, response: reqwest::Response) -> BanhBaoRingError {
+    async fn parse_error(&self, response: reqwest::Response) -> POPSignerError {
         let status = response.status().as_u16();
 
         // Handle specific status codes
         if status == 401 {
-            return BanhBaoRingError::Unauthorized;
+            return POPSignerError::Unauthorized;
         }
         if status == 429 {
-            return BanhBaoRingError::RateLimited;
+            return POPSignerError::RateLimited;
         }
 
         let error: std::result::Result<ApiErrorResponse, _> = response.json().await;
@@ -272,15 +272,15 @@ impl Client {
             Ok(e) => {
                 // Check for quota exceeded
                 if e.error.code == "quota_exceeded" {
-                    return BanhBaoRingError::QuotaExceeded(e.error.message);
+                    return POPSignerError::QuotaExceeded(e.error.message);
                 }
-                BanhBaoRingError::Api {
+                POPSignerError::Api {
                     code: e.error.code,
                     message: e.error.message,
                     status_code: status,
                 }
             }
-            Err(_) => BanhBaoRingError::Api {
+            Err(_) => POPSignerError::Api {
                 code: "unknown".to_string(),
                 message: "Unknown error".to_string(),
                 status_code: status,
@@ -336,4 +336,3 @@ mod tests {
         assert!(config.user_agent.is_none());
     }
 }
-

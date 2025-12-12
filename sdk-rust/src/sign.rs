@@ -1,10 +1,10 @@
 //! Signing operations.
 //!
 //! This module provides the SignClient for signing data with keys stored
-//! in BanhBaoRing. Supports both single and batch signing operations.
+//! in POPSigner. Supports both single and batch signing operations.
 
 use crate::client::Client;
-use crate::error::{BanhBaoRingError, Result};
+use crate::error::{POPSignerError, Result};
 use crate::types::{BatchSignRequest, SignResponse};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use serde::{Deserialize, Serialize};
@@ -33,12 +33,12 @@ impl SignClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     /// use uuid::Uuid;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     let key_id = Uuid::parse_str("...")?;
     ///     
     ///     // Sign raw data (will be hashed by the server)
@@ -54,13 +54,13 @@ impl SignClient {
     /// # Example with prehashed data
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     /// use uuid::Uuid;
     /// use sha2::{Sha256, Digest};
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     let key_id = Uuid::parse_str("...")?;
     ///     
     ///     // Hash data locally (requires sha2 crate)
@@ -97,7 +97,7 @@ impl SignClient {
 
         let signature = BASE64
             .decode(&response.signature)
-            .map_err(|e| BanhBaoRingError::Decode(e.to_string()))?;
+            .map_err(|e| POPSignerError::Decode(e.to_string()))?;
 
         Ok(SignResponse {
             key_id: *key_id,
@@ -108,7 +108,7 @@ impl SignClient {
 
     /// Sign multiple messages in parallel.
     ///
-    /// This is critical for Celestia's parallel blob submission pattern.
+    /// This is critical for parallel signing patterns.
     /// All signing operations are performed in a single API call, reducing
     /// latency significantly.
     ///
@@ -119,12 +119,12 @@ impl SignClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::{Client, types::{BatchSignRequest, BatchSignItem}};
+    /// use popsigner::{Client, types::{BatchSignRequest, BatchSignItem}};
     /// use uuid::Uuid;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     
     ///     let worker1 = Uuid::parse_str("...")?;
     ///     let worker2 = Uuid::parse_str("...")?;
@@ -196,7 +196,7 @@ impl SignClient {
 
             let signature = BASE64
                 .decode(&sig.signature)
-                .map_err(|e| BanhBaoRingError::Decode(e.to_string()))?;
+                .map_err(|e| POPSignerError::Decode(e.to_string()))?;
 
             results.push(SignResponse {
                 key_id: sig.key_id,
@@ -206,7 +206,7 @@ impl SignClient {
         }
 
         if errors > 0 && results.is_empty() {
-            return Err(BanhBaoRingError::BatchPartialFailure {
+            return Err(POPSignerError::BatchPartialFailure {
                 failed: errors,
                 total: request.requests.len(),
             });
@@ -227,12 +227,12 @@ impl SignClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     /// use uuid::Uuid;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     let key_id = Uuid::parse_str("...")?;
     ///     
     ///     let data = b"hello world";
@@ -289,4 +289,3 @@ mod tests {
         // Just verify it compiles and doesn't panic
     }
 }
-

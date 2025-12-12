@@ -45,7 +45,7 @@ app:
 # After
 app:
   name: POPSigner
-  url: https://popsigner.io
+  url: https://popsigner.com
   description: Point-of-Presence signing infrastructure
 ```
 
@@ -57,7 +57,7 @@ app:
 
 app:
   name: POPSigner
-  url: https://popsigner.io
+  url: https://popsigner.com
   
 server:
   host: 0.0.0.0
@@ -276,7 +276,7 @@ const (
 // After
 const (
     DefaultAppName = "POPSigner"
-    DefaultAppURL  = "https://popsigner.io"
+    DefaultAppURL  = "https://popsigner.com"
 )
 ```
 

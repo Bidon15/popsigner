@@ -1,6 +1,6 @@
 # POPSigner Rust SDK
 
-Official Rust SDK for the [POPSigner](https://popsigner.io) Control Plane API.
+Official Rust SDK for the [POPSigner](https://popsigner.com) Control Plane API.
 
 POPSigner is Point-of-Presence signing infrastructure. Keys are stored in OpenBao and **never leave the secure enclave**. You remain sovereign.
 
@@ -107,7 +107,7 @@ let client = Client::new("psk_live_xxxxx");
 
 // Custom configuration
 let client = Client::with_config("psk_live_xxxxx", ClientConfig {
-    base_url: Some("https://api.staging.popsigner.io".to_string()),
+    base_url: Some("https://api.staging.popsigner.com".to_string()),
     timeout: Some(Duration::from_secs(60)),
     user_agent: Some("my-app/1.0".to_string()),
 });
@@ -283,6 +283,6 @@ MIT OR Apache-2.0
 
 ## Links
 
-- [POPSigner Documentation](https://docs.popsigner.io)
-- [API Reference](https://docs.popsigner.io/api)
+- [POPSigner Documentation](https://docs.popsigner.com)
+- [API Reference](https://docs.popsigner.com/api)
 - [GitHub Repository](https://github.com/popsigner/sdk-rust)

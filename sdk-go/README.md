@@ -1,6 +1,6 @@
 # POPSigner Go SDK
 
-Official Go SDK for the [POPSigner](https://popsigner.io) Control Plane API.
+Official Go SDK for the [POPSigner](https://popsigner.com) Control Plane API.
 
 POPSigner is Point-of-Presence signing infrastructure backed by OpenBao. Keys remain remote. You remain sovereign.
 

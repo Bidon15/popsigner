@@ -1,4 +1,4 @@
-package banhbaoring
+package popsigner
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ const (
 	headerContentType = "Content-Type"
 	headerUserAgent   = "User-Agent"
 	contentTypeJSON   = "application/json"
-	sdkUserAgent      = "banhbaoring-go/1.0.0"
+	sdkUserAgent      = "popsigner-go/1.0.0"
 )
 
 // doRequest performs an HTTP request and handles common error cases.
@@ -102,4 +102,3 @@ func (c *Client) patch(ctx context.Context, path string, body interface{}, resul
 func (c *Client) delete(ctx context.Context, path string) error {
 	return c.doRequest(ctx, http.MethodDelete, path, nil, nil)
 }
-

@@ -1,4 +1,4 @@
-//! Type definitions for the BanhBaoRing SDK.
+//! Type definitions for the POPSigner SDK.
 //!
 //! This module contains all the request and response types used by the SDK.
 
@@ -226,4 +226,3 @@ mod tests {
         assert!(json.contains("4"));
     }
 }
-

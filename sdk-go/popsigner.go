@@ -1,4 +1,8 @@
-package banhbaoring
+// Package popsigner provides the official Go SDK for the POPSigner Control Plane API.
+//
+// POPSigner is Point-of-Presence signing infrastructure.
+// Deploy inline with execution. Keys remain remote. You remain sovereign.
+package popsigner
 
 import (
 	"net/http"
@@ -6,17 +10,17 @@ import (
 )
 
 const (
-	// DefaultBaseURL is the default BanhBaoRing API endpoint.
-	DefaultBaseURL = "https://api.banhbaoring.io"
+	// DefaultBaseURL is the default POPSigner API endpoint.
+	DefaultBaseURL = "https://api.popsigner.com"
 	// DefaultTimeout is the default HTTP client timeout.
 	DefaultTimeout = 30 * time.Second
 )
 
-// Client is the BanhBaoRing API client.
+// Client is the POPSigner API client.
 //
 // Use NewClient to create a new client with an API key:
 //
-//	client := banhbaoring.NewClient("bbr_live_xxxxx")
+//	client := popsigner.NewClient("psk_live_xxxxx")
 type Client struct {
 	apiKey     string
 	baseURL    string
@@ -36,7 +40,7 @@ type Option func(*Client)
 //
 // Example:
 //
-//	client := banhbaoring.NewClient("key", banhbaoring.WithBaseURL("https://custom.api.io"))
+//	client := popsigner.NewClient("key", popsigner.WithBaseURL("https://custom.api.io"))
 func WithBaseURL(url string) Option {
 	return func(c *Client) {
 		c.baseURL = url
@@ -48,7 +52,7 @@ func WithBaseURL(url string) Option {
 // Example:
 //
 //	httpClient := &http.Client{Timeout: 60 * time.Second}
-//	client := banhbaoring.NewClient("key", banhbaoring.WithHTTPClient(httpClient))
+//	client := popsigner.NewClient("key", popsigner.WithHTTPClient(httpClient))
 func WithHTTPClient(httpClient *http.Client) Option {
 	return func(c *Client) {
 		c.httpClient = httpClient
@@ -59,7 +63,7 @@ func WithHTTPClient(httpClient *http.Client) Option {
 //
 // Example:
 //
-//	client := banhbaoring.NewClient("key", banhbaoring.WithTimeout(60 * time.Second))
+//	client := popsigner.NewClient("key", popsigner.WithTimeout(60 * time.Second))
 func WithTimeout(timeout time.Duration) Option {
 	return func(c *Client) {
 		if c.httpClient == nil {
@@ -69,15 +73,15 @@ func WithTimeout(timeout time.Duration) Option {
 	}
 }
 
-// NewClient creates a new BanhBaoRing API client.
+// NewClient creates a new POPSigner API client.
 //
-// The apiKey should be a valid BanhBaoRing API key in the format "bbr_live_xxxxx"
-// or "bbr_test_xxxxx".
+// The apiKey should be a valid POPSigner API key in the format "psk_live_xxxxx"
+// or "psk_test_xxxxx".
 //
 // Example:
 //
-//	client := banhbaoring.NewClient("bbr_live_xxxxx")
-//	key, err := client.Keys.Create(ctx, banhbaoring.CreateKeyRequest{
+//	client := popsigner.NewClient("psk_live_xxxxx")
+//	key, err := client.Keys.Create(ctx, popsigner.CreateKeyRequest{
 //	    Name:        "sequencer",
 //	    NamespaceID: namespaceID,
 //	})
@@ -107,4 +111,3 @@ func NewClient(apiKey string, opts ...Option) *Client {
 func (c *Client) BaseURL() string {
 	return c.baseURL
 }
-

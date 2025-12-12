@@ -184,7 +184,7 @@ Create the cluster resource:
 
 ```bash
 kubectl apply -f - <<EOF
-apiVersion: popsigner.io/v1alpha1
+apiVersion: popsigner.com/v1alpha1
 kind: POPSignerCluster
 metadata:
   name: production

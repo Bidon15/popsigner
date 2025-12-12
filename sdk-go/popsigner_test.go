@@ -1,4 +1,4 @@
-package banhbaoring
+package popsigner
 
 import (
 	"context"
@@ -515,4 +515,3 @@ func TestPtr(t *testing.T) {
 		t.Errorf("expected %v, got %v", event, *ptr)
 	}
 }
-

@@ -466,17 +466,17 @@ Refactor the Kubernetes operator including:
 
 ```
 - OLD: banhbaoring.io
-- NEW: popsigner.io
+- NEW: popsigner.com
 ```
 
 #### CRD Names
 
 | Old | New |
 |-----|-----|
-| `banhbaoringclusters.banhbaoring.io` | `popsignerclusters.popsigner.io` |
-| `banhbaoringtenants.banhbaoring.io` | `popsignertenants.popsigner.io` |
-| `banhbaoringbackups.banhbaoring.io` | `popsignerbackups.popsigner.io` |
-| `banhbaoringrestores.banhbaoring.io` | `popsignerrestores.popsigner.io` |
+| `banhbaoringclusters.banhbaoring.io` | `popsignerclusters.popsigner.com` |
+| `banhbaoringtenants.banhbaoring.io` | `popsignertenants.popsigner.com` |
+| `banhbaoringbackups.banhbaoring.io` | `popsignerbackups.popsigner.com` |
+| `banhbaoringrestores.banhbaoring.io` | `popsignerrestores.popsigner.com` |
 
 ### 3.3 Files to Rename
 
@@ -546,7 +546,7 @@ labels:
 labels:
   app.kubernetes.io/name: popsigner
   app.kubernetes.io/component: control-plane
-  popsigner.io/tenant: default
+  popsigner.com/tenant: default
 ```
 
 ### 3.9 Implementation Checklist - Stage 3
@@ -618,7 +618,7 @@ This is a **clean break** with no backward compatibility. Users must:
 | Env var | `BANHBAO_TOKEN` | `POPSIGNER_API_KEY` |
 | Go package | `banhbaoring` | `popsigner` |
 | Rust crate | `banhbaoring` | `popsigner` |
-| CRD API group | `banhbaoring.io` | `popsigner.io` |
+| CRD API group | `banhbaoring.io` | `popsigner.com` |
 | Helm chart | `banhbaoring-operator` | `popsigner-operator` |
 
 ### Rollout Strategy
@@ -637,7 +637,7 @@ go install github.com/Bidon15/banhbaoring/cmd/popsigner@latest
 
 # 2. Update environment variables
 export POPSIGNER_API_KEY="psk_xxx"  # Get new key from dashboard
-export POPSIGNER_ADDR="https://api.popsigner.io"
+export POPSIGNER_ADDR="https://api.popsigner.com"
 
 # 3. Update Go imports
 # Before: import "github.com/banhbaoring/sdk-go"

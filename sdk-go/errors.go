@@ -1,4 +1,4 @@
-package banhbaoring
+package popsigner
 
 import (
 	"encoding/json"
@@ -133,4 +133,3 @@ func IsAPIError(err error) (*Error, bool) {
 	}
 	return nil, false
 }
-

@@ -1,20 +1,20 @@
-//! # BanhBaoRing Rust SDK
+//! # POPSigner Rust SDK
 //!
-//! Official Rust SDK for the BanhBaoRing Control Plane API.
+//! Official Rust SDK for the POPSigner Control Plane API.
 //!
-//! BanhBaoRing provides secure key management for Celestia and Cosmos SDK applications.
-//! Keys are stored in OpenBao (Vault fork) and never leave the secure enclave.
+//! POPSigner is Point-of-Presence signing infrastructure.
+//! Deploy inline with execution. Keys remain remote. You remain sovereign.
 //!
 //! ## Quick Start
 //!
 //! ```rust,no_run
-//! use banhbaoring::{Client, types::CreateKeyRequest};
+//! use popsigner::{Client, types::CreateKeyRequest};
 //! use uuid::Uuid;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     // Create a client with your API key
-//!     let client = Client::new("bbr_live_xxxxx");
+//!     let client = Client::new("psk_live_xxxxx");
 //!     
 //!     // Create a key
 //!     let namespace_id = Uuid::parse_str("...")?;
@@ -35,17 +35,17 @@
 //! }
 //! ```
 //!
-//! ## Parallel Workers (Celestia Pattern)
+//! ## Parallel Workers Pattern
 //!
-//! For high-throughput blob submission, use batch operations:
+//! For high-throughput signing, use batch operations:
 //!
 //! ```rust,no_run
-//! use banhbaoring::{Client, types::{CreateBatchRequest, BatchSignRequest, BatchSignItem}};
+//! use popsigner::{Client, types::{CreateBatchRequest, BatchSignRequest, BatchSignItem}};
 //! use uuid::Uuid;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let client = Client::new("bbr_live_xxxxx");
+//!     let client = Client::new("psk_live_xxxxx");
 //!     let namespace_id = Uuid::parse_str("...")?;
 //!     
 //!     // Create 4 worker keys
@@ -83,19 +83,19 @@
 //!
 //! ## Error Handling
 //!
-//! All operations return `Result<T, BanhBaoRingError>`:
+//! All operations return `Result<T, POPSignerError>`:
 //!
 //! ```rust,no_run
-//! use banhbaoring::{Client, error::BanhBaoRingError};
+//! use popsigner::{Client, error::POPSignerError};
 //!
 //! #[tokio::main]
 //! async fn main() {
-//!     let client = Client::new("bbr_live_xxxxx");
+//!     let client = Client::new("psk_live_xxxxx");
 //!     
 //!     match client.keys().list(None).await {
 //!         Ok(keys) => println!("Found {} keys", keys.len()),
-//!         Err(BanhBaoRingError::Unauthorized) => println!("Invalid API key"),
-//!         Err(BanhBaoRingError::RateLimited) => println!("Rate limited, retry later"),
+//!         Err(POPSignerError::Unauthorized) => println!("Invalid API key"),
+//!         Err(POPSignerError::RateLimited) => println!("Rate limited, retry later"),
 //!         Err(e) => println!("Error: {}", e),
 //!     }
 //! }
@@ -111,11 +111,10 @@ pub mod types;
 
 // Re-export main types at the crate root
 pub use client::{Client, ClientConfig};
-pub use error::{BanhBaoRingError, Result};
+pub use error::{POPSignerError, Result};
 
 // Re-export types module for easy access
 pub use types::{
     AuditLog, BatchSignItem, BatchSignRequest, CreateBatchRequest, CreateKeyRequest, Key,
     ListAuditLogsQuery, Namespace, Organization, PaginatedResponse, SignResponse,
 };
-
