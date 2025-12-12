@@ -1,4 +1,4 @@
-// Package redis provides Redis resource builders for the BanhBaoRing operator.
+// Package redis provides Redis resource builders for the POPSigner operator.
 package redis
 
 import (
@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
@@ -20,7 +20,7 @@ const (
 )
 
 // StatefulSet builds the Redis StatefulSet (standalone mode)
-func StatefulSet(cluster *banhbaoringv1.BanhBaoRingCluster) *appsv1.StatefulSet {
+func StatefulSet(cluster *popsignerv1.POPSignerCluster) *appsv1.StatefulSet {
 	spec := cluster.Spec.Redis
 	name := fmt.Sprintf("%s-redis", cluster.Name)
 	labels := constants.Labels(cluster.Name, constants.ComponentRedis, spec.Version)
@@ -123,7 +123,7 @@ func StatefulSet(cluster *banhbaoringv1.BanhBaoRingCluster) *appsv1.StatefulSet 
 }
 
 // Service builds the Redis Service
-func Service(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.Service {
+func Service(cluster *popsignerv1.POPSignerCluster) *corev1.Service {
 	name := fmt.Sprintf("%s-redis", cluster.Name)
 	labels := constants.Labels(cluster.Name, constants.ComponentRedis, cluster.Spec.Redis.Version)
 
@@ -144,7 +144,7 @@ func Service(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.Service {
 }
 
 // ConnectionSecret builds the Redis connection Secret
-func ConnectionSecret(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.Secret {
+func ConnectionSecret(cluster *popsignerv1.POPSignerCluster) *corev1.Secret {
 	name := fmt.Sprintf("%s-redis", cluster.Name)
 	labels := constants.Labels(cluster.Name, constants.ComponentRedis, cluster.Spec.Redis.Version)
 

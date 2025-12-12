@@ -4,8 +4,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// BanhBaoRingTenantSpec defines the desired state
-type BanhBaoRingTenantSpec struct {
+// POPSignerTenantSpec defines the desired state
+type POPSignerTenantSpec struct {
 	// Reference to the parent cluster
 	// +kubebuilder:validation:Required
 	ClusterRef ClusterReference `json:"clusterRef"`
@@ -28,7 +28,7 @@ type BanhBaoRingTenantSpec struct {
 	Settings TenantSettings `json:"settings,omitempty"`
 }
 
-// ClusterReference references a BanhBaoRingCluster
+// ClusterReference references a POPSignerCluster
 type ClusterReference struct {
 	Name string `json:"name"`
 }
@@ -75,8 +75,8 @@ type WebhookConfig struct {
 	Secret SecretKeyRef `json:"secret"`
 }
 
-// BanhBaoRingTenantStatus defines the observed state
-type BanhBaoRingTenantStatus struct {
+// POPSignerTenantStatus defines the observed state
+type POPSignerTenantStatus struct {
 	// Phase: Pending, Active, Suspended, Deleted
 	// +kubebuilder:default="Pending"
 	Phase string `json:"phase,omitempty"`
@@ -108,24 +108,25 @@ type TenantUsage struct {
 // +kubebuilder:printcolumn:name="Keys",type=integer,JSONPath=`.status.usage.keys`
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
-// BanhBaoRingTenant is the Schema for the banhbaoringtenants API
-type BanhBaoRingTenant struct {
+// POPSignerTenant is the Schema for the popsignertenants API
+type POPSignerTenant struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   BanhBaoRingTenantSpec   `json:"spec,omitempty"`
-	Status BanhBaoRingTenantStatus `json:"status,omitempty"`
+	Spec   POPSignerTenantSpec   `json:"spec,omitempty"`
+	Status POPSignerTenantStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// BanhBaoRingTenantList contains a list of BanhBaoRingTenant
-type BanhBaoRingTenantList struct {
+// POPSignerTenantList contains a list of POPSignerTenant
+type POPSignerTenantList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []BanhBaoRingTenant `json:"items"`
+	Items           []POPSignerTenant `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&BanhBaoRingTenant{}, &BanhBaoRingTenantList{})
+	SchemeBuilder.Register(&POPSignerTenant{}, &POPSignerTenantList{})
 }
+

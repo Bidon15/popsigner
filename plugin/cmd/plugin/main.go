@@ -1,3 +1,7 @@
+// POPSigner secp256k1 Plugin
+//
+// This OpenBao plugin provides native secp256k1 signing operations.
+// Keys never leave the vault boundary.
 package main
 
 import (

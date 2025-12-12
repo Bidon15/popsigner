@@ -1,4 +1,4 @@
-// Package constants provides shared constants for the BanhBaoRing operator.
+// Package constants provides shared constants for the POPSigner operator.
 package constants
 
 const (
@@ -41,10 +41,10 @@ const (
 	RestorePhaseFailed    = "Failed"
 
 	// Finalizer
-	Finalizer = "banhbaoring.io/finalizer"
+	Finalizer = "popsigner.com/finalizer"
 
 	// Manager name
-	ManagedBy = "banhbaoring-operator"
+	ManagedBy = "popsigner-operator"
 
 	// Default versions
 	DefaultOpenBaoVersion   = "2.0.0"
@@ -81,7 +81,7 @@ const (
 // Labels returns standard labels for a component
 func Labels(clusterName, component, version string) map[string]string {
 	return map[string]string{
-		LabelApp:       "banhbaoring",
+		LabelApp:       "popsigner",
 		LabelInstance:  clusterName,
 		LabelComponent: component,
 		LabelVersion:   version,
@@ -92,7 +92,7 @@ func Labels(clusterName, component, version string) map[string]string {
 // SelectorLabels returns labels for pod selection
 func SelectorLabels(clusterName, component string) map[string]string {
 	return map[string]string{
-		LabelApp:       "banhbaoring",
+		LabelApp:       "popsigner",
 		LabelInstance:  clusterName,
 		LabelComponent: component,
 	}

@@ -1,155 +1,315 @@
+/* POPSigner 80s CRT Terminal Aesthetic
+   Amber + Green phosphor on black
+   Stranger Things S5 / Bloomberg 1980s vibes */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ============================================
-   BanhBaoRing Design System
-   Dark mode with purple (#a855f7) + orange (#f97316) accents
-   ============================================ */
+:root {
+  /* === PHOSPHOR AMBER (Primary) === */
+  --phosphor-amber: #FFB000;
+  --phosphor-amber-bright: #FFCC00;
+  --phosphor-amber-dim: #CC8800;
+  --phosphor-amber-dark: #333300;
+  
+  /* === PHOSPHOR GREEN (Secondary) === */
+  --phosphor-green: #33FF00;
+  --phosphor-green-dim: #228B22;
+  --phosphor-green-dark: #1A4D1A;
+  --phosphor-green-bg: #0D1A0D;
+  
+  /* === TERMINAL RED (Alerts) === */
+  --terminal-red: #FF3333;
+  --terminal-red-dim: #CC2222;
+  
+  /* === CRT BACKGROUNDS === */
+  --bg-crt: #000000;
+  --bg-surface: #0A0A0A;
+  --bg-elevated: #111111;
+  --bg-glow: #0D1A0D;
+  
+  /* === TEXT (Phosphor colors) === */
+  --text-primary: #FFB000;    /* Amber */
+  --text-secondary: #33FF00;  /* Green */
+  --text-muted: #CC8800;      /* Dim amber */
+  --text-dim: #666600;        /* Very dim */
+}
 
 @layer base {
-  /* Smooth scrolling */
+  /* CRT Monitor base */
   html {
     scroll-behavior: smooth;
   }
+  
+  body {
+    background-color: var(--bg-crt);
+    color: var(--text-primary);
+    font-family: 'IBM Plex Mono', 'VT323', monospace;
+  }
 
-  /* Selection color - purple accent */
+  /* Selection color - amber accent */
   ::selection {
-    background-color: rgba(168, 85, 247, 0.3);
+    background-color: rgba(255, 176, 0, 0.3);
     color: #ffffff;
   }
 
-  /* Focus visible styles - purple */
+  /* Focus visible styles - amber */
   :focus-visible {
-    outline: 2px solid #a855f7;
+    outline: 2px solid var(--phosphor-amber);
     outline-offset: 2px;
   }
 
-  /* Custom scrollbar for dark theme */
+  /* Custom scrollbar for CRT theme */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    background: #0c0a14;
+    background: var(--bg-crt);
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #4a3f5c;
+    background: var(--phosphor-amber-dark);
     border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #6b5b8a;
+    background: var(--phosphor-amber-dim);
   }
 }
 
 @layer components {
   /* ============================================
-     Landing Page Components
+     Phosphor Glow Utilities
      ============================================ */
+  .glow-amber {
+    text-shadow: 0 0 8px var(--phosphor-amber);
+  }
+  .glow-green {
+    text-shadow: 0 0 8px var(--phosphor-green);
+  }
+  .glow-red {
+    text-shadow: 0 0 8px var(--terminal-red);
+  }
+
+  /* ============================================
+     CRT Scanline Overlay
+     ============================================ */
+  .crt-scanlines::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.15),
+      rgba(0, 0, 0, 0.15) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    pointer-events: none;
+  }
+
+  /* ============================================
+     Terminal Button
+     ============================================ */
+  .btn-terminal {
+    background-color: var(--phosphor-amber);
+    color: #000000;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+  }
+  .btn-terminal:hover {
+    background-color: var(--phosphor-amber-bright);
+    box-shadow: 0 0 20px var(--phosphor-amber);
+  }
+
+  /* CTA Button - Primary (Amber) */
+  .btn-cta {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3;
+    background-color: var(--phosphor-amber);
+    color: #000000;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+  }
+  .btn-cta:hover {
+    background-color: var(--phosphor-amber-bright);
+    box-shadow: 0 0 20px var(--phosphor-amber);
+  }
+
+  /* CTA Button - Ghost/Secondary */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3;
+    border: 1px solid var(--phosphor-amber-dark);
+    color: var(--phosphor-amber);
+    font-weight: 500;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover {
+    border-color: var(--phosphor-amber);
+    box-shadow: 0 0 10px rgba(255, 176, 0, 0.3);
+  }
+
+  /* ============================================
+     Terminal Card
+     ============================================ */
+  .card-crt {
+    background-color: var(--bg-crt);
+    border: 1px solid var(--phosphor-amber-dark);
+    border-radius: 0.25rem;
+  }
+  .card-crt:hover {
+    border-color: var(--phosphor-amber);
+    box-shadow: 0 0 10px rgba(255, 176, 0, 0.3);
+  }
+
+  /* Green variant */
+  .card-crt-green {
+    border-color: var(--phosphor-green-dark);
+  }
+  .card-crt-green:hover {
+    border-color: var(--phosphor-green);
+    box-shadow: 0 0 10px rgba(51, 255, 0, 0.3);
+  }
 
   /* Terminal-style card */
   .terminal-card {
-    @apply bg-terminal-card/80 backdrop-blur-sm border border-terminal-border rounded-xl p-6;
-    @apply hover:border-purple-500/30 transition-all duration-300;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--phosphor-amber-dark);
+    border-radius: 0.25rem;
+    padding: 1.5rem;
+    transition: all 0.2s;
+  }
+  .terminal-card:hover {
+    border-color: var(--phosphor-amber-dim);
   }
 
-  /* CTA Button - Primary (Purple to Orange gradient) */
-  .btn-cta {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3;
-    @apply bg-gradient-to-r from-purple-500 to-orange-500 text-white font-display font-semibold;
-    @apply rounded-xl transition-all duration-200;
-    @apply hover:shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02];
-    @apply active:scale-[0.98];
-    @apply focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-terminal-bg;
-  }
-
-  /* CTA Button - Secondary/Ghost */
-  .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3;
-    @apply border border-terminal-border text-terminal-text font-display font-medium;
-    @apply rounded-xl transition-all duration-200;
-    @apply hover:border-purple-500/50 hover:text-purple-300;
-    @apply focus:outline-none focus:ring-2 focus:ring-purple-500/50;
-  }
-
-  /* Code block terminal style */
+  /* ============================================
+     Code Blocks
+     ============================================ */
   .code-terminal {
-    @apply bg-terminal-bg border border-terminal-border rounded-xl;
-    @apply font-mono text-sm overflow-x-auto;
+    background-color: var(--bg-crt);
+    border: 1px solid var(--phosphor-amber-dark);
+    border-radius: 0.25rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.875rem;
+    overflow-x: auto;
   }
 
-  /* Section heading */
+  .code-block {
+    background-color: var(--bg-crt);
+    border: 1px solid var(--phosphor-amber-dark);
+    border-radius: 0.25rem;
+    padding: 1rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.875rem;
+    overflow-x: auto;
+  }
+
+  .code-inline {
+    background-color: var(--bg-surface);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.125rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.875rem;
+    color: var(--phosphor-green);
+  }
+
+  /* ============================================
+     Section Headings
+     ============================================ */
   .section-heading {
-    @apply text-3xl md:text-4xl font-display font-bold text-terminal-text;
+    font-size: 1.875rem;
+    font-weight: bold;
+    color: var(--phosphor-amber);
+    text-shadow: 0 0 10px var(--phosphor-amber);
   }
 
-  /* Section subheading */
   .section-subheading {
-    @apply text-terminal-muted text-lg max-w-2xl;
+    color: var(--text-muted);
+    font-size: 1.125rem;
   }
 
-  /* Feature icon container */
+  /* ============================================
+     Feature Icon
+     ============================================ */
   .feature-icon {
-    @apply w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20;
-    @apply flex items-center justify-center text-purple-400 text-xl;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.25rem;
+    background-color: rgba(255, 176, 0, 0.1);
+    border: 1px solid var(--phosphor-amber-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--phosphor-amber);
   }
 
-  /* Status LED indicator */
+  /* ============================================
+     Status LED Indicators
+     ============================================ */
   .status-led {
-    @apply w-2 h-2 rounded-full;
-    box-shadow: 0 0 6px currentColor;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
   }
 
-  .status-led-purple {
-    @apply bg-purple-500;
-    box-shadow: 0 0 6px rgba(168, 85, 247, 0.8);
+  .status-led-amber {
+    background-color: var(--phosphor-amber);
+    box-shadow: 0 0 6px var(--phosphor-amber);
   }
 
-  .status-led-teal {
-    @apply bg-terminal-teal;
-    box-shadow: 0 0 6px rgba(0, 240, 209, 0.8);
+  .status-led-green {
+    background-color: var(--phosphor-green);
+    box-shadow: 0 0 6px var(--phosphor-green);
   }
 
-  .status-led-orange {
-    @apply bg-orange-500;
-    box-shadow: 0 0 6px rgba(249, 115, 22, 0.8);
+  .status-led-red {
+    background-color: var(--terminal-red);
+    box-shadow: 0 0 6px var(--terminal-red);
   }
 
-  /* Glowing borders */
-  .glow-border-purple {
-    box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.3),
-                0 0 15px -3px rgba(168, 85, 247, 0.2);
+  /* ============================================
+     Glowing Borders
+     ============================================ */
+  .glow-border-amber {
+    box-shadow: 0 0 0 1px rgba(255, 176, 0, 0.3),
+                0 0 15px -3px rgba(255, 176, 0, 0.2);
   }
 
-  .glow-border-orange {
-    box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.3),
-                0 0 15px -3px rgba(249, 115, 22, 0.2);
+  .glow-border-green {
+    box-shadow: 0 0 0 1px rgba(51, 255, 0, 0.3),
+                0 0 15px -3px rgba(51, 255, 0, 0.2);
   }
 
-  .glow-border-teal {
-    box-shadow: 0 0 0 1px rgba(0, 240, 209, 0.3),
-                0 0 15px -3px rgba(0, 240, 209, 0.2);
+  .glow-border-red {
+    box-shadow: 0 0 0 1px rgba(255, 51, 51, 0.3),
+                0 0 15px -3px rgba(255, 51, 51, 0.2);
   }
 
-  /* Terminal grid background - purple tinted */
+  /* ============================================
+     Terminal Grid Background
+     ============================================ */
   .terminal-grid-bg {
     background-image:
-      linear-gradient(to right, rgba(74, 63, 92, 0.3) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(74, 63, 92, 0.3) 1px, transparent 1px);
+      linear-gradient(to right, rgba(51, 51, 0, 0.3) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(51, 51, 0, 0.3) 1px, transparent 1px);
     background-size: 60px 60px;
   }
 
   /* ============================================
-     Dashboard Components (existing)
+     Custom Scrollbar
      ============================================ */
-
-  /* Custom scrollbar */
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #2A2A30 transparent;
+    scrollbar-color: var(--phosphor-amber-dark) transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -162,15 +322,17 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: #2A2A30;
+    background: var(--phosphor-amber-dark);
     border-radius: 3px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: #3A3A42;
+    background: var(--phosphor-amber-dim);
   }
 
-  /* HTMX loading states */
+  /* ============================================
+     HTMX Loading States
+     ============================================ */
   .htmx-request .htmx-indicator {
     display: inline-flex;
   }
@@ -179,222 +341,315 @@
     display: none;
   }
 
-  /* Loading spinner */
   .htmx-request.htmx-indicator,
   .htmx-request .htmx-indicator {
     animation: spin 1s linear infinite;
   }
 
   @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 
-  /* Skeleton loading animation */
+  /* ============================================
+     Skeleton Loading
+     ============================================ */
   .skeleton {
     background: linear-gradient(
       90deg,
-      #1B1B1F 0%,
-      #232328 50%,
-      #1B1B1F 100%
+      var(--bg-crt) 0%,
+      var(--bg-surface) 50%,
+      var(--bg-crt) 100%
     );
     background-size: 200% 100%;
     animation: skeleton-shimmer 1.5s ease-in-out infinite;
   }
 
   @keyframes skeleton-shimmer {
-    0% {
-      background-position: 200% 0;
-    }
-    100% {
-      background-position: -200% 0;
-    }
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
   }
 
-  /* Form inputs */
+  /* ============================================
+     Form Inputs
+     ============================================ */
   .input {
-    @apply w-full px-4 py-2.5 bg-terminal-bg border border-terminal-border rounded-xl text-terminal-text placeholder-terminal-muted/50;
-    @apply focus:outline-none focus:ring-2 focus:ring-terminal-accent focus:border-transparent;
-    @apply transition-all duration-200;
+    @apply w-full px-4 py-2.5 rounded;
+    background-color: var(--bg-crt);
+    border: 1px solid var(--phosphor-amber-dark);
+    color: var(--phosphor-amber);
+    transition: all 0.2s;
   }
-
+  .input::placeholder {
+    color: var(--text-dim);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--phosphor-amber);
+    box-shadow: 0 0 10px rgba(255, 176, 0, 0.3);
+  }
   .input:disabled {
-    @apply opacity-50 cursor-not-allowed;
+    opacity: 0.5;
+    cursor: not-allowed;
   }
-
   .input-error {
-    @apply border-red-500/50 focus:ring-red-500;
+    border-color: var(--terminal-red);
+  }
+  .input-error:focus {
+    box-shadow: 0 0 10px rgba(255, 51, 51, 0.3);
   }
 
   /* Labels */
   .label {
-    @apply block text-sm font-medium text-terminal-text mb-1.5;
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--phosphor-amber);
+    margin-bottom: 0.375rem;
   }
 
   .label-hint {
-    @apply text-xs text-terminal-muted mt-1;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 0.25rem;
   }
 
-  /* Form groups */
   .form-group {
-    @apply mb-4;
+    margin-bottom: 1rem;
   }
 
-  /* Code blocks */
-  .code-block {
-    @apply bg-terminal-bg border border-terminal-border rounded-xl p-4 font-mono text-sm overflow-x-auto;
-  }
-
-  .code-inline {
-    @apply bg-terminal-bg/80 px-1.5 py-0.5 rounded font-mono text-sm text-terminal-accent;
-  }
-
-  /* Badges */
+  /* ============================================
+     Badges
+     ============================================ */
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium;
   }
 
   .badge-success {
-    @apply bg-emerald-500/10 text-emerald-400 border border-emerald-500/20;
+    background-color: rgba(51, 255, 0, 0.1);
+    color: var(--phosphor-green);
+    border: 1px solid var(--phosphor-green-dark);
   }
 
   .badge-warning {
-    @apply bg-amber-500/10 text-amber-400 border border-amber-500/20;
+    background-color: rgba(255, 176, 0, 0.1);
+    color: var(--phosphor-amber);
+    border: 1px solid var(--phosphor-amber-dark);
   }
 
   .badge-error {
-    @apply bg-red-500/10 text-red-400 border border-red-500/20;
+    background-color: rgba(255, 51, 51, 0.1);
+    color: var(--terminal-red);
+    border: 1px solid var(--terminal-red-dim);
   }
 
   .badge-info {
-    @apply bg-sky-500/10 text-sky-400 border border-sky-500/20;
+    background-color: rgba(51, 255, 0, 0.1);
+    color: var(--phosphor-green);
+    border: 1px solid var(--phosphor-green-dark);
   }
 
   .badge-neutral {
-    @apply bg-terminal-border/30 text-terminal-muted border border-terminal-border;
+    background-color: var(--bg-surface);
+    color: var(--text-muted);
+    border: 1px solid var(--phosphor-amber-dark);
   }
 
-  /* Tables */
+  /* ============================================
+     Tables
+     ============================================ */
   .table {
     @apply w-full text-sm;
   }
 
   .table th {
-    @apply text-left text-xs font-semibold text-terminal-muted uppercase tracking-wider px-4 py-3 border-b border-terminal-border;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--phosphor-amber-dark);
   }
 
   .table td {
-    @apply px-4 py-4 border-b border-terminal-border/50;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(51, 51, 0, 0.5);
   }
 
   .table tbody tr {
-    @apply transition-colors hover:bg-terminal-card/50;
+    transition: background-color 0.2s;
+  }
+  .table tbody tr:hover {
+    background-color: var(--bg-surface);
   }
 
-  /* Dividers */
+  /* ============================================
+     Dividers
+     ============================================ */
   .divider {
-    @apply border-t border-terminal-border my-6;
+    border-top: 1px solid var(--phosphor-amber-dark);
+    margin: 1.5rem 0;
   }
 
-  /* Glowing divider */
   .divider-glow {
-    @apply h-px bg-gradient-to-r from-transparent via-terminal-border-highlight to-transparent;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--phosphor-amber-dim), transparent);
   }
 
-  /* Page header */
+  /* ============================================
+     Page Headers
+     ============================================ */
   .page-header {
-    @apply mb-8;
+    margin-bottom: 2rem;
   }
 
   .page-title {
-    @apply text-2xl lg:text-3xl font-display font-bold text-terminal-text;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--phosphor-amber);
+    text-shadow: 0 0 8px var(--phosphor-amber);
   }
 
   .page-subtitle {
-    @apply mt-2 text-terminal-muted;
+    margin-top: 0.5rem;
+    color: var(--text-muted);
   }
 
-  /* Tabs */
+  /* ============================================
+     Tabs
+     ============================================ */
   .tabs {
-    @apply flex gap-1 border-b border-terminal-border;
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--phosphor-amber-dark);
   }
 
   .tab {
-    @apply px-4 py-2.5 text-sm font-medium text-terminal-muted -mb-px border-b-2 border-transparent;
-    @apply hover:text-terminal-text hover:border-terminal-border transition-colors;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab:hover {
+    color: var(--phosphor-amber);
+    border-color: var(--phosphor-amber-dark);
   }
 
   .tab-active {
-    @apply text-terminal-accent border-terminal-accent;
+    color: var(--phosphor-amber);
+    border-color: var(--phosphor-amber);
   }
 
-  /* Dropdown menus */
+  /* ============================================
+     Dropdown Menus
+     ============================================ */
   .dropdown-menu {
-    @apply absolute right-0 mt-2 w-48 bg-terminal-card border border-terminal-border rounded-xl shadow-xl z-50 py-1 overflow-hidden;
+    position: absolute;
+    right: 0;
+    margin-top: 0.5rem;
+    width: 12rem;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--phosphor-amber-dark);
+    border-radius: 0.25rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    z-index: 50;
+    padding: 0.25rem 0;
+    overflow: hidden;
   }
 
   .dropdown-item {
-    @apply block px-4 py-2 text-sm text-terminal-muted hover:text-terminal-text hover:bg-terminal-border/30 transition-colors;
+    display: block;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    transition: all 0.2s;
+  }
+  .dropdown-item:hover {
+    color: var(--phosphor-amber);
+    background-color: rgba(255, 176, 0, 0.1);
   }
 
   .dropdown-divider {
-    @apply border-t border-terminal-border my-1;
+    border-top: 1px solid var(--phosphor-amber-dark);
+    margin: 0.25rem 0;
   }
 
-  /* Tooltips */
+  /* ============================================
+     Tooltips
+     ============================================ */
   [data-tooltip] {
-    @apply relative cursor-help;
+    position: relative;
+    cursor: help;
   }
 
   [data-tooltip]::after {
     content: attr(data-tooltip);
-    @apply absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1;
-    @apply bg-terminal-card border border-terminal-border rounded text-xs text-terminal-text whitespace-nowrap;
-    @apply opacity-0 invisible transition-all duration-200;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--phosphor-amber-dark);
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--phosphor-amber);
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s;
   }
 
   [data-tooltip]:hover::after {
-    @apply opacity-100 visible;
+    opacity: 1;
+    visibility: visible;
   }
 }
 
 @layer utilities {
-  /* Text gradient utility - purple to orange */
+  /* Text gradient utility - amber to green */
   .text-gradient {
-    @apply bg-gradient-to-r from-purple-400 via-orange-400 to-purple-400 bg-clip-text text-transparent;
+    background: linear-gradient(to right, var(--phosphor-amber), var(--phosphor-green), var(--phosphor-amber));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
-  .text-gradient-purple {
-    @apply bg-gradient-to-r from-purple-400 to-purple-500 bg-clip-text text-transparent;
+  .text-gradient-amber {
+    background: linear-gradient(to right, var(--phosphor-amber), var(--phosphor-amber-bright));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
-  .text-gradient-orange {
-    @apply bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent;
+  .text-gradient-green {
+    background: linear-gradient(to right, var(--phosphor-green), var(--phosphor-green-dim));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   /* Glow effects */
-  .glow-purple {
-    box-shadow: 0 0 20px -5px rgba(168, 85, 247, 0.4);
+  .glow-amber {
+    box-shadow: 0 0 20px -5px rgba(255, 176, 0, 0.4);
   }
 
-  .glow-purple-lg {
-    box-shadow: 0 0 40px -10px rgba(168, 85, 247, 0.5);
+  .glow-amber-lg {
+    box-shadow: 0 0 40px -10px rgba(255, 176, 0, 0.5);
   }
 
-  .glow-orange {
-    box-shadow: 0 0 20px -5px rgba(249, 115, 22, 0.4);
+  .glow-green {
+    box-shadow: 0 0 20px -5px rgba(51, 255, 0, 0.4);
   }
 
-  .glow-orange-lg {
-    box-shadow: 0 0 40px -10px rgba(249, 115, 22, 0.5);
-  }
-
-  .glow-teal {
-    box-shadow: 0 0 20px -5px rgba(0, 240, 209, 0.3);
+  .glow-green-lg {
+    box-shadow: 0 0 40px -10px rgba(51, 255, 0, 0.5);
   }
 
   /* Hide scrollbar but keep functionality */
@@ -424,18 +679,22 @@
     animation-delay: 500ms;
   }
 
-  /* Backdrop blur fallback */
-  @supports not (backdrop-filter: blur(12px)) {
-    .backdrop-blur-lg {
-      background-color: rgba(12, 10, 20, 0.98);
-    }
+  /* Blinking cursor */
+  .cursor-blink::after {
+    content: '▋';
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
   }
 
   /* Reduced motion support */
   @media (prefers-reduced-motion: reduce) {
     .animate-fade-in,
     .animate-slide-up,
-    .animate-bounce {
+    .animate-blink {
       animation: none;
       opacity: 1;
       transform: none;

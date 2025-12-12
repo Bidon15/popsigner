@@ -1,4 +1,4 @@
-module github.com/banhbaoring/sdk-go
+module github.com/popsigner/sdk-go
 
 go 1.25
 

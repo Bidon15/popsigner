@@ -1,5 +1,6 @@
 # Binaries
 banhbao
+popsigner
 *.exe
 *.exe~
 *.dll

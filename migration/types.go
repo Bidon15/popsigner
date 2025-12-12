@@ -1,7 +1,7 @@
 package migration
 
 import (
-	"github.com/Bidon15/banhbaoring"
+	popsigner "github.com/Bidon15/banhbaoring"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
@@ -10,7 +10,7 @@ import (
 // ImportConfig configures key import.
 type ImportConfig struct {
 	SourceKeyring     keyring.Keyring
-	DestKeyring       *banhbaoring.BaoKeyring
+	DestKeyring       *popsigner.BaoKeyring
 	KeyName           string
 	NewKeyName        string
 	DeleteAfterImport bool
@@ -29,7 +29,7 @@ type ImportResult struct {
 
 // ExportConfig configures key export.
 type ExportConfig struct {
-	SourceKeyring     *banhbaoring.BaoKeyring
+	SourceKeyring     *popsigner.BaoKeyring
 	DestKeyring       keyring.Keyring
 	KeyName           string
 	NewKeyName        string
@@ -49,7 +49,7 @@ type ExportResult struct {
 // BatchImportConfig for multiple keys.
 type BatchImportConfig struct {
 	SourceKeyring     keyring.Keyring
-	DestKeyring       *banhbaoring.BaoKeyring
+	DestKeyring       *popsigner.BaoKeyring
 	KeyNames          []string
 	DeleteAfterImport bool
 	Exportable        bool

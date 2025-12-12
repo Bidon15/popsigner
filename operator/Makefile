@@ -1,5 +1,5 @@
 # Image URL to use all building/pushing image targets
-IMG ?= banhbaoring-operator:latest
+IMG ?= popsigner-operator:latest
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -103,7 +103,7 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 
 ##@ Helm
 
-CHART_DIR := charts/banhbaoring-operator
+CHART_DIR := charts/popsigner-operator
 
 .PHONY: helm-lint
 helm-lint: ## Lint Helm chart
@@ -111,7 +111,7 @@ helm-lint: ## Lint Helm chart
 
 .PHONY: helm-template
 helm-template: ## Render Helm templates locally
-	helm template banhbaoring $(CHART_DIR) --debug
+	helm template popsigner $(CHART_DIR) --debug
 
 .PHONY: helm-package
 helm-package: ## Package Helm chart
@@ -120,4 +120,4 @@ helm-package: ## Package Helm chart
 
 .PHONY: helm-push
 helm-push: helm-package ## Push Helm chart to OCI registry
-	helm push dist/banhbaoring-operator-*.tgz oci://ghcr.io/bidon15/charts
+	helm push dist/popsigner-operator-*.tgz oci://ghcr.io/bidon15/charts

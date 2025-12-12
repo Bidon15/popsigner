@@ -68,11 +68,11 @@ The system scales horizontally to handle increased load:
 ### 1.7 One-Command Deployment Goal
 ```bash
 # Install operator
-kubectl apply -f https://banhbaoring.io/install/operator.yaml
+kubectl apply -f https://popsigner.com/install/operator.yaml
 
 # Deploy full stack
 kubectl apply -f - <<EOF
-apiVersion: banhbaoring.io/v1
+apiVersion: popsigner.com/v1
 kind: BanhBaoRingCluster
 metadata:
   name: production
@@ -93,7 +93,7 @@ EOF
 ### 2.1 BanhBaoRingCluster (Main Resource)
 
 ```yaml
-apiVersion: banhbaoring.io/v1
+apiVersion: popsigner.com/v1
 kind: BanhBaoRingCluster
 metadata:
   name: production
@@ -292,7 +292,7 @@ status:
 ### 2.2 BanhBaoRingTenant (Multi-tenant Provisioning)
 
 ```yaml
-apiVersion: banhbaoring.io/v1
+apiVersion: popsigner.com/v1
 kind: BanhBaoRingTenant
 metadata:
   name: celestia-validator-co
@@ -359,7 +359,7 @@ status:
 ### 2.3 BanhBaoRingBackup (Manual/On-Demand Backups)
 
 ```yaml
-apiVersion: banhbaoring.io/v1
+apiVersion: popsigner.com/v1
 kind: BanhBaoRingBackup
 metadata:
   name: pre-upgrade-backup
@@ -415,7 +415,7 @@ status:
 ### 2.4 BanhBaoRingRestore (Disaster Recovery)
 
 ```yaml
-apiVersion: banhbaoring.io/v1
+apiVersion: popsigner.com/v1
 kind: BanhBaoRingRestore
 metadata:
   name: restore-from-backup
@@ -747,7 +747,7 @@ spec:
 
 ```bash
 # Option 1: Helm (recommended)
-helm repo add banhbaoring https://charts.banhbaoring.io
+helm repo add banhbaoring https://charts.popsigner.com
 helm repo update
 
 helm install banhbaoring-operator banhbaoring/operator \
@@ -756,7 +756,7 @@ helm install banhbaoring-operator banhbaoring/operator \
   --set image.tag=v1.0.0
 
 # Option 2: Direct manifest
-kubectl apply -f https://banhbaoring.io/install/operator.yaml
+kubectl apply -f https://popsigner.com/install/operator.yaml
 ```
 
 ### 6.3 Deploy Full Stack
@@ -782,7 +782,7 @@ kubectl create secret generic grafana-admin \
 
 # 3. Deploy cluster
 cat <<EOF | kubectl apply -f -
-apiVersion: banhbaoring.io/v1
+apiVersion: popsigner.com/v1
 kind: BanhBaoRingCluster
 metadata:
   name: production
@@ -871,7 +871,7 @@ kubectl get banhbaoringcluster production -n banhbaoring \
 
 ```bash
 kubectl apply -f - <<EOF
-apiVersion: banhbaoring.io/v1
+apiVersion: popsigner.com/v1
 kind: BanhBaoRingTenant
 metadata:
   name: acme-corp
@@ -1005,10 +1005,10 @@ operator/
 ├── config/
 │   ├── crd/
 │   │   └── bases/
-│   │       ├── banhbaoring.io_banhbaoringclusters.yaml
-│   │       ├── banhbaoring.io_banhbaoringtenants.yaml
-│   │       ├── banhbaoring.io_banhbaoringbackups.yaml
-│   │       └── banhbaoring.io_banhbaoringrestores.yaml
+│   │       ├── popsigner.com_banhbaoringclusters.yaml
+│   │       ├── popsigner.com_banhbaoringtenants.yaml
+│   │       ├── popsigner.com_banhbaoringbackups.yaml
+│   │       └── popsigner.com_banhbaoringrestores.yaml
 │   ├── rbac/
 │   │   ├── role.yaml
 │   │   ├── role_binding.yaml

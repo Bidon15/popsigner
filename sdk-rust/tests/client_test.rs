@@ -1,6 +1,6 @@
-//! Integration tests for the BanhBaoRing client.
+//! Integration tests for the POPSigner client.
 
-use banhbaoring::{Client, ClientConfig};
+use popsigner::{Client, ClientConfig};
 use std::time::Duration;
 use wiremock::matchers::{header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -46,7 +46,7 @@ async fn test_get_request_with_auth() {
         },
     );
 
-    let keys: Vec<banhbaoring::Key> = client.keys().list(None).await.unwrap();
+    let keys: Vec<popsigner::Key> = client.keys().list(None).await.unwrap();
     assert!(keys.is_empty());
 }
 
@@ -73,11 +73,11 @@ async fn test_unauthorized_error() {
         },
     );
 
-    let result: Result<Vec<banhbaoring::Key>, _> = client.keys().list(None).await;
+    let result: Result<Vec<popsigner::Key>, _> = client.keys().list(None).await;
     assert!(result.is_err());
     assert!(matches!(
         result.unwrap_err(),
-        banhbaoring::BanhBaoRingError::Unauthorized
+        popsigner::POPSignerError::Unauthorized
     ));
 }
 
@@ -104,11 +104,11 @@ async fn test_rate_limited_error() {
         },
     );
 
-    let result: Result<Vec<banhbaoring::Key>, _> = client.keys().list(None).await;
+    let result: Result<Vec<popsigner::Key>, _> = client.keys().list(None).await;
     assert!(result.is_err());
     assert!(matches!(
         result.unwrap_err(),
-        banhbaoring::BanhBaoRingError::RateLimited
+        popsigner::POPSignerError::RateLimited
     ));
 }
 
@@ -140,7 +140,7 @@ async fn test_api_error_parsing() {
     let result = client.keys().get(&key_id).await;
 
     match result {
-        Err(banhbaoring::BanhBaoRingError::Api {
+        Err(popsigner::POPSignerError::Api {
             code,
             message,
             status_code,
@@ -152,4 +152,3 @@ async fn test_api_error_parsing() {
         _ => panic!("Expected Api error"),
     }
 }
-

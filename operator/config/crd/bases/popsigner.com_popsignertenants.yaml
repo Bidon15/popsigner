@@ -4,31 +4,33 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-  name: banhbaoringrestores.banhbaoring.io
+  name: popsignertenants.popsigner.com
 spec:
-  group: banhbaoring.io
+  group: popsigner.com
   names:
-    kind: BanhBaoRingRestore
-    listKind: BanhBaoRingRestoreList
-    plural: banhbaoringrestores
-    singular: banhbaoringrestore
+    kind: POPSignerTenant
+    listKind: POPSignerTenantList
+    plural: popsignertenants
+    singular: popsignertenant
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
     - jsonPath: .status.phase
       name: Phase
       type: string
-    - jsonPath: .spec.backupRef.name
-      name: Backup
+    - jsonPath: .spec.plan
+      name: Plan
       type: string
+    - jsonPath: .status.usage.keys
+      name: Keys
+      type: integer
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
     name: v1
     schema:
       openAPIV3Schema:
-        description: BanhBaoRingRestore is the Schema for the banhbaoringrestores
-          API
+        description: POPSignerTenant is the Schema for the popsignertenants API
         properties:
           apiVersion:
             description: |-
@@ -48,98 +50,117 @@ spec:
           metadata:
             type: object
           spec:
-            description: BanhBaoRingRestoreSpec defines the desired state
+            description: POPSignerTenantSpec defines the desired state
             properties:
-              backupRef:
-                description: Reference to backup resource
+              admin:
+                description: Initial admin user
                 properties:
-                  name:
+                  email:
                     type: string
+                  password:
+                    description: SecretKeyRef references a key in a Secret
+                    properties:
+                      key:
+                        type: string
+                      name:
+                        type: string
+                    required:
+                    - key
+                    - name
+                    type: object
                 required:
-                - name
+                - email
                 type: object
               clusterRef:
-                description: ClusterReference references a BanhBaoRingCluster
+                description: Reference to the parent cluster
                 properties:
                   name:
                     type: string
                 required:
                 - name
                 type: object
-              components:
-                description: 'Components to restore (default: all from backup)'
-                items:
-                  type: string
-                type: array
-              options:
-                description: RestoreOptions configures restore behavior
+              displayName:
+                description: Display name for the tenant
+                type: string
+              plan:
+                default: free
+                description: 'Plan: free, starter, pro, enterprise'
+                enum:
+                - free
+                - starter
+                - pro
+                - enterprise
+                type: string
+              quotas:
+                description: Resource quotas
                 properties:
-                  stopApplications:
-                    default: true
-                    type: boolean
-                  verifyBackup:
-                    default: true
-                    type: boolean
+                  apiKeys:
+                    default: 2
+                    format: int32
+                    type: integer
+                  keys:
+                    default: 5
+                    format: int32
+                    type: integer
+                  namespaces:
+                    default: 1
+                    format: int32
+                    type: integer
+                  signaturesPerMonth:
+                    default: 10000
+                    format: int64
+                    type: integer
+                  teamMembers:
+                    default: 1
+                    format: int32
+                    type: integer
                 type: object
-              source:
-                description: Or restore from specific location
+              settings:
+                description: Custom settings
                 properties:
-                  gcs:
-                    description: GCSDestination configures Google Cloud Storage
-                    properties:
-                      bucket:
-                        type: string
-                      credentials:
-                        description: SecretKeyRef references a key in a Secret
-                        properties:
-                          key:
+                  allowExportableKeys:
+                    type: boolean
+                  allowedIPRanges:
+                    items:
+                      type: string
+                    type: array
+                  auditRetentionDays:
+                    default: 30
+                    format: int32
+                    type: integer
+                  webhooks:
+                    items:
+                      description: WebhookConfig defines a webhook endpoint
+                      properties:
+                        events:
+                          items:
                             type: string
-                          name:
-                            type: string
-                        required:
-                        - key
-                        - name
-                        type: object
-                      prefix:
-                        type: string
-                    required:
-                    - bucket
-                    - credentials
-                    type: object
-                  s3:
-                    description: S3Destination configures S3-compatible storage
-                    properties:
-                      bucket:
-                        type: string
-                      credentials:
-                        description: SecretKeyRef references a key in a Secret
-                        properties:
-                          key:
-                            type: string
-                          name:
-                            type: string
-                        required:
-                        - key
-                        - name
-                        type: object
-                      prefix:
-                        type: string
-                      region:
-                        type: string
-                    required:
-                    - bucket
-                    - credentials
-                    type: object
+                          type: array
+                        secret:
+                          description: SecretKeyRef references a key in a Secret
+                          properties:
+                            key:
+                              type: string
+                            name:
+                              type: string
+                          required:
+                          - key
+                          - name
+                          type: object
+                        url:
+                          type: string
+                      required:
+                      - secret
+                      - url
+                      type: object
+                    type: array
                 type: object
             required:
             - clusterRef
             type: object
           status:
-            description: BanhBaoRingRestoreStatus defines the observed state
+            description: POPSignerTenantStatus defines the observed state
             properties:
-              completedAt:
-                format: date-time
-                type: string
               conditions:
                 items:
                   description: Condition contains details for one aspect of the current
@@ -196,25 +217,35 @@ spec:
                   - type
                   type: object
                 type: array
-              phase:
-                description: Pending, Stopping, Restoring, Starting, Completed, Failed
-                type: string
-              startedAt:
+              createdAt:
                 format: date-time
                 type: string
-              steps:
-                items:
-                  description: RestoreStep represents a step in the restore process
-                  properties:
-                    name:
-                      type: string
-                    status:
-                      type: string
-                  required:
-                  - name
-                  - status
-                  type: object
-                type: array
+              lastActiveAt:
+                format: date-time
+                type: string
+              openbaoNamespace:
+                description: OpenBao namespace for this tenant
+                type: string
+              phase:
+                default: Pending
+                description: 'Phase: Pending, Active, Suspended, Deleted'
+                type: string
+              usage:
+                description: Current usage
+                properties:
+                  apiKeys:
+                    format: int32
+                    type: integer
+                  keys:
+                    format: int32
+                    type: integer
+                  signaturesThisMonth:
+                    format: int64
+                    type: integer
+                  teamMembers:
+                    format: int32
+                    type: integer
+                type: object
             type: object
         type: object
     served: true

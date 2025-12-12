@@ -29,4 +29,8 @@ WORKDIR /
 COPY --from=builder /workspace/manager .
 USER 65532:65532
 
+LABEL org.opencontainers.image.source="https://github.com/Bidon15/banhbaoring"
+LABEL org.opencontainers.image.description="POPSigner Kubernetes Operator"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
+
 ENTRYPOINT ["/manager"]

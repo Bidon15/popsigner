@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "banhbaoring-operator.fullname" . }}-metrics
+  name: {{ include "popsigner-operator.fullname" . }}-metrics
   labels:
-    {{- include "banhbaoring-operator.labels" . | nindent 4 }}
+    {{- include "popsigner-operator.labels" . | nindent 4 }}
 spec:
   type: ClusterIP
   ports:
@@ -13,5 +13,5 @@ spec:
       protocol: TCP
       name: metrics
   selector:
-    {{- include "banhbaoring-operator.selectorLabels" . | nindent 4 }}
+    {{- include "popsigner-operator.selectorLabels" . | nindent 4 }}
 {{- end }}

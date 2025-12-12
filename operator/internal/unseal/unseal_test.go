@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 )
 
 func TestNewProvider(t *testing.T) {
@@ -51,7 +51,7 @@ func TestAWSKMSProvider(t *testing.T) {
 	})
 
 	t.Run("Validate_missing_config", func(t *testing.T) {
-		spec := &banhbaoringv1.AutoUnsealSpec{
+		spec := &popsignerv1.AutoUnsealSpec{
 			Provider: "awskms",
 		}
 		if err := provider.Validate(spec); err == nil {
@@ -60,9 +60,9 @@ func TestAWSKMSProvider(t *testing.T) {
 	})
 
 	t.Run("Validate_missing_keyId", func(t *testing.T) {
-		spec := &banhbaoringv1.AutoUnsealSpec{
+		spec := &popsignerv1.AutoUnsealSpec{
 			Provider: "awskms",
-			AWSKMS: &banhbaoringv1.AWSKMSSpec{
+			AWSKMS: &popsignerv1.AWSKMSSpec{
 				Region: "us-west-2",
 			},
 		}
@@ -72,9 +72,9 @@ func TestAWSKMSProvider(t *testing.T) {
 	})
 
 	t.Run("Validate_valid", func(t *testing.T) {
-		spec := &banhbaoringv1.AutoUnsealSpec{
+		spec := &popsignerv1.AutoUnsealSpec{
 			Provider: "awskms",
-			AWSKMS: &banhbaoringv1.AWSKMSSpec{
+			AWSKMS: &popsignerv1.AWSKMSSpec{
 				KeyID:  "alias/my-key",
 				Region: "us-west-2",
 			},
@@ -85,9 +85,9 @@ func TestAWSKMSProvider(t *testing.T) {
 	})
 
 	t.Run("GetConfig", func(t *testing.T) {
-		spec := &banhbaoringv1.AutoUnsealSpec{
+		spec := &popsignerv1.AutoUnsealSpec{
 			Provider: "awskms",
-			AWSKMS: &banhbaoringv1.AWSKMSSpec{
+			AWSKMS: &popsignerv1.AWSKMSSpec{
 				KeyID:  "alias/my-key",
 				Region: "eu-west-1",
 			},
@@ -105,9 +105,9 @@ func TestAWSKMSProvider(t *testing.T) {
 	})
 
 	t.Run("GetConfig_default_region", func(t *testing.T) {
-		spec := &banhbaoringv1.AutoUnsealSpec{
+		spec := &popsignerv1.AutoUnsealSpec{
 			Provider: "awskms",
-			AWSKMS: &banhbaoringv1.AWSKMSSpec{
+			AWSKMS: &popsignerv1.AWSKMSSpec{
 				KeyID: "alias/my-key",
 			},
 		}
@@ -118,12 +118,12 @@ func TestAWSKMSProvider(t *testing.T) {
 	})
 
 	t.Run("GetEnvVars_with_credentials", func(t *testing.T) {
-		spec := &banhbaoringv1.AutoUnsealSpec{
+		spec := &popsignerv1.AutoUnsealSpec{
 			Provider: "awskms",
-			AWSKMS: &banhbaoringv1.AWSKMSSpec{
+			AWSKMS: &popsignerv1.AWSKMSSpec{
 				KeyID:  "alias/my-key",
 				Region: "us-west-2",
-				Credentials: &banhbaoringv1.SecretKeyRef{
+				Credentials: &popsignerv1.SecretKeyRef{
 					Name: "aws-creds",
 					Key:  "credentials",
 				},
@@ -151,9 +151,9 @@ func TestAWSKMSProvider(t *testing.T) {
 	})
 
 	t.Run("GetVolumes", func(t *testing.T) {
-		spec := &banhbaoringv1.AutoUnsealSpec{
+		spec := &popsignerv1.AutoUnsealSpec{
 			Provider: "awskms",
-			AWSKMS:   &banhbaoringv1.AWSKMSSpec{},
+			AWSKMS:   &popsignerv1.AWSKMSSpec{},
 		}
 		volumes := provider.GetVolumes(spec)
 		if len(volumes) != 0 {
@@ -172,9 +172,9 @@ func TestGCPKMSProvider(t *testing.T) {
 	})
 
 	t.Run("Validate_valid", func(t *testing.T) {
-		spec := &banhbaoringv1.AutoUnsealSpec{
+		spec := &popsignerv1.AutoUnsealSpec{
 			Provider: "gcpkms",
-			GCPKMS: &banhbaoringv1.GCPKMSSpec{
+			GCPKMS: &popsignerv1.GCPKMSSpec{
 				Project:   "my-project",
 				Location:  "global",
 				KeyRing:   "my-keyring",
@@ -187,9 +187,9 @@ func TestGCPKMSProvider(t *testing.T) {
 	})
 
 	t.Run("GetConfig", func(t *testing.T) {
-		spec := &banhbaoringv1.AutoUnsealSpec{
+		spec := &popsignerv1.AutoUnsealSpec{
 			Provider: "gcpkms",
-			GCPKMS: &banhbaoringv1.GCPKMSSpec{
+			GCPKMS: &popsignerv1.GCPKMSSpec{
 				Project:   "my-project",
 				Location:  "global",
 				KeyRing:   "my-keyring",
@@ -206,14 +206,14 @@ func TestGCPKMSProvider(t *testing.T) {
 	})
 
 	t.Run("GetVolumes_with_credentials", func(t *testing.T) {
-		spec := &banhbaoringv1.AutoUnsealSpec{
+		spec := &popsignerv1.AutoUnsealSpec{
 			Provider: "gcpkms",
-			GCPKMS: &banhbaoringv1.GCPKMSSpec{
+			GCPKMS: &popsignerv1.GCPKMSSpec{
 				Project:   "my-project",
 				Location:  "global",
 				KeyRing:   "my-keyring",
 				CryptoKey: "my-key",
-				Credentials: &banhbaoringv1.SecretKeyRef{
+				Credentials: &popsignerv1.SecretKeyRef{
 					Name: "gcp-creds",
 					Key:  "key.json",
 				},
@@ -236,9 +236,9 @@ func TestAzureKVProvider(t *testing.T) {
 	})
 
 	t.Run("Validate_valid", func(t *testing.T) {
-		spec := &banhbaoringv1.AutoUnsealSpec{
+		spec := &popsignerv1.AutoUnsealSpec{
 			Provider: "azurekv",
-			AzureKV: &banhbaoringv1.AzureKVSpec{
+			AzureKV: &popsignerv1.AzureKVSpec{
 				TenantID:  "my-tenant",
 				VaultName: "my-vault",
 				KeyName:   "my-key",
@@ -250,9 +250,9 @@ func TestAzureKVProvider(t *testing.T) {
 	})
 
 	t.Run("GetConfig", func(t *testing.T) {
-		spec := &banhbaoringv1.AutoUnsealSpec{
+		spec := &popsignerv1.AutoUnsealSpec{
 			Provider: "azurekv",
-			AzureKV: &banhbaoringv1.AzureKVSpec{
+			AzureKV: &popsignerv1.AzureKVSpec{
 				TenantID:  "my-tenant",
 				VaultName: "my-vault",
 				KeyName:   "my-key",
@@ -278,9 +278,9 @@ func TestTransitProvider(t *testing.T) {
 	})
 
 	t.Run("Validate_valid", func(t *testing.T) {
-		spec := &banhbaoringv1.AutoUnsealSpec{
+		spec := &popsignerv1.AutoUnsealSpec{
 			Provider: "transit",
-			Transit: &banhbaoringv1.TransitSpec{
+			Transit: &popsignerv1.TransitSpec{
 				Address:   "https://vault.example.com:8200",
 				MountPath: "transit",
 				KeyName:   "autounseal",
@@ -292,9 +292,9 @@ func TestTransitProvider(t *testing.T) {
 	})
 
 	t.Run("GetConfig", func(t *testing.T) {
-		spec := &banhbaoringv1.AutoUnsealSpec{
+		spec := &popsignerv1.AutoUnsealSpec{
 			Provider: "transit",
-			Transit: &banhbaoringv1.TransitSpec{
+			Transit: &popsignerv1.TransitSpec{
 				Address:   "https://vault.example.com:8200",
 				MountPath: "transit",
 				KeyName:   "autounseal",
@@ -310,12 +310,12 @@ func TestTransitProvider(t *testing.T) {
 	})
 
 	t.Run("GetEnvVars", func(t *testing.T) {
-		spec := &banhbaoringv1.AutoUnsealSpec{
+		spec := &popsignerv1.AutoUnsealSpec{
 			Provider: "transit",
-			Transit: &banhbaoringv1.TransitSpec{
+			Transit: &popsignerv1.TransitSpec{
 				Address: "https://vault.example.com:8200",
 				KeyName: "autounseal",
-				Token: banhbaoringv1.SecretKeyRef{
+				Token: popsignerv1.SecretKeyRef{
 					Name: "transit-token",
 					Key:  "token",
 				},
@@ -341,10 +341,10 @@ func TestTransitProvider(t *testing.T) {
 
 func TestGetProviderForCluster(t *testing.T) {
 	t.Run("disabled", func(t *testing.T) {
-		cluster := &banhbaoringv1.BanhBaoRingCluster{
-			Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-				OpenBao: banhbaoringv1.OpenBaoSpec{
-					AutoUnseal: banhbaoringv1.AutoUnsealSpec{
+		cluster := &popsignerv1.POPSignerCluster{
+			Spec: popsignerv1.POPSignerClusterSpec{
+				OpenBao: popsignerv1.OpenBaoSpec{
+					AutoUnseal: popsignerv1.AutoUnsealSpec{
 						Enabled: false,
 					},
 				},
@@ -360,10 +360,10 @@ func TestGetProviderForCluster(t *testing.T) {
 	})
 
 	t.Run("enabled", func(t *testing.T) {
-		cluster := &banhbaoringv1.BanhBaoRingCluster{
-			Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-				OpenBao: banhbaoringv1.OpenBaoSpec{
-					AutoUnseal: banhbaoringv1.AutoUnsealSpec{
+		cluster := &popsignerv1.POPSignerCluster{
+			Spec: popsignerv1.POPSignerClusterSpec{
+				OpenBao: popsignerv1.OpenBaoSpec{
+					AutoUnseal: popsignerv1.AutoUnsealSpec{
 						Enabled:  true,
 						Provider: "awskms",
 					},

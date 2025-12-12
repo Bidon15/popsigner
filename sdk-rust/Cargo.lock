@@ -72,23 +72,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "banhbaoring"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "base64 0.21.7",
- "reqwest",
- "serde",
- "serde_json",
- "sha2",
- "thiserror",
- "tokio",
- "tokio-test",
- "uuid",
- "wiremock",
-]
-
-[[package]]
 name = "base64"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -946,6 +929,23 @@ name = "pkg-config"
 version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
+
+[[package]]
+name = "popsigner"
+version = "1.0.0"
+dependencies = [
+ "async-trait",
+ "base64 0.21.7",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror",
+ "tokio",
+ "tokio-test",
+ "uuid",
+ "wiremock",
+]
 
 [[package]]
 name = "potential_utf"

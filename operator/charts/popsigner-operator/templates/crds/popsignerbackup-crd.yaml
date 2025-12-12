@@ -1,0 +1,79 @@
+{{- if .Values.installCRDs }}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.5
+  name: popsignerbackups.popsigner.com
+  labels:
+    {{- include "popsigner-operator.labels" . | nindent 4 }}
+spec:
+  group: popsigner.com
+  names:
+    kind: POPSignerBackup
+    listKind: POPSignerBackupList
+    plural: popsignerbackups
+    singular: popsignerbackup
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .status.totalSize
+      name: Size
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: POPSignerBackup is the Schema for the popsignerbackups API
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: POPSignerBackupSpec defines the desired state
+            properties:
+              clusterRef:
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
+              components:
+                default:
+                - openbao
+                - database
+                - secrets
+                items:
+                  type: string
+                type: array
+              destination:
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+              type:
+                default: full
+                enum:
+                - full
+                - incremental
+                type: string
+            required:
+            - clusterRef
+            type: object
+          status:
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+{{- end }}

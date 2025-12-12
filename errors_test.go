@@ -1,4 +1,4 @@
-package banhbaoring
+package popsigner
 
 import (
 	"errors"
@@ -49,9 +49,9 @@ func TestBaoError_Error(t *testing.T) {
 
 func TestBaoError_Is(t *testing.T) {
 	tests := []struct {
-		name       string
-		baoErr     *BaoError
-		target     error
+		name        string
+		baoErr      *BaoError
+		target      error
 		shouldMatch bool
 	}{
 		{
@@ -145,17 +145,17 @@ func TestKeyError_Error(t *testing.T) {
 		{
 			name:     "sign operation",
 			keyErr:   &KeyError{Op: "sign", KeyName: "mykey", Err: ErrSigningFailed},
-			expected: `sign key "mykey": banhbaoring: signing failed`,
+			expected: `sign key "mykey": popsigner: signing failed`,
 		},
 		{
 			name:     "get operation",
 			keyErr:   &KeyError{Op: "get", KeyName: "testkey", Err: ErrKeyNotFound},
-			expected: `get key "testkey": banhbaoring: key not found`,
+			expected: `get key "testkey": popsigner: key not found`,
 		},
 		{
 			name:     "export operation",
 			keyErr:   &KeyError{Op: "export", KeyName: "secretkey", Err: ErrKeyNotExportable},
-			expected: `export key "secretkey": banhbaoring: key is not exportable`,
+			expected: `export key "secretkey": popsigner: key is not exportable`,
 		},
 	}
 	for _, tt := range tests {
@@ -180,18 +180,18 @@ func TestKeyError_Unwrap(t *testing.T) {
 	t.Run("nested unwrap chain", func(t *testing.T) {
 		innerErr := &KeyError{Op: "inner", KeyName: "inner-key", Err: ErrKeyNotFound}
 		outerErr := &KeyError{Op: "outer", KeyName: "outer-key", Err: innerErr}
-		
+
 		assert.True(t, errors.Is(outerErr, ErrKeyNotFound))
 	})
 }
 
 func TestWrapKeyError(t *testing.T) {
 	tests := []struct {
-		name     string
-		op       string
-		keyName  string
-		err      error
-		wantNil  bool
+		name    string
+		op      string
+		keyName string
+		err     error
+		wantNil bool
 	}{
 		{
 			name:    "wraps non-nil error",
@@ -317,7 +317,7 @@ func TestSentinelErrorMessages(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.err.Error(), func(t *testing.T) {
 			assert.Contains(t, tt.err.Error(), tt.contains)
-			assert.Contains(t, tt.err.Error(), "banhbaoring:")
+			assert.Contains(t, tt.err.Error(), "popsigner:")
 		})
 	}
 }
@@ -326,7 +326,7 @@ func TestErrorsAs(t *testing.T) {
 	t.Run("BaoError can be extracted with errors.As", func(t *testing.T) {
 		var baoErr *BaoError
 		err := NewBaoError(404, []string{"not found"}, "req-123")
-		
+
 		assert.True(t, errors.As(err, &baoErr))
 		assert.Equal(t, 404, baoErr.StatusCode)
 	})
@@ -334,7 +334,7 @@ func TestErrorsAs(t *testing.T) {
 	t.Run("KeyError can be extracted with errors.As", func(t *testing.T) {
 		var keyErr *KeyError
 		err := WrapKeyError("get", "testkey", ErrKeyNotFound)
-		
+
 		assert.True(t, errors.As(err, &keyErr))
 		assert.Equal(t, "testkey", keyErr.KeyName)
 	})
@@ -342,7 +342,7 @@ func TestErrorsAs(t *testing.T) {
 	t.Run("ValidationError can be extracted with errors.As", func(t *testing.T) {
 		var valErr *ValidationError
 		err := NewValidationError("Field", "is required")
-		
+
 		assert.True(t, errors.As(err, &valErr))
 		assert.Equal(t, "Field", valErr.Field)
 	})
@@ -371,4 +371,3 @@ func TestBaoError_HTTPStatusCodeMapping(t *testing.T) {
 		})
 	}
 }
-

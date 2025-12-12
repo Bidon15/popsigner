@@ -9,18 +9,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 )
 
-// ClusterReconciler reconciles a BanhBaoRingCluster object
+// ClusterReconciler reconciles a POPSignerCluster object
 type ClusterReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=banhbaoring.io,resources=banhbaoringclusters,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=banhbaoring.io,resources=banhbaoringclusters/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=banhbaoring.io,resources=banhbaoringclusters/finalizers,verbs=update
+// +kubebuilder:rbac:groups=popsigner.com,resources=popsignerclusters,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=popsigner.com,resources=popsignerclusters/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=popsigner.com,resources=popsignerclusters/finalizers,verbs=update
 // +kubebuilder:rbac:groups=apps,resources=statefulsets;deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=services;configmaps;secrets;persistentvolumeclaims,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
@@ -30,10 +30,10 @@ type ClusterReconciler struct {
 // Reconcile is part of the main kubernetes reconciliation loop
 func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
-	log.Info("Reconciling BanhBaoRingCluster", "name", req.Name)
+	log.Info("Reconciling POPSignerCluster", "name", req.Name)
 
 	// Fetch the cluster
-	cluster := &banhbaoringv1.BanhBaoRingCluster{}
+	cluster := &popsignerv1.POPSignerCluster{}
 	if err := r.Get(ctx, req.NamespacedName, cluster); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
@@ -129,6 +129,6 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 // SetupWithManager sets up the controller with the Manager.
 func (r *ClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&banhbaoringv1.BanhBaoRingCluster{}).
+		For(&popsignerv1.POPSignerCluster{}).
 		Complete(r)
 }

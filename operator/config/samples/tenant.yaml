@@ -1,8 +1,8 @@
-apiVersion: banhbaoring.io/v1
-kind: BanhBaoRingTenant
+apiVersion: popsigner.com/v1
+kind: POPSignerTenant
 metadata:
   name: acme-corp
-  namespace: banhbaoring
+  namespace: popsigner
 spec:
   clusterRef:
     name: production

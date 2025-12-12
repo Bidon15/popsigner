@@ -1,3 +1,5 @@
+// POPSigner secp256k1 Plugin for OpenBao
+// Provides native secp256k1 signing operations for Cosmos/Celestia blockchains.
 module github.com/Bidon15/banhbaoring/plugin
 
 go 1.25

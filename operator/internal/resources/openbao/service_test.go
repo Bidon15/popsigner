@@ -6,18 +6,18 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
 func TestHeadlessService(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			OpenBao: banhbaoringv1.OpenBaoSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			OpenBao: popsignerv1.OpenBaoSpec{
 				Version: "2.0.0",
 			},
 		},
@@ -70,13 +70,13 @@ func TestHeadlessService(t *testing.T) {
 }
 
 func TestActiveService(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "production",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			OpenBao: banhbaoringv1.OpenBaoSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			OpenBao: popsignerv1.OpenBaoSpec{
 				Version: "2.0.0",
 			},
 		},
@@ -120,13 +120,13 @@ func TestActiveService(t *testing.T) {
 }
 
 func TestInternalService(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			OpenBao: banhbaoringv1.OpenBaoSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			OpenBao: popsignerv1.OpenBaoSpec{
 				Version: "2.0.0",
 			},
 		},

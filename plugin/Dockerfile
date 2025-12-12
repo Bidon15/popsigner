@@ -17,21 +17,23 @@ COPY . .
 ARG TARGETARCH=arm64
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build \
     -ldflags="-w -s" \
-    -o /banhbaoring-secp256k1 \
+    -o /popsigner-secp256k1 \
     ./cmd/plugin
 
 # Final stage - minimal image with just the binary
 FROM alpine:3.19
 
+LABEL org.opencontainers.image.title="POPSigner secp256k1 Plugin"
+LABEL org.opencontainers.image.description="OpenBao plugin for secp256k1 signing"
+
 # Install ca-certificates for HTTPS
 RUN apk add --no-cache ca-certificates
 
 # Copy binary from builder
-COPY --from=builder /banhbaoring-secp256k1 /usr/local/bin/banhbaoring-secp256k1
+COPY --from=builder /popsigner-secp256k1 /usr/local/bin/popsigner-secp256k1
 
 # Make executable
-RUN chmod +x /usr/local/bin/banhbaoring-secp256k1
+RUN chmod +x /usr/local/bin/popsigner-secp256k1
 
 # The plugin binary - OpenBao will load this
-ENTRYPOINT ["/usr/local/bin/banhbaoring-secp256k1"]
-
+ENTRYPOINT ["/usr/local/bin/popsigner-secp256k1"]

@@ -5,13 +5,13 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 )
 
 func TestCronJob(t *testing.T) {
 	tests := []struct {
 		name             string
-		cluster          *banhbaoringv1.BanhBaoRingCluster
+		cluster          *popsignerv1.POPSignerCluster
 		expectedName     string
 		expectedSchedule string
 		wantS3Env        bool
@@ -19,21 +19,21 @@ func TestCronJob(t *testing.T) {
 	}{
 		{
 			name: "default schedule with S3",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
+			cluster: &popsignerv1.POPSignerCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-cluster",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+				Spec: popsignerv1.POPSignerClusterSpec{
 					Domain: "keys.example.com",
-					Backup: banhbaoringv1.BackupSpec{
+					Backup: popsignerv1.BackupSpec{
 						Enabled: true,
-						Destination: banhbaoringv1.BackupDestination{
-							S3: &banhbaoringv1.S3Destination{
+						Destination: popsignerv1.BackupDestination{
+							S3: &popsignerv1.S3Destination{
 								Bucket: "my-bucket",
 								Region: "us-west-2",
 								Prefix: "backups/",
-								Credentials: banhbaoringv1.SecretKeyRef{
+								Credentials: popsignerv1.SecretKeyRef{
 									Name: "aws-creds",
 									Key:  "credentials",
 								},
@@ -49,22 +49,22 @@ func TestCronJob(t *testing.T) {
 		},
 		{
 			name: "custom schedule with GCS",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
+			cluster: &popsignerv1.POPSignerCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "prod-cluster",
 					Namespace: "production",
 				},
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+				Spec: popsignerv1.POPSignerClusterSpec{
 					Domain: "keys.prod.example.com",
-					Backup: banhbaoringv1.BackupSpec{
+					Backup: popsignerv1.BackupSpec{
 						Enabled:   true,
 						Schedule:  "0 4 * * 0",
 						Retention: 90,
-						Destination: banhbaoringv1.BackupDestination{
-							GCS: &banhbaoringv1.GCSDestination{
+						Destination: popsignerv1.BackupDestination{
+							GCS: &popsignerv1.GCSDestination{
 								Bucket: "gcs-bucket",
 								Prefix: "prod-backups/",
-								Credentials: banhbaoringv1.SecretKeyRef{
+								Credentials: popsignerv1.SecretKeyRef{
 									Name: "gcp-creds",
 									Key:  "service-account.json",
 								},
@@ -80,14 +80,14 @@ func TestCronJob(t *testing.T) {
 		},
 		{
 			name: "empty schedule uses default",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
+			cluster: &popsignerv1.POPSignerCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "dev-cluster",
 					Namespace: "development",
 				},
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+				Spec: popsignerv1.POPSignerClusterSpec{
 					Domain: "keys.dev.example.com",
-					Backup: banhbaoringv1.BackupSpec{
+					Backup: popsignerv1.BackupSpec{
 						Enabled: true,
 					},
 				},
@@ -193,21 +193,21 @@ func TestCronJobName(t *testing.T) {
 }
 
 func TestBuildEnv(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			Backup: banhbaoringv1.BackupSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			Backup: popsignerv1.BackupSpec{
 				Enabled:   true,
 				Retention: 30,
-				Destination: banhbaoringv1.BackupDestination{
-					S3: &banhbaoringv1.S3Destination{
+				Destination: popsignerv1.BackupDestination{
+					S3: &popsignerv1.S3Destination{
 						Bucket: "test-bucket",
 						Region: "eu-west-1",
 						Prefix: "daily/",
-						Credentials: banhbaoringv1.SecretKeyRef{
+						Credentials: popsignerv1.SecretKeyRef{
 							Name: "aws-secret",
 							Key:  "key",
 						},

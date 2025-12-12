@@ -1,4 +1,4 @@
-//! Basic usage example for the BanhBaoRing SDK.
+//! Basic usage example for the POPSigner SDK.
 //!
 //! This example demonstrates:
 //! - Creating a client
@@ -8,24 +8,24 @@
 //!
 //! Run with:
 //! ```bash
-//! BANHBAORING_API_KEY=bbr_live_xxx NAMESPACE_ID=... cargo run --example basic
+//! POPSIGNER_API_KEY=psk_live_xxx NAMESPACE_ID=... cargo run --example basic
 //! ```
 
-use banhbaoring::{Client, CreateKeyRequest};
+use popsigner::{Client, CreateKeyRequest};
 use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Get API key from environment
-    let api_key = std::env::var("BANHBAORING_API_KEY")
-        .expect("BANHBAORING_API_KEY environment variable required");
+    let api_key = std::env::var("POPSIGNER_API_KEY")
+        .expect("POPSIGNER_API_KEY environment variable required");
     let namespace_id: Uuid = std::env::var("NAMESPACE_ID")
         .expect("NAMESPACE_ID environment variable required")
         .parse()
         .expect("Invalid NAMESPACE_ID format");
 
     // Create client
-    println!("Creating BanhBaoRing client...");
+    println!("Creating POPSigner client...");
     let client = Client::new(&api_key);
 
     // Create a key
@@ -49,7 +49,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Sign some data
     println!("\nSigning data...");
-    let data = b"Hello, Celestia!";
+    let data = b"Hello, POPSigner!";
     let sign_result = client.sign().sign(&key.id, data, false).await?;
 
     println!("Signature:");
@@ -92,4 +92,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nDone!");
     Ok(())
 }
-

@@ -28,11 +28,11 @@ impl AuditClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::{Client, types::ListAuditLogsQuery};
+    /// use popsigner::{Client, types::ListAuditLogsQuery};
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     
     ///     // List all audit logs
     ///     let logs = client.audit().list(None).await?;
@@ -93,12 +93,12 @@ impl AuditClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     /// use uuid::Uuid;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     let log_id = Uuid::parse_str("...")?;
     ///     
     ///     let log = client.audit().get(&log_id).await?;
@@ -120,12 +120,12 @@ impl AuditClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use banhbaoring::Client;
+    /// use popsigner::Client;
     /// use uuid::Uuid;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = Client::new("bbr_live_xxxxx");
+    ///     let client = Client::new("psk_live_xxxxx");
     ///     let key_id = Uuid::parse_str("...")?;
     ///     
     ///     let logs = client.audit().list_for_resource("key", &key_id).await?;
@@ -168,4 +168,3 @@ mod tests {
         assert!(query.limit.is_none());
     }
 }
-

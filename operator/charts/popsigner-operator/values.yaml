@@ -1,9 +1,9 @@
-# Default values for banhbaoring-operator.
+# Default values for popsigner-operator.
 
 replicaCount: 1
 
 image:
-  repository: banhbaoring/operator
+  repository: popsigner/operator
   pullPolicy: IfNotPresent
   # Defaults to appVersion if not set
   tag: ""

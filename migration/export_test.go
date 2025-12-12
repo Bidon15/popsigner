@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Bidon15/banhbaoring"
+	popsigner "github.com/Bidon15/banhbaoring"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,7 +33,7 @@ func testPrivKeyBytes() []byte {
 }
 
 // setupTestBaoKeyring creates a BaoKeyring for testing with a mock server.
-func setupTestBaoKeyring(t *testing.T, handler http.HandlerFunc) (*banhbaoring.BaoKeyring, *httptest.Server, string) {
+func setupTestBaoKeyring(t *testing.T, handler http.HandlerFunc) (*popsigner.BaoKeyring, *httptest.Server, string) {
 	t.Helper()
 
 	server := httptest.NewTLSServer(handler)
@@ -42,7 +42,7 @@ func setupTestBaoKeyring(t *testing.T, handler http.HandlerFunc) (*banhbaoring.B
 	storePath := filepath.Join(tmpDir, "keyring.json")
 
 	// Create client directly
-	cfg := banhbaoring.Config{
+	cfg := popsigner.Config{
 		BaoAddr:       server.URL,
 		BaoToken:      "test-token",
 		StorePath:     storePath,
@@ -61,14 +61,14 @@ func setupTestBaoKeyring(t *testing.T, handler http.HandlerFunc) (*banhbaoring.B
 
 	server.Config.Handler = http.HandlerFunc(healthHandler)
 
-	kr, err := banhbaoring.New(context.Background(), cfg)
+	kr, err := popsigner.New(context.Background(), cfg)
 	require.NoError(t, err)
 
 	return kr, server, tmpDir
 }
 
 // setupTestBaoKeyringWithExportableKey creates a keyring with a pre-populated exportable key.
-func setupTestBaoKeyringWithExportableKey(t *testing.T, uid string, exportable bool, handler http.HandlerFunc) (*banhbaoring.BaoKeyring, *httptest.Server, string) {
+func setupTestBaoKeyringWithExportableKey(t *testing.T, uid string, exportable bool, handler http.HandlerFunc) (*popsigner.BaoKeyring, *httptest.Server, string) {
 	t.Helper()
 
 	kr, server, tmpDir := setupTestBaoKeyring(t, handler)
@@ -110,7 +110,7 @@ func setupTestBaoKeyringWithExportableKey(t *testing.T, uid string, exportable b
 
 	server.Config.Handler = http.HandlerFunc(createHandler)
 
-	_, err := kr.NewAccountWithOptions(uid, banhbaoring.KeyOptions{Exportable: exportable})
+	_, err := kr.NewAccountWithOptions(uid, popsigner.KeyOptions{Exportable: exportable})
 	require.NoError(t, err)
 
 	// Now switch back to the original handler for subsequent operations
@@ -158,7 +158,7 @@ func (m *mockExportDestKeyring) Sign(uid string, msg []byte, signMode signing.Si
 		return nil, nil, m.signErr
 	}
 	if _, ok := m.keys[uid]; !ok {
-		return nil, nil, banhbaoring.ErrKeyNotFound
+		return nil, nil, popsigner.ErrKeyNotFound
 	}
 	// Return a mock 64-byte signature
 	sig := make([]byte, 64)
@@ -439,7 +439,7 @@ func TestExport_KeyNotExportable(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
-	assert.ErrorIs(t, err, banhbaoring.ErrKeyNotExportable)
+	assert.ErrorIs(t, err, popsigner.ErrKeyNotExportable)
 }
 
 func TestExport_KeyNotFound(t *testing.T) {
@@ -464,7 +464,7 @@ func TestExport_KeyNotFound(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
-	assert.ErrorIs(t, err, banhbaoring.ErrKeyNotFound)
+	assert.ErrorIs(t, err, popsigner.ErrKeyNotFound)
 }
 
 func TestExport_WithVerification(t *testing.T) {
@@ -581,7 +581,7 @@ func TestExport_DeleteFailsOnVerificationFailure(t *testing.T) {
 	defer func() { _ = kr.Close() }()
 
 	destKeyring := newMockExportDestKeyring()
-	destKeyring.signErr = banhbaoring.ErrSigningFailed // Make verification fail
+	destKeyring.signErr = popsigner.ErrSigningFailed // Make verification fail
 
 	cfg := ExportConfig{
 		SourceKeyring:     kr,
@@ -641,7 +641,7 @@ func TestValidateExport_KeyNotExportable(t *testing.T) {
 	err := ValidateExport(context.Background(), cfg)
 
 	assert.Error(t, err)
-	assert.ErrorIs(t, err, banhbaoring.ErrKeyNotExportable)
+	assert.ErrorIs(t, err, popsigner.ErrKeyNotExportable)
 }
 
 func TestValidateExport_KeyNotFound(t *testing.T) {
@@ -661,7 +661,7 @@ func TestValidateExport_KeyNotFound(t *testing.T) {
 	err := ValidateExport(context.Background(), cfg)
 
 	assert.Error(t, err)
-	assert.ErrorIs(t, err, banhbaoring.ErrKeyNotFound)
+	assert.ErrorIs(t, err, popsigner.ErrKeyNotFound)
 }
 
 func TestValidateExport_MissingSourceKeyring(t *testing.T) {
@@ -782,7 +782,7 @@ func TestVerifyLocalKey_KeyNotFound(t *testing.T) {
 func TestVerifyLocalKey_SignError(t *testing.T) {
 	destKeyring := newMockExportDestKeyring()
 	destKeyring.keys["test-key"] = []byte("test")
-	destKeyring.signErr = banhbaoring.ErrSigningFailed
+	destKeyring.signErr = popsigner.ErrSigningFailed
 
 	result := verifyLocalKey(destKeyring, "test-key")
 
@@ -826,7 +826,7 @@ func TestExport_ImportError(t *testing.T) {
 	defer func() { _ = kr.Close() }()
 
 	destKeyring := newMockExportDestKeyring()
-	destKeyring.importErr = banhbaoring.ErrKeyExists // Simulate import failure
+	destKeyring.importErr = popsigner.ErrKeyExists // Simulate import failure
 
 	cfg := ExportConfig{
 		SourceKeyring: kr,

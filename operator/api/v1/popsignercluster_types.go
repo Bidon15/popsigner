@@ -6,8 +6,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// BanhBaoRingClusterSpec defines the desired state
-type BanhBaoRingClusterSpec struct {
+// POPSignerClusterSpec defines the desired state
+type POPSignerClusterSpec struct {
 	// Domain for the cluster endpoints (e.g., keys.mycompany.com)
 	// +kubebuilder:validation:Required
 	Domain string `json:"domain"`
@@ -158,7 +158,7 @@ type APISpec struct {
 	// +kubebuilder:default="1.0.0"
 	Version string `json:"version,omitempty"`
 
-	// Image overrides the default image (e.g., "rg.nl-ams.scw.cloud/banhbao/control-plane")
+	// Image overrides the default image (e.g., "ghcr.io/bidon15/popsigner-control-plane")
 	Image string `json:"image,omitempty"`
 
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
@@ -182,7 +182,7 @@ type DashboardSpec struct {
 	// +kubebuilder:default="1.0.0"
 	Version string `json:"version,omitempty"`
 
-	// Image overrides the default image (e.g., "rg.nl-ams.scw.cloud/banhbao/dashboard")
+	// Image overrides the default image (e.g., "ghcr.io/bidon15/popsigner-dashboard")
 	Image string `json:"image,omitempty"`
 
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
@@ -318,8 +318,8 @@ type SecretKeyRef struct {
 	Key  string `json:"key"`
 }
 
-// BanhBaoRingClusterStatus defines the observed state
-type BanhBaoRingClusterStatus struct {
+// POPSignerClusterStatus defines the observed state
+type POPSignerClusterStatus struct {
 	// Current phase: Pending, Initializing, Running, Degraded, Failed
 	// +kubebuilder:default="Pending"
 	Phase string `json:"phase,omitempty"`
@@ -365,24 +365,25 @@ type EndpointsStatus struct {
 // +kubebuilder:printcolumn:name="API",type=string,JSONPath=`.status.api.replicas`
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
-// BanhBaoRingCluster is the Schema for the banhbaoringclusters API
-type BanhBaoRingCluster struct {
+// POPSignerCluster is the Schema for the popsignerclusters API
+type POPSignerCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   BanhBaoRingClusterSpec   `json:"spec,omitempty"`
-	Status BanhBaoRingClusterStatus `json:"status,omitempty"`
+	Spec   POPSignerClusterSpec   `json:"spec,omitempty"`
+	Status POPSignerClusterStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// BanhBaoRingClusterList contains a list of BanhBaoRingCluster
-type BanhBaoRingClusterList struct {
+// POPSignerClusterList contains a list of POPSignerCluster
+type POPSignerClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []BanhBaoRingCluster `json:"items"`
+	Items           []POPSignerCluster `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&BanhBaoRingCluster{}, &BanhBaoRingClusterList{})
+	SchemeBuilder.Register(&POPSignerCluster{}, &POPSignerClusterList{})
 }
+

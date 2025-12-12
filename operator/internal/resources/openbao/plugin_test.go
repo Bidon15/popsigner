@@ -6,7 +6,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
@@ -44,15 +44,15 @@ func TestPluginDownloadURL(t *testing.T) {
 func TestGetPluginInfo(t *testing.T) {
 	tests := []struct {
 		name        string
-		cluster     *banhbaoringv1.BanhBaoRingCluster
+		cluster     *popsignerv1.POPSignerCluster
 		wantVersion string
 	}{
 		{
 			name: "default version",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{
-						Plugin: banhbaoringv1.PluginSpec{},
+			cluster: &popsignerv1.POPSignerCluster{
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{
+						Plugin: popsignerv1.PluginSpec{},
 					},
 				},
 			},
@@ -60,10 +60,10 @@ func TestGetPluginInfo(t *testing.T) {
 		},
 		{
 			name: "custom version",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{
-						Plugin: banhbaoringv1.PluginSpec{
+			cluster: &popsignerv1.POPSignerCluster{
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{
+						Plugin: popsignerv1.PluginSpec{
 							Version: "2.0.0",
 						},
 					},
@@ -93,32 +93,32 @@ func TestGetPluginInfo(t *testing.T) {
 func TestInitContainer(t *testing.T) {
 	tests := []struct {
 		name        string
-		cluster     *banhbaoringv1.BanhBaoRingCluster
+		cluster     *popsignerv1.POPSignerCluster
 		wantVersion string
 	}{
 		{
 			name: "default version",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
+			cluster: &popsignerv1.POPSignerCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-cluster",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{},
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{},
 				},
 			},
 			wantVersion: constants.DefaultPluginVersion,
 		},
 		{
 			name: "custom version",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
+			cluster: &popsignerv1.POPSignerCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-cluster",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{
-						Plugin: banhbaoringv1.PluginSpec{
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{
+						Plugin: popsignerv1.PluginSpec{
 							Version: "2.0.0",
 						},
 					},
@@ -188,13 +188,13 @@ func TestRegisterPluginScript(t *testing.T) {
 }
 
 func TestPluginRegistrationJob(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			OpenBao: banhbaoringv1.OpenBaoSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			OpenBao: popsignerv1.OpenBaoSpec{
 				Version: "2.0.0",
 			},
 		},

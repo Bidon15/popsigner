@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/conditions"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 	"github.com/Bidon15/banhbaoring/operator/internal/resources"
@@ -19,7 +19,7 @@ import (
 )
 
 // reconcileAPI handles API resources.
-func (r *ClusterReconciler) reconcileAPI(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *ClusterReconciler) reconcileAPI(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	log := log.FromContext(ctx)
 	log.Info("Reconciling API")
 
@@ -50,7 +50,7 @@ func (r *ClusterReconciler) reconcileAPI(ctx context.Context, cluster *banhbaori
 // NOTE: The dashboard is integrated into the control-plane. This function
 // is kept for backwards compatibility but is typically not needed when
 // dashboard.replicas is 0. The control-plane serves both API and dashboard.
-func (r *ClusterReconciler) reconcileDashboard(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *ClusterReconciler) reconcileDashboard(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	log := log.FromContext(ctx)
 
 	// Skip if dashboard replicas is 0 (dashboard is integrated into control-plane)
@@ -77,7 +77,7 @@ func (r *ClusterReconciler) reconcileDashboard(ctx context.Context, cluster *ban
 }
 
 // isAPIReady checks if API pods are ready.
-func (r *ClusterReconciler) isAPIReady(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) bool {
+func (r *ClusterReconciler) isAPIReady(ctx context.Context, cluster *popsignerv1.POPSignerCluster) bool {
 	name := resources.ResourceName(cluster.Name, constants.ComponentAPI)
 
 	deployment := &appsv1.Deployment{}
@@ -95,7 +95,7 @@ func (r *ClusterReconciler) isAPIReady(ctx context.Context, cluster *banhbaoring
 
 // isDashboardReady checks if Dashboard pods are ready.
 // Returns true if dashboard is disabled (replicas=0) or all pods are ready.
-func (r *ClusterReconciler) isDashboardReady(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) bool {
+func (r *ClusterReconciler) isDashboardReady(ctx context.Context, cluster *popsignerv1.POPSignerCluster) bool {
 	// Dashboard is disabled (served by control-plane)
 	if cluster.Spec.Dashboard.Replicas == 0 {
 		return true
@@ -117,13 +117,13 @@ func (r *ClusterReconciler) isDashboardReady(ctx context.Context, cluster *banhb
 }
 
 // updateAPIStatus updates the cluster status with API info.
-func (r *ClusterReconciler) updateAPIStatus(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *ClusterReconciler) updateAPIStatus(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	name := resources.ResourceName(cluster.Name, constants.ComponentAPI)
 
 	deployment := &appsv1.Deployment{}
 	if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: cluster.Namespace}, deployment); err != nil {
 		if errors.IsNotFound(err) {
-			cluster.Status.API = banhbaoringv1.ComponentStatus{
+			cluster.Status.API = popsignerv1.ComponentStatus{
 				Ready:   false,
 				Message: "Deployment not found",
 			}
@@ -140,7 +140,7 @@ func (r *ClusterReconciler) updateAPIStatus(ctx context.Context, cluster *banhba
 		version = constants.DefaultAPIVersion
 	}
 
-	cluster.Status.API = banhbaoringv1.ComponentStatus{
+	cluster.Status.API = popsignerv1.ComponentStatus{
 		Ready:    ready,
 		Version:  version,
 		Replicas: fmt.Sprintf("%d/%d", deployment.Status.ReadyReplicas, expectedReplicas),
@@ -167,10 +167,10 @@ func (r *ClusterReconciler) updateAPIStatus(ctx context.Context, cluster *banhba
 }
 
 // updateDashboardStatus updates the cluster status with Dashboard info.
-func (r *ClusterReconciler) updateDashboardStatus(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *ClusterReconciler) updateDashboardStatus(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	// Dashboard is disabled/integrated into control-plane
 	if cluster.Spec.Dashboard.Replicas == 0 {
-		cluster.Status.Dashboard = banhbaoringv1.ComponentStatus{
+		cluster.Status.Dashboard = popsignerv1.ComponentStatus{
 			Ready:   true,
 			Message: "Integrated into control-plane",
 		}
@@ -189,7 +189,7 @@ func (r *ClusterReconciler) updateDashboardStatus(ctx context.Context, cluster *
 	deployment := &appsv1.Deployment{}
 	if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: cluster.Namespace}, deployment); err != nil {
 		if errors.IsNotFound(err) {
-			cluster.Status.Dashboard = banhbaoringv1.ComponentStatus{
+			cluster.Status.Dashboard = popsignerv1.ComponentStatus{
 				Ready:   false,
 				Message: "Deployment not found",
 			}
@@ -206,7 +206,7 @@ func (r *ClusterReconciler) updateDashboardStatus(ctx context.Context, cluster *
 		version = constants.DefaultDashboardVersion
 	}
 
-	cluster.Status.Dashboard = banhbaoringv1.ComponentStatus{
+	cluster.Status.Dashboard = popsignerv1.ComponentStatus{
 		Ready:    ready,
 		Version:  version,
 		Replicas: fmt.Sprintf("%d/%d", deployment.Status.ReadyReplicas, expectedReplicas),
@@ -233,12 +233,12 @@ func (r *ClusterReconciler) updateDashboardStatus(ctx context.Context, cluster *
 }
 
 // isAppsReady checks if both API and Dashboard are ready.
-func (r *ClusterReconciler) isAppsReady(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) bool {
+func (r *ClusterReconciler) isAppsReady(ctx context.Context, cluster *popsignerv1.POPSignerCluster) bool {
 	return r.isAPIReady(ctx, cluster) && r.isDashboardReady(ctx, cluster)
 }
 
 // updateAppsStatus updates the cluster status with both API and Dashboard info.
-func (r *ClusterReconciler) updateAppsStatus(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *ClusterReconciler) updateAppsStatus(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	if err := r.updateAPIStatus(ctx, cluster); err != nil {
 		return fmt.Errorf("failed to update API status: %w", err)
 	}

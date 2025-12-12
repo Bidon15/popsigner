@@ -4,22 +4,22 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-  name: banhbaoringbackups.banhbaoring.io
+  name: popsignerrestores.popsigner.com
 spec:
-  group: banhbaoring.io
+  group: popsigner.com
   names:
-    kind: BanhBaoRingBackup
-    listKind: BanhBaoRingBackupList
-    plural: banhbaoringbackups
-    singular: banhbaoringbackup
+    kind: POPSignerRestore
+    listKind: POPSignerRestoreList
+    plural: popsignerrestores
+    singular: popsignerrestore
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
     - jsonPath: .status.phase
       name: Phase
       type: string
-    - jsonPath: .status.totalSize
-      name: Size
+    - jsonPath: .spec.backupRef.name
+      name: Backup
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
@@ -27,7 +27,8 @@ spec:
     name: v1
     schema:
       openAPIV3Schema:
-        description: BanhBaoRingBackup is the Schema for the banhbaoringbackups API
+        description: POPSignerRestore is the Schema for the popsignerrestores
+          API
         properties:
           apiVersion:
             description: |-
@@ -47,10 +48,18 @@ spec:
           metadata:
             type: object
           spec:
-            description: BanhBaoRingBackupSpec defines the desired state
+            description: POPSignerRestoreSpec defines the desired state
             properties:
+              backupRef:
+                description: Reference to backup resource
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
               clusterRef:
-                description: ClusterReference references a BanhBaoRingCluster
+                description: ClusterReference references a POPSignerCluster
                 properties:
                   name:
                     type: string
@@ -58,16 +67,22 @@ spec:
                 - name
                 type: object
               components:
-                default:
-                - openbao
-                - database
-                - secrets
-                description: Components to backup
+                description: 'Components to restore (default: all from backup)'
                 items:
                   type: string
                 type: array
-              destination:
-                description: Override cluster backup destination
+              options:
+                description: RestoreOptions configures restore behavior
+                properties:
+                  stopApplications:
+                    default: true
+                    type: boolean
+                  verifyBackup:
+                    default: true
+                    type: boolean
+                type: object
+              source:
+                description: Or restore from specific location
                 properties:
                   gcs:
                     description: GCSDestination configures Google Cloud Storage
@@ -116,40 +131,15 @@ spec:
                     - credentials
                     type: object
                 type: object
-              type:
-                default: full
-                description: full or incremental
-                enum:
-                - full
-                - incremental
-                type: string
             required:
             - clusterRef
             type: object
           status:
-            description: BanhBaoRingBackupStatus defines the observed state
+            description: POPSignerRestoreStatus defines the observed state
             properties:
               completedAt:
                 format: date-time
                 type: string
-              components:
-                items:
-                  description: BackupComponentStatus represents the backup status
-                    of a component
-                  properties:
-                    location:
-                      type: string
-                    name:
-                      type: string
-                    size:
-                      type: string
-                    status:
-                      type: string
-                  required:
-                  - name
-                  - status
-                  type: object
-                type: array
               conditions:
                 items:
                   description: Condition contains details for one aspect of the current
@@ -207,13 +197,24 @@ spec:
                   type: object
                 type: array
               phase:
-                description: Pending, Running, Completed, Failed
+                description: Pending, Stopping, Restoring, Starting, Completed, Failed
                 type: string
               startedAt:
                 format: date-time
                 type: string
-              totalSize:
-                type: string
+              steps:
+                items:
+                  description: RestoreStep represents a step in the restore process
+                  properties:
+                    name:
+                      type: string
+                    status:
+                      type: string
+                  required:
+                  - name
+                  - status
+                  type: object
+                type: array
             type: object
         type: object
     served: true

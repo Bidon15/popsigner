@@ -20,7 +20,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/conditions"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 	"github.com/Bidon15/banhbaoring/operator/internal/resources"
@@ -29,7 +29,7 @@ import (
 )
 
 // reconcileOpenBao handles all OpenBao resources.
-func (r *ClusterReconciler) reconcileOpenBao(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *ClusterReconciler) reconcileOpenBao(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	log := log.FromContext(ctx)
 	log.Info("Reconciling OpenBao")
 
@@ -105,7 +105,7 @@ func (r *ClusterReconciler) reconcileOpenBao(ctx context.Context, cluster *banhb
 }
 
 // configureAutoUnseal adds auto-unseal configuration to the StatefulSet.
-func (r *ClusterReconciler) configureAutoUnseal(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster, sts *appsv1.StatefulSet) error {
+func (r *ClusterReconciler) configureAutoUnseal(ctx context.Context, cluster *popsignerv1.POPSignerCluster, sts *appsv1.StatefulSet) error {
 	provider, err := unseal.GetProviderForCluster(cluster)
 	if err != nil {
 		return err
@@ -151,7 +151,7 @@ func (r *ClusterReconciler) configureAutoUnseal(ctx context.Context, cluster *ba
 }
 
 // isOpenBaoReady checks if OpenBao pods are ready.
-func (r *ClusterReconciler) isOpenBaoReady(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) bool {
+func (r *ClusterReconciler) isOpenBaoReady(ctx context.Context, cluster *popsignerv1.POPSignerCluster) bool {
 	name := resources.ResourceName(cluster.Name, constants.ComponentOpenBao)
 
 	sts := &appsv1.StatefulSet{}
@@ -168,13 +168,13 @@ func (r *ClusterReconciler) isOpenBaoReady(ctx context.Context, cluster *banhbao
 }
 
 // updateOpenBaoStatus updates the cluster status with OpenBao info.
-func (r *ClusterReconciler) updateOpenBaoStatus(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *ClusterReconciler) updateOpenBaoStatus(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	name := resources.ResourceName(cluster.Name, constants.ComponentOpenBao)
 
 	sts := &appsv1.StatefulSet{}
 	if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: cluster.Namespace}, sts); err != nil {
 		if errors.IsNotFound(err) {
-			cluster.Status.OpenBao = banhbaoringv1.ComponentStatus{
+			cluster.Status.OpenBao = popsignerv1.ComponentStatus{
 				Ready:   false,
 				Message: "StatefulSet not found",
 			}
@@ -186,7 +186,7 @@ func (r *ClusterReconciler) updateOpenBaoStatus(ctx context.Context, cluster *ba
 	expectedReplicas := *sts.Spec.Replicas
 	ready := sts.Status.ReadyReplicas >= expectedReplicas
 
-	cluster.Status.OpenBao = banhbaoringv1.ComponentStatus{
+	cluster.Status.OpenBao = popsignerv1.ComponentStatus{
 		Ready:    ready,
 		Version:  cluster.Spec.OpenBao.Version,
 		Replicas: fmt.Sprintf("%d/%d", sts.Status.ReadyReplicas, expectedReplicas),
@@ -208,7 +208,7 @@ func (r *ClusterReconciler) updateOpenBaoStatus(ctx context.Context, cluster *ba
 }
 
 // initializeOpenBao performs first-time initialization.
-func (r *ClusterReconciler) initializeOpenBao(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *ClusterReconciler) initializeOpenBao(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	log := log.FromContext(ctx)
 	log.Info("Initializing OpenBao cluster")
 
@@ -227,7 +227,7 @@ func (r *ClusterReconciler) initializeOpenBao(ctx context.Context, cluster *banh
 }
 
 // registerPlugin registers the secp256k1 plugin.
-func (r *ClusterReconciler) registerPlugin(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *ClusterReconciler) registerPlugin(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	log := log.FromContext(ctx)
 	log.Info("Registering secp256k1 plugin")
 
@@ -238,7 +238,7 @@ func (r *ClusterReconciler) registerPlugin(ctx context.Context, cluster *banhbao
 }
 
 // createOrUpdate creates or updates a Kubernetes resource.
-func (r *ClusterReconciler) createOrUpdate(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster, obj client.Object) error {
+func (r *ClusterReconciler) createOrUpdate(ctx context.Context, cluster *popsignerv1.POPSignerCluster, obj client.Object) error {
 	// Set owner reference
 	if err := ctrl.SetControllerReference(cluster, obj, r.Scheme); err != nil {
 		return fmt.Errorf("failed to set controller reference: %w", err)
@@ -261,20 +261,20 @@ func (r *ClusterReconciler) createOrUpdate(ctx context.Context, cluster *banhbao
 			obj.SetResourceVersion(existing.GetResourceVersion())
 
 			if err := r.Update(ctx, obj); err != nil {
-			return fmt.Errorf("failed to update resource: %w", err)
+				return fmt.Errorf("failed to update resource: %w", err)
+			}
+		} else {
+			return fmt.Errorf("failed to create resource: %w", err)
 		}
-	} else {
-		return fmt.Errorf("failed to create resource: %w", err)
 	}
-}
 
 	return nil
 }
 
 // ensureTLSSecret creates a self-signed TLS certificate for OpenBao if it doesn't exist.
-func (r *ClusterReconciler) ensureTLSSecret(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster, name string) (*corev1.Secret, error) {
+func (r *ClusterReconciler) ensureTLSSecret(ctx context.Context, cluster *popsignerv1.POPSignerCluster, name string) (*corev1.Secret, error) {
 	secretName := name + "-tls"
-	
+
 	// Check if secret already exists
 	existing := &corev1.Secret{}
 	err := r.Get(ctx, types.NamespacedName{Name: secretName, Namespace: cluster.Namespace}, existing)
@@ -292,7 +292,7 @@ func (r *ClusterReconciler) ensureTLSSecret(ctx context.Context, cluster *banhba
 	}
 
 	labels := resources.Labels(cluster.Name, constants.ComponentOpenBao, cluster.Spec.OpenBao.Version)
-	
+
 	return &corev1.Secret{
 		ObjectMeta: resources.ObjectMeta(secretName, cluster.Namespace, labels),
 		Type:       corev1.SecretTypeTLS,
@@ -316,7 +316,7 @@ func generateSelfSignedCert(name, namespace string) (certPEM, keyPEM, caPEM []by
 	caTemplate := x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
-			Organization: []string{"BanhBaoRing"},
+			Organization: []string{"POPSigner"},
 			CommonName:   "OpenBao CA",
 		},
 		NotBefore:             time.Now(),
@@ -346,7 +346,7 @@ func generateSelfSignedCert(name, namespace string) (certPEM, keyPEM, caPEM []by
 	serverTemplate := x509.Certificate{
 		SerialNumber: big.NewInt(2),
 		Subject: pkix.Name{
-			Organization: []string{"BanhBaoRing"},
+			Organization: []string{"POPSigner"},
 			CommonName:   name,
 		},
 		NotBefore: time.Now(),

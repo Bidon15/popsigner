@@ -7,12 +7,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
 // Service builds the API Service.
-func Service(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.Service {
+func Service(cluster *popsignerv1.POPSignerCluster) *corev1.Service {
 	name := fmt.Sprintf("%s-api", cluster.Name)
 
 	version := cluster.Spec.API.Version

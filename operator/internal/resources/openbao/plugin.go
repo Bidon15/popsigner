@@ -5,7 +5,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 	"github.com/Bidon15/banhbaoring/operator/internal/resources"
 )
@@ -14,9 +14,9 @@ const (
 	// PluginName is the name of the secp256k1 plugin.
 	PluginName = "secp256k1"
 	// PluginBinaryName is the binary name for the plugin.
-	PluginBinaryName = "banhbaoring-secp256k1"
+	PluginBinaryName = "popsigner-secp256k1"
 	// PluginDownloadBaseURL is the base URL for downloading plugins.
-	PluginDownloadBaseURL = "https://github.com/Bidon15/banhbaoring/releases/download"
+	PluginDownloadBaseURL = "https://github.com/popsigner/popsigner/releases/download"
 )
 
 // PluginInfo contains information needed to register the plugin.
@@ -36,7 +36,7 @@ func PluginDownloadURL(version, os, arch string) string {
 }
 
 // GetPluginInfo returns plugin registration info.
-func GetPluginInfo(cluster *banhbaoringv1.BanhBaoRingCluster) PluginInfo {
+func GetPluginInfo(cluster *popsignerv1.POPSignerCluster) PluginInfo {
 	version := cluster.Spec.OpenBao.Plugin.Version
 	if version == "" {
 		version = constants.DefaultPluginVersion
@@ -50,7 +50,7 @@ func GetPluginInfo(cluster *banhbaoringv1.BanhBaoRingCluster) PluginInfo {
 }
 
 // InitContainer returns an init container that downloads the plugin.
-func InitContainer(cluster *banhbaoringv1.BanhBaoRingCluster) corev1.Container {
+func InitContainer(cluster *popsignerv1.POPSignerCluster) corev1.Container {
 	version := cluster.Spec.OpenBao.Plugin.Version
 	if version == "" {
 		version = constants.DefaultPluginVersion
@@ -123,7 +123,7 @@ echo "Plugin registered and enabled successfully"
 
 // PluginRegistrationJob returns a Job spec for registering the plugin.
 // This is called after the cluster is initialized and unsealed.
-func PluginRegistrationJob(cluster *banhbaoringv1.BanhBaoRingCluster) corev1.Container {
+func PluginRegistrationJob(cluster *popsignerv1.POPSignerCluster) corev1.Container {
 	return corev1.Container{
 		Name:    "register-plugin",
 		Image:   fmt.Sprintf("%s:%s", OpenBaoImage, cluster.Spec.OpenBao.Version),

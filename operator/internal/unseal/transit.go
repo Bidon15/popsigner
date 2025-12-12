@@ -6,7 +6,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 )
 
 // TransitProvider implements the Provider interface for Transit (Vault-to-Vault) unseal.
@@ -18,7 +18,7 @@ func (p *TransitProvider) Name() string {
 }
 
 // Validate checks if the configuration is valid.
-func (p *TransitProvider) Validate(spec *banhbaoringv1.AutoUnsealSpec) error {
+func (p *TransitProvider) Validate(spec *popsignerv1.AutoUnsealSpec) error {
 	if spec.Transit == nil {
 		return fmt.Errorf("transit configuration required")
 	}
@@ -32,7 +32,7 @@ func (p *TransitProvider) Validate(spec *banhbaoringv1.AutoUnsealSpec) error {
 }
 
 // GetConfig returns the HCL configuration for the seal stanza.
-func (p *TransitProvider) GetConfig(spec *banhbaoringv1.AutoUnsealSpec) string {
+func (p *TransitProvider) GetConfig(spec *popsignerv1.AutoUnsealSpec) string {
 	if spec.Transit == nil {
 		return ""
 	}
@@ -52,7 +52,7 @@ func (p *TransitProvider) GetConfig(spec *banhbaoringv1.AutoUnsealSpec) string {
 }
 
 // GetEnvVars returns environment variables needed by the provider.
-func (p *TransitProvider) GetEnvVars(ctx context.Context, spec *banhbaoringv1.AutoUnsealSpec, namespace string) ([]corev1.EnvVar, error) {
+func (p *TransitProvider) GetEnvVars(ctx context.Context, spec *popsignerv1.AutoUnsealSpec, namespace string) ([]corev1.EnvVar, error) {
 	var envVars []corev1.EnvVar
 
 	if spec.Transit == nil {
@@ -76,13 +76,13 @@ func (p *TransitProvider) GetEnvVars(ctx context.Context, spec *banhbaoringv1.Au
 }
 
 // GetVolumes returns additional volumes needed by the provider.
-func (p *TransitProvider) GetVolumes(spec *banhbaoringv1.AutoUnsealSpec) []corev1.Volume {
+func (p *TransitProvider) GetVolumes(spec *popsignerv1.AutoUnsealSpec) []corev1.Volume {
 	// Transit provider doesn't require additional volumes
 	return nil
 }
 
 // GetVolumeMounts returns additional volume mounts needed by the provider.
-func (p *TransitProvider) GetVolumeMounts(spec *banhbaoringv1.AutoUnsealSpec) []corev1.VolumeMount {
+func (p *TransitProvider) GetVolumeMounts(spec *popsignerv1.AutoUnsealSpec) []corev1.VolumeMount {
 	// Transit provider doesn't require additional volume mounts
 	return nil
 }

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Bidon15/banhbaoring"
+	popsigner "github.com/Bidon15/banhbaoring"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -47,7 +47,7 @@ func Export(ctx context.Context, cfg ExportConfig) (*ExportResult, error) {
 	}
 
 	if !meta.Exportable {
-		return nil, banhbaoring.ErrKeyNotExportable
+		return nil, popsigner.ErrKeyNotExportable
 	}
 
 	// Determine destination key name
@@ -124,7 +124,7 @@ func ValidateExport(ctx context.Context, cfg ExportConfig) error {
 	}
 
 	if !meta.Exportable {
-		return banhbaoring.ErrKeyNotExportable
+		return popsigner.ErrKeyNotExportable
 	}
 
 	return nil

@@ -2,16 +2,16 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "banhbaoring-operator.fullname" . }}-manager
+  name: {{ include "popsigner-operator.fullname" . }}-manager
   labels:
-    {{- include "banhbaoring-operator.labels" . | nindent 4 }}
+    {{- include "popsigner-operator.labels" . | nindent 4 }}
 rules:
-  # BanhBaoRing resources
-  - apiGroups: ["banhbaoring.io"]
+  # POPSigner resources
+  - apiGroups: ["popsigner.com"]
     resources: ["*"]
     verbs: ["*"]
-  # BanhBaoRing status subresources
-  - apiGroups: ["banhbaoring.io"]
+  # POPSigner status subresources
+  - apiGroups: ["popsigner.com"]
     resources: ["*/status"]
     verbs: ["get", "update", "patch"]
   # Core resources

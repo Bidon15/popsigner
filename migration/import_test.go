@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Bidon15/banhbaoring"
+	popsigner "github.com/Bidon15/banhbaoring"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -267,14 +267,14 @@ func TestImport_Success(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "keyring.json")
 
-	cfg := banhbaoring.Config{
+	cfg := popsigner.Config{
 		BaoAddr:       server.URL,
 		BaoToken:      "test-token",
 		StorePath:     storePath,
 		SkipTLSVerify: true,
 	}
 
-	destKr, err := banhbaoring.New(context.Background(), cfg)
+	destKr, err := popsigner.New(context.Background(), cfg)
 	require.NoError(t, err)
 	defer func() { _ = destKr.Close() }()
 
@@ -337,14 +337,14 @@ func TestImport_WithNewKeyName(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "keyring.json")
 
-	cfg := banhbaoring.Config{
+	cfg := popsigner.Config{
 		BaoAddr:       server.URL,
 		BaoToken:      "test-token",
 		StorePath:     storePath,
 		SkipTLSVerify: true,
 	}
 
-	destKr, err := banhbaoring.New(context.Background(), cfg)
+	destKr, err := popsigner.New(context.Background(), cfg)
 	require.NoError(t, err)
 	defer func() { _ = destKr.Close() }()
 
@@ -401,14 +401,14 @@ func TestImport_DeleteAfterImport(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "keyring.json")
 
-	cfg := banhbaoring.Config{
+	cfg := popsigner.Config{
 		BaoAddr:       server.URL,
 		BaoToken:      "test-token",
 		StorePath:     storePath,
 		SkipTLSVerify: true,
 	}
 
-	destKr, err := banhbaoring.New(context.Background(), cfg)
+	destKr, err := popsigner.New(context.Background(), cfg)
 	require.NoError(t, err)
 	defer func() { _ = destKr.Close() }()
 
@@ -438,7 +438,7 @@ func TestImport_ValidationErrors(t *testing.T) {
 	}{
 		{
 			name:    "nil source keyring",
-			cfg:     ImportConfig{DestKeyring: &banhbaoring.BaoKeyring{}, KeyName: "test"},
+			cfg:     ImportConfig{DestKeyring: &popsigner.BaoKeyring{}, KeyName: "test"},
 			wantErr: "source keyring is required",
 		},
 		{
@@ -448,7 +448,7 @@ func TestImport_ValidationErrors(t *testing.T) {
 		},
 		{
 			name:    "empty key name",
-			cfg:     ImportConfig{SourceKeyring: newMockSourceKeyring(), DestKeyring: &banhbaoring.BaoKeyring{}},
+			cfg:     ImportConfig{SourceKeyring: newMockSourceKeyring(), DestKeyring: &popsigner.BaoKeyring{}},
 			wantErr: "key name is required",
 		},
 	}
@@ -478,14 +478,14 @@ func TestImport_ExportError(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "keyring.json")
 
-	cfg := banhbaoring.Config{
+	cfg := popsigner.Config{
 		BaoAddr:       server.URL,
 		BaoToken:      "test-token",
 		StorePath:     storePath,
 		SkipTLSVerify: true,
 	}
 
-	destKr, err := banhbaoring.New(context.Background(), cfg)
+	destKr, err := popsigner.New(context.Background(), cfg)
 	require.NoError(t, err)
 	defer func() { _ = destKr.Close() }()
 
@@ -529,14 +529,14 @@ func TestImport_ImportError(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "keyring.json")
 
-	cfg := banhbaoring.Config{
+	cfg := popsigner.Config{
 		BaoAddr:       server.URL,
 		BaoToken:      "test-token",
 		StorePath:     storePath,
 		SkipTLSVerify: true,
 	}
 
-	destKr, err := banhbaoring.New(context.Background(), cfg)
+	destKr, err := popsigner.New(context.Background(), cfg)
 	require.NoError(t, err)
 	defer func() { _ = destKr.Close() }()
 
@@ -606,14 +606,14 @@ func TestBatchImport_Success(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "keyring.json")
 
-	cfg := banhbaoring.Config{
+	cfg := popsigner.Config{
 		BaoAddr:       server.URL,
 		BaoToken:      "test-token",
 		StorePath:     storePath,
 		SkipTLSVerify: true,
 	}
 
-	destKr, err := banhbaoring.New(context.Background(), cfg)
+	destKr, err := popsigner.New(context.Background(), cfg)
 	require.NoError(t, err)
 	defer func() { _ = destKr.Close() }()
 
@@ -688,14 +688,14 @@ func TestBatchImport_PartialFailure(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "keyring.json")
 
-	cfg := banhbaoring.Config{
+	cfg := popsigner.Config{
 		BaoAddr:       server.URL,
 		BaoToken:      "test-token",
 		StorePath:     storePath,
 		SkipTLSVerify: true,
 	}
 
-	destKr, err := banhbaoring.New(context.Background(), cfg)
+	destKr, err := popsigner.New(context.Background(), cfg)
 	require.NoError(t, err)
 	defer func() { _ = destKr.Close() }()
 
@@ -727,7 +727,7 @@ func TestBatchImport_ValidationErrors(t *testing.T) {
 	}{
 		{
 			name:    "nil source keyring",
-			cfg:     BatchImportConfig{DestKeyring: &banhbaoring.BaoKeyring{}},
+			cfg:     BatchImportConfig{DestKeyring: &popsigner.BaoKeyring{}},
 			wantErr: "source keyring is required",
 		},
 		{
@@ -767,14 +767,14 @@ func TestBatchImport_ContextCancellation(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "keyring.json")
 
-	cfg := banhbaoring.Config{
+	cfg := popsigner.Config{
 		BaoAddr:       server.URL,
 		BaoToken:      "test-token",
 		StorePath:     storePath,
 		SkipTLSVerify: true,
 	}
 
-	destKr, err := banhbaoring.New(context.Background(), cfg)
+	destKr, err := popsigner.New(context.Background(), cfg)
 	require.NoError(t, err)
 	defer func() { _ = destKr.Close() }()
 
@@ -930,14 +930,14 @@ func TestImport_VerificationFails(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "keyring.json")
 
-	cfg := banhbaoring.Config{
+	cfg := popsigner.Config{
 		BaoAddr:       server.URL,
 		BaoToken:      "test-token",
 		StorePath:     storePath,
 		SkipTLSVerify: true,
 	}
 
-	destKr, err := banhbaoring.New(context.Background(), cfg)
+	destKr, err := popsigner.New(context.Background(), cfg)
 	require.NoError(t, err)
 	defer func() { _ = destKr.Close() }()
 
@@ -1003,14 +1003,14 @@ func TestImport_DeleteSkippedOnVerificationFailure(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "keyring.json")
 
-	cfg := banhbaoring.Config{
+	cfg := popsigner.Config{
 		BaoAddr:       server.URL,
 		BaoToken:      "test-token",
 		StorePath:     storePath,
 		SkipTLSVerify: true,
 	}
 
-	destKr, err := banhbaoring.New(context.Background(), cfg)
+	destKr, err := popsigner.New(context.Background(), cfg)
 	require.NoError(t, err)
 	defer func() { _ = destKr.Close() }()
 
@@ -1074,14 +1074,14 @@ func TestImport_PublicKeyMatch(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "keyring.json")
 
-	cfg := banhbaoring.Config{
+	cfg := popsigner.Config{
 		BaoAddr:       server.URL,
 		BaoToken:      "test-token",
 		StorePath:     storePath,
 		SkipTLSVerify: true,
 	}
 
-	destKr, err := banhbaoring.New(context.Background(), cfg)
+	destKr, err := popsigner.New(context.Background(), cfg)
 	require.NoError(t, err)
 	defer func() { _ = destKr.Close() }()
 

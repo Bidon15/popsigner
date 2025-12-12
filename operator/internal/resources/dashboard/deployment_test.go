@@ -5,19 +5,19 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
 func TestDeployment(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
 			Domain: "keys.example.com",
-			Dashboard: banhbaoringv1.DashboardSpec{
+			Dashboard: popsignerv1.DashboardSpec{
 				Version:  "1.0.0",
 				Replicas: 3,
 			},
@@ -48,7 +48,7 @@ func TestDeployment(t *testing.T) {
 	}
 
 	// Verify container image
-	expectedImage := "banhbaoring/dashboard:1.0.0"
+	expectedImage := "popsigner/dashboard:1.0.0"
 	if deployment.Spec.Template.Spec.Containers[0].Image != expectedImage {
 		t.Errorf("expected image %q, got %q", expectedImage, deployment.Spec.Template.Spec.Containers[0].Image)
 	}
@@ -84,14 +84,14 @@ func TestDeployment(t *testing.T) {
 }
 
 func TestDeploymentDefaultVersion(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
 			Domain:    "keys.example.com",
-			Dashboard: banhbaoringv1.DashboardSpec{
+			Dashboard: popsignerv1.DashboardSpec{
 				// Version not set
 			},
 		},
@@ -100,21 +100,21 @@ func TestDeploymentDefaultVersion(t *testing.T) {
 	deployment := Deployment(cluster)
 
 	// Verify default version is used
-	expectedImage := "banhbaoring/dashboard:" + constants.DefaultDashboardVersion
+	expectedImage := "popsigner/dashboard:" + constants.DefaultDashboardVersion
 	if deployment.Spec.Template.Spec.Containers[0].Image != expectedImage {
 		t.Errorf("expected image %q, got %q", expectedImage, deployment.Spec.Template.Spec.Containers[0].Image)
 	}
 }
 
 func TestDeploymentDefaultReplicas(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
 			Domain: "keys.example.com",
-			Dashboard: banhbaoringv1.DashboardSpec{
+			Dashboard: popsignerv1.DashboardSpec{
 				Version: "1.0.0",
 				// Replicas not set (0)
 			},
@@ -130,14 +130,14 @@ func TestDeploymentDefaultReplicas(t *testing.T) {
 }
 
 func TestService(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
 			Domain: "keys.example.com",
-			Dashboard: banhbaoringv1.DashboardSpec{
+			Dashboard: popsignerv1.DashboardSpec{
 				Version: "1.0.0",
 			},
 		},
@@ -171,14 +171,14 @@ func TestService(t *testing.T) {
 }
 
 func TestServiceDefaultVersion(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
 			Domain:    "keys.example.com",
-			Dashboard: banhbaoringv1.DashboardSpec{
+			Dashboard: popsignerv1.DashboardSpec{
 				// Version not set
 			},
 		},
@@ -194,7 +194,7 @@ func TestServiceDefaultVersion(t *testing.T) {
 
 func TestMergeResources(t *testing.T) {
 	// Test with no override
-	result := mergeResources(banhbaoringv1.BanhBaoRingCluster{}.Spec.Dashboard.Resources)
+	result := mergeResources(popsignerv1.POPSignerCluster{}.Spec.Dashboard.Resources)
 
 	if result.Requests == nil {
 		t.Fatal("expected default requests to be set")

@@ -6,7 +6,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 )
 
 // AzureKVProvider implements the Provider interface for Azure Key Vault.
@@ -18,7 +18,7 @@ func (p *AzureKVProvider) Name() string {
 }
 
 // Validate checks if the configuration is valid.
-func (p *AzureKVProvider) Validate(spec *banhbaoringv1.AutoUnsealSpec) error {
+func (p *AzureKVProvider) Validate(spec *popsignerv1.AutoUnsealSpec) error {
 	if spec.AzureKV == nil {
 		return fmt.Errorf("azurekv configuration required")
 	}
@@ -35,7 +35,7 @@ func (p *AzureKVProvider) Validate(spec *banhbaoringv1.AutoUnsealSpec) error {
 }
 
 // GetConfig returns the HCL configuration for the seal stanza.
-func (p *AzureKVProvider) GetConfig(spec *banhbaoringv1.AutoUnsealSpec) string {
+func (p *AzureKVProvider) GetConfig(spec *popsignerv1.AutoUnsealSpec) string {
 	if spec.AzureKV == nil {
 		return ""
 	}
@@ -48,7 +48,7 @@ func (p *AzureKVProvider) GetConfig(spec *banhbaoringv1.AutoUnsealSpec) string {
 }
 
 // GetEnvVars returns environment variables needed by the provider.
-func (p *AzureKVProvider) GetEnvVars(ctx context.Context, spec *banhbaoringv1.AutoUnsealSpec, namespace string) ([]corev1.EnvVar, error) {
+func (p *AzureKVProvider) GetEnvVars(ctx context.Context, spec *popsignerv1.AutoUnsealSpec, namespace string) ([]corev1.EnvVar, error) {
 	var envVars []corev1.EnvVar
 
 	if spec.AzureKV == nil {
@@ -92,13 +92,13 @@ func (p *AzureKVProvider) GetEnvVars(ctx context.Context, spec *banhbaoringv1.Au
 }
 
 // GetVolumes returns additional volumes needed by the provider.
-func (p *AzureKVProvider) GetVolumes(spec *banhbaoringv1.AutoUnsealSpec) []corev1.Volume {
+func (p *AzureKVProvider) GetVolumes(spec *popsignerv1.AutoUnsealSpec) []corev1.Volume {
 	// Azure Key Vault doesn't require additional volumes
 	return nil
 }
 
 // GetVolumeMounts returns additional volume mounts needed by the provider.
-func (p *AzureKVProvider) GetVolumeMounts(spec *banhbaoringv1.AutoUnsealSpec) []corev1.VolumeMount {
+func (p *AzureKVProvider) GetVolumeMounts(spec *popsignerv1.AutoUnsealSpec) []corev1.VolumeMount {
 	// Azure Key Vault doesn't require additional volume mounts
 	return nil
 }

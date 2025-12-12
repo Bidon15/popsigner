@@ -6,23 +6,23 @@ metadata:
     app.kubernetes.io/name: namespace
     app.kubernetes.io/instance: system
     app.kubernetes.io/component: manager
-    app.kubernetes.io/created-by: banhbaoring-operator
-    app.kubernetes.io/part-of: banhbaoring-operator
+    app.kubernetes.io/created-by: popsigner-operator
+    app.kubernetes.io/part-of: popsigner-operator
     app.kubernetes.io/managed-by: kustomize
-  name: banhbaoring-system
+  name: popsigner-system
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: controller-manager
-  namespace: banhbaoring-system
+  namespace: popsigner-system
   labels:
     control-plane: controller-manager
     app.kubernetes.io/name: deployment
     app.kubernetes.io/instance: controller-manager
     app.kubernetes.io/component: manager
-    app.kubernetes.io/created-by: banhbaoring-operator
-    app.kubernetes.io/part-of: banhbaoring-operator
+    app.kubernetes.io/created-by: popsigner-operator
+    app.kubernetes.io/part-of: popsigner-operator
     app.kubernetes.io/managed-by: kustomize
 spec:
   selector:
@@ -45,7 +45,7 @@ spec:
             - /manager
           args:
             - --leader-elect
-          image: banhbaoring-operator:latest
+          image: popsigner-operator:latest
           name: manager
           securityContext:
             allowPrivilegeEscalation: false

@@ -45,12 +45,12 @@ rules:
   - update
   - watch
 - apiGroups:
-  - banhbaoring.io
+  - popsigner.com
   resources:
-  - banhbaoringbackups
-  - banhbaoringclusters
-  - banhbaoringrestores
-  - banhbaoringtenants
+  - popsignerbackups
+  - popsignerclusters
+  - popsignerrestores
+  - popsignertenants
   verbs:
   - create
   - delete
@@ -60,21 +60,21 @@ rules:
   - update
   - watch
 - apiGroups:
-  - banhbaoring.io
+  - popsigner.com
   resources:
-  - banhbaoringbackups/finalizers
-  - banhbaoringclusters/finalizers
-  - banhbaoringrestores/finalizers
-  - banhbaoringtenants/finalizers
+  - popsignerbackups/finalizers
+  - popsignerclusters/finalizers
+  - popsignerrestores/finalizers
+  - popsignertenants/finalizers
   verbs:
   - update
 - apiGroups:
-  - banhbaoring.io
+  - popsigner.com
   resources:
-  - banhbaoringbackups/status
-  - banhbaoringclusters/status
-  - banhbaoringrestores/status
-  - banhbaoringtenants/status
+  - popsignerbackups/status
+  - popsignerclusters/status
+  - popsignerrestores/status
+  - popsignertenants/status
   verbs:
   - get
   - patch

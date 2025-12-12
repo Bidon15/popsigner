@@ -7,7 +7,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 	"github.com/Bidon15/banhbaoring/operator/internal/resources"
 )
@@ -22,7 +22,7 @@ const (
 )
 
 // GrafanaDeployment creates a Deployment for Grafana.
-func GrafanaDeployment(cluster *banhbaoringv1.BanhBaoRingCluster) *appsv1.Deployment {
+func GrafanaDeployment(cluster *popsignerv1.POPSignerCluster) *appsv1.Deployment {
 	name := fmt.Sprintf("%s-grafana", cluster.Name)
 	labels := constants.Labels(cluster.Name, ComponentGrafana, GrafanaVersion)
 	selector := constants.SelectorLabels(cluster.Name, ComponentGrafana)
@@ -59,7 +59,7 @@ func GrafanaDeployment(cluster *banhbaoringv1.BanhBaoRingCluster) *appsv1.Deploy
 	}
 }
 
-func grafanaEnv(cluster *banhbaoringv1.BanhBaoRingCluster) []corev1.EnvVar {
+func grafanaEnv(cluster *popsignerv1.POPSignerCluster) []corev1.EnvVar {
 	env := []corev1.EnvVar{
 		{Name: "GF_INSTALL_PLUGINS", Value: "grafana-piechart-panel"},
 	}
@@ -88,7 +88,7 @@ func grafanaVolumeMounts() []corev1.VolumeMount {
 	}
 }
 
-func grafanaVolumes(cluster *banhbaoringv1.BanhBaoRingCluster) []corev1.Volume {
+func grafanaVolumes(cluster *popsignerv1.POPSignerCluster) []corev1.Volume {
 	name := fmt.Sprintf("%s-grafana", cluster.Name)
 	return []corev1.Volume{
 		{
@@ -111,7 +111,7 @@ func grafanaVolumes(cluster *banhbaoringv1.BanhBaoRingCluster) []corev1.Volume {
 }
 
 // GrafanaService creates a Service for Grafana.
-func GrafanaService(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.Service {
+func GrafanaService(cluster *popsignerv1.POPSignerCluster) *corev1.Service {
 	name := fmt.Sprintf("%s-grafana", cluster.Name)
 	labels := constants.Labels(cluster.Name, ComponentGrafana, GrafanaVersion)
 	selector := constants.SelectorLabels(cluster.Name, ComponentGrafana)
@@ -135,7 +135,7 @@ func GrafanaService(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.Service {
 }
 
 // DatasourcesConfigMap creates a ConfigMap for Grafana datasources.
-func DatasourcesConfigMap(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.ConfigMap {
+func DatasourcesConfigMap(cluster *popsignerv1.POPSignerCluster) *corev1.ConfigMap {
 	name := fmt.Sprintf("%s-grafana-datasources", cluster.Name)
 	labels := constants.Labels(cluster.Name, ComponentGrafana, GrafanaVersion)
 	prometheusURL := fmt.Sprintf("http://%s-prometheus:%d", cluster.Name, constants.PortPrometheus)
@@ -162,13 +162,13 @@ datasources:
 }
 
 // DashboardsConfigMap creates a ConfigMap for Grafana dashboard provisioning.
-func DashboardsConfigMap(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.ConfigMap {
+func DashboardsConfigMap(cluster *popsignerv1.POPSignerCluster) *corev1.ConfigMap {
 	name := fmt.Sprintf("%s-grafana-dashboards", cluster.Name)
 	labels := constants.Labels(cluster.Name, ComponentGrafana, GrafanaVersion)
 
 	provisioningYAML := `apiVersion: 1
 providers:
-  - name: 'banhbaoring'
+  - name: 'popsigner'
     orgId: 1
     folder: ''
     type: file

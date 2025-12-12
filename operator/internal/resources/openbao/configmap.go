@@ -7,7 +7,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 	"github.com/Bidon15/banhbaoring/operator/internal/resources"
 )
@@ -56,7 +56,7 @@ type ConfigData struct {
 }
 
 // ConfigMap builds the OpenBao configuration ConfigMap.
-func ConfigMap(cluster *banhbaoringv1.BanhBaoRingCluster) (*corev1.ConfigMap, error) {
+func ConfigMap(cluster *popsignerv1.POPSignerCluster) (*corev1.ConfigMap, error) {
 	name := resources.ResourceName(cluster.Name, constants.ComponentOpenBao)
 	labels := resources.Labels(cluster.Name, constants.ComponentOpenBao, cluster.Spec.OpenBao.Version)
 
@@ -96,7 +96,7 @@ func ConfigMap(cluster *banhbaoringv1.BanhBaoRingCluster) (*corev1.ConfigMap, er
 	}, nil
 }
 
-func buildSealConfig(cluster *banhbaoringv1.BanhBaoRingCluster) string {
+func buildSealConfig(cluster *popsignerv1.POPSignerCluster) string {
 	unseal := cluster.Spec.OpenBao.AutoUnseal
 	if !unseal.Enabled {
 		return ""

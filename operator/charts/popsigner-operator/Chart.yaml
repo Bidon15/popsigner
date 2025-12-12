@@ -1,8 +1,8 @@
 apiVersion: v2
-name: banhbaoring-operator
-description: BanhBaoRing Kubernetes Operator - Deploy and manage secure key infrastructure
+name: popsigner-operator
+description: POPSigner Kubernetes Operator - Deploy and manage secure key infrastructure
 type: application
-version: 0.1.0
+version: 1.0.0
 appVersion: "1.0.0"
 keywords:
   - key-management
@@ -11,10 +11,11 @@ keywords:
   - celestia
   - rollups
   - signing
+  - popsigner
 maintainers:
-  - name: BanhBaoRing Team
+  - name: POPSigner Team
     url: https://github.com/Bidon15/banhbaoring
-home: https://banhbaoring.io
+home: https://popsigner.com
 sources:
   - https://github.com/Bidon15/banhbaoring
-icon: https://banhbaoring.io/logo.png
+icon: https://popsigner.com/logo.png

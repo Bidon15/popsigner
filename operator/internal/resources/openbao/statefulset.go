@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 	"github.com/Bidon15/banhbaoring/operator/internal/resources"
 )
@@ -32,7 +32,7 @@ const (
 )
 
 // StatefulSet builds the OpenBao StatefulSet.
-func StatefulSet(cluster *banhbaoringv1.BanhBaoRingCluster) *appsv1.StatefulSet {
+func StatefulSet(cluster *popsignerv1.POPSignerCluster) *appsv1.StatefulSet {
 	spec := cluster.Spec.OpenBao
 	name := resources.ResourceName(cluster.Name, constants.ComponentOpenBao)
 	labels := resources.Labels(cluster.Name, constants.ComponentOpenBao, spec.Version)
@@ -69,7 +69,7 @@ func StatefulSet(cluster *banhbaoringv1.BanhBaoRingCluster) *appsv1.StatefulSet 
 	}
 }
 
-func buildPodSpec(cluster *banhbaoringv1.BanhBaoRingCluster, name, version string) corev1.PodSpec {
+func buildPodSpec(cluster *popsignerv1.POPSignerCluster, name, version string) corev1.PodSpec {
 	_ = cluster.Spec.OpenBao // Reserved for future use
 
 	return corev1.PodSpec{
@@ -84,7 +84,7 @@ func buildPodSpec(cluster *banhbaoringv1.BanhBaoRingCluster, name, version strin
 	}
 }
 
-func buildOpenBaoContainer(cluster *banhbaoringv1.BanhBaoRingCluster, version string) corev1.Container {
+func buildOpenBaoContainer(cluster *popsignerv1.POPSignerCluster, version string) corev1.Container {
 	spec := cluster.Spec.OpenBao
 
 	resourceReqs := resources.MergeResourceRequirements(
@@ -134,7 +134,7 @@ func buildOpenBaoContainer(cluster *banhbaoringv1.BanhBaoRingCluster, version st
 	}
 }
 
-func buildEnv(cluster *banhbaoringv1.BanhBaoRingCluster) []corev1.EnvVar {
+func buildEnv(cluster *popsignerv1.POPSignerCluster) []corev1.EnvVar {
 	name := resources.ResourceName(cluster.Name, constants.ComponentOpenBao)
 
 	env := []corev1.EnvVar{
@@ -158,7 +158,7 @@ func buildEnv(cluster *banhbaoringv1.BanhBaoRingCluster) []corev1.EnvVar {
 	return env
 }
 
-func autoUnsealEnv(cluster *banhbaoringv1.BanhBaoRingCluster) []corev1.EnvVar {
+func autoUnsealEnv(cluster *popsignerv1.POPSignerCluster) []corev1.EnvVar {
 	unseal := cluster.Spec.OpenBao.AutoUnseal
 	var env []corev1.EnvVar
 
@@ -206,7 +206,7 @@ func buildVolumes(name string) []corev1.Volume {
 	}
 }
 
-func buildDataPVC(spec banhbaoringv1.OpenBaoSpec) corev1.PersistentVolumeClaim {
+func buildDataPVC(spec popsignerv1.OpenBaoSpec) corev1.PersistentVolumeClaim {
 	size := spec.Storage.Size.String()
 	if size == "" || size == "0" {
 		size = constants.DefaultOpenBaoStorageSize

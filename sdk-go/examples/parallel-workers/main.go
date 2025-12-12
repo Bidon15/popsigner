@@ -1,6 +1,6 @@
-// Example: Parallel Workers with BanhBaoRing SDK
+// Example: Parallel Workers with POPSigner SDK
 //
-// This example demonstrates how to use BanhBaoRing for parallel blob submission,
+// This example demonstrates how to use POPSigner for parallel blob submission,
 // a critical pattern for Celestia sequencers. It shows both the batch API
 // approach and manual goroutine parallelism.
 package main
@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/banhbaoring/sdk-go"
+	popsigner "github.com/popsigner/sdk-go"
 	"github.com/google/uuid"
 )
 
@@ -21,12 +21,12 @@ const numWorkers = 4
 
 func main() {
 	// Initialize the client
-	apiKey := os.Getenv("BANHBAORING_API_KEY")
+	apiKey := os.Getenv("POPSIGNER_API_KEY")
 	if apiKey == "" {
-		log.Fatal("BANHBAORING_API_KEY environment variable is required")
+		log.Fatal("POPSIGNER_API_KEY environment variable is required")
 	}
 
-	client := banhbaoring.NewClient(apiKey)
+	client := popsigner.NewClient(apiKey)
 	ctx := context.Background()
 
 	// Get namespace ID
@@ -47,7 +47,7 @@ func main() {
 	start := time.Now()
 
 	// Create 4 worker keys in parallel using batch API
-	keys, err := client.Keys.CreateBatch(ctx, banhbaoring.CreateBatchRequest{
+	keys, err := client.Keys.CreateBatch(ctx, popsigner.CreateBatchRequest{
 		Prefix:      "blob-worker",
 		Count:       numWorkers,
 		NamespaceID: namespaceID,
@@ -83,9 +83,9 @@ func main() {
 	start = time.Now()
 
 	// Build batch sign request
-	requests := make([]banhbaoring.SignRequest, numWorkers)
+	requests := make([]popsigner.SignRequest, numWorkers)
 	for i := 0; i < numWorkers; i++ {
-		requests[i] = banhbaoring.SignRequest{
+		requests[i] = popsigner.SignRequest{
 			KeyID:     keys[i].ID,
 			Data:      blobs[i],
 			Prehashed: false,
@@ -93,7 +93,7 @@ func main() {
 	}
 
 	// Sign all in parallel with a single API call
-	results, err := client.Sign.SignBatch(ctx, banhbaoring.BatchSignRequest{
+	results, err := client.Sign.SignBatch(ctx, popsigner.BatchSignRequest{
 		Requests: requests,
 	})
 	if err != nil {
@@ -118,7 +118,7 @@ func main() {
 	start = time.Now()
 
 	var wg sync.WaitGroup
-	sigs := make([]*banhbaoring.SignResponse, numWorkers)
+	sigs := make([]*popsigner.SignResponse, numWorkers)
 	errs := make([]error, numWorkers)
 
 	for i := 0; i < numWorkers; i++ {
@@ -152,7 +152,7 @@ func main() {
 	fmt.Println("\n=== Method 3: Sequential (Baseline) ===")
 	start = time.Now()
 
-	sequentialSigs := make([]*banhbaoring.SignResponse, numWorkers)
+	sequentialSigs := make([]*popsigner.SignResponse, numWorkers)
 	for i := 0; i < numWorkers; i++ {
 		resp, err := client.Sign.Sign(ctx, keys[i].ID, blobs[i], false)
 		if err != nil {
@@ -191,4 +191,3 @@ func main() {
 
 	fmt.Println("\nParallel workers example completed!")
 }
-

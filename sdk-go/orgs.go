@@ -1,4 +1,4 @@
-package banhbaoring
+package popsigner
 
 import (
 	"context"
@@ -50,7 +50,7 @@ type CreateNamespaceRequest struct {
 //
 // Example:
 //
-//	org, err := client.Orgs.Create(ctx, banhbaoring.CreateOrgRequest{
+//	org, err := client.Orgs.Create(ctx, popsigner.CreateOrgRequest{
 //	    Name: "My Organization",
 //	})
 func (s *OrgsService) Create(ctx context.Context, req CreateOrgRequest) (*Organization, error) {
@@ -91,7 +91,7 @@ func (s *OrgsService) Get(ctx context.Context, orgID uuid.UUID) (*Organization, 
 //
 // Example:
 //
-//	org, err := client.Orgs.Update(ctx, orgID, banhbaoring.UpdateOrgRequest{
+//	org, err := client.Orgs.Update(ctx, orgID, popsigner.UpdateOrgRequest{
 //	    Name: "New Name",
 //	})
 func (s *OrgsService) Update(ctx context.Context, orgID uuid.UUID, req UpdateOrgRequest) (*Organization, error) {
@@ -142,9 +142,9 @@ func (s *OrgsService) ListMembers(ctx context.Context, orgID uuid.UUID) ([]*Memb
 //
 // Example:
 //
-//	invitation, err := client.Orgs.InviteMember(ctx, orgID, banhbaoring.InviteMemberRequest{
+//	invitation, err := client.Orgs.InviteMember(ctx, orgID, popsigner.InviteMemberRequest{
 //	    Email: "user@example.com",
-//	    Role:  banhbaoring.RoleOperator,
+//	    Role:  popsigner.RoleOperator,
 //	})
 func (s *OrgsService) InviteMember(ctx context.Context, orgID uuid.UUID, req InviteMemberRequest) (*Invitation, error) {
 	var resp Invitation
@@ -167,8 +167,8 @@ func (s *OrgsService) RemoveMember(ctx context.Context, orgID, userID uuid.UUID)
 //
 // Example:
 //
-//	err := client.Orgs.UpdateMemberRole(ctx, orgID, userID, banhbaoring.UpdateMemberRoleRequest{
-//	    Role: banhbaoring.RoleAdmin,
+//	err := client.Orgs.UpdateMemberRole(ctx, orgID, userID, popsigner.UpdateMemberRoleRequest{
+//	    Role: popsigner.RoleAdmin,
 //	})
 func (s *OrgsService) UpdateMemberRole(ctx context.Context, orgID, userID uuid.UUID, req UpdateMemberRoleRequest) error {
 	return s.client.patch(ctx, fmt.Sprintf("/v1/organizations/%s/members/%s", orgID, userID), req, nil)
@@ -213,7 +213,7 @@ func (s *OrgsService) ListNamespaces(ctx context.Context, orgID uuid.UUID) ([]*N
 //
 // Example:
 //
-//	ns, err := client.Orgs.CreateNamespace(ctx, orgID, banhbaoring.CreateNamespaceRequest{
+//	ns, err := client.Orgs.CreateNamespace(ctx, orgID, popsigner.CreateNamespaceRequest{
 //	    Name:        "production",
 //	    Description: "Production keys",
 //	})
@@ -246,4 +246,3 @@ func (s *OrgsService) GetNamespace(ctx context.Context, orgID, namespaceID uuid.
 func (s *OrgsService) DeleteNamespace(ctx context.Context, orgID, namespaceID uuid.UUID) error {
 	return s.client.delete(ctx, fmt.Sprintf("/v1/organizations/%s/namespaces/%s", orgID, namespaceID))
 }
-

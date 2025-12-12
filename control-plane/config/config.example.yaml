@@ -1,8 +1,9 @@
-# BanhBaoRing Control Plane Configuration
+# POPSigner Control Plane Configuration
+# Point-of-Presence signing infrastructure
 # Copy this file to config.yaml and fill in your values
 #
-# Environment variables override file values with prefix BANHBAO_
-# Example: BANHBAO_DATABASE_PASSWORD overrides database.password
+# Environment variables override file values with prefix POPSIGNER_
+# Example: POPSIGNER_DATABASE_PASSWORD overrides database.password
 
 server:
   port: 8080
@@ -14,9 +15,9 @@ server:
 database:
   host: "localhost"
   port: 5432
-  user: "banhbao"
-  password: "banhbao"  # Change in production!
-  database: "banhbaoring"
+  user: "popsigner"
+  password: "popsigner"  # Change in production!
+  database: "popsigner"
   ssl_mode: "disable"  # Use "require" in production
   max_open_conns: 25
   max_idle_conns: 5
@@ -30,14 +31,14 @@ redis:
 
 openbao:
   address: "http://localhost:8200"
-  token: ""  # Set via BANHBAO_OPENBAO_TOKEN env var
+  token: ""  # Set via POPSIGNER_OPENBAO_TOKEN env var
   namespace: ""
   secp256k1_path: "secp256k1"
 
 # Authentication (OAuth-only - no email/password)
 auth:
   # Generate with: openssl rand -base64 32
-  jwt_secret: ""  # Required! Set via BANHBAO_AUTH_JWT_SECRET
+  jwt_secret: ""  # Required! Set via POPSIGNER_AUTH_JWT_SECRET
   jwt_expiry: "24h"
   session_expiry: "168h"  # 7 days
 

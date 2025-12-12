@@ -8,7 +8,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
@@ -22,7 +22,7 @@ const (
 )
 
 // Prometheus creates a Prometheus CR for the cluster.
-func Prometheus(cluster *banhbaoringv1.BanhBaoRingCluster) *monitoringv1.Prometheus {
+func Prometheus(cluster *popsignerv1.POPSignerCluster) *monitoringv1.Prometheus {
 	spec := cluster.Spec.Monitoring.Prometheus
 	name := fmt.Sprintf("%s-prometheus", cluster.Name)
 	labels := constants.Labels(cluster.Name, ComponentPrometheus, "")
@@ -79,7 +79,7 @@ func Prometheus(cluster *banhbaoringv1.BanhBaoRingCluster) *monitoringv1.Prometh
 }
 
 // ServiceMonitor creates a ServiceMonitor for a component.
-func ServiceMonitor(cluster *banhbaoringv1.BanhBaoRingCluster, component string, port int) *monitoringv1.ServiceMonitor {
+func ServiceMonitor(cluster *popsignerv1.POPSignerCluster, component string, port int) *monitoringv1.ServiceMonitor {
 	name := fmt.Sprintf("%s-%s", cluster.Name, component)
 	labels := constants.Labels(cluster.Name, component, "")
 
@@ -102,7 +102,7 @@ func ServiceMonitor(cluster *banhbaoringv1.BanhBaoRingCluster, component string,
 }
 
 // PrometheusService creates a Service for Prometheus.
-func PrometheusService(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.Service {
+func PrometheusService(cluster *popsignerv1.POPSignerCluster) *corev1.Service {
 	name := fmt.Sprintf("%s-prometheus", cluster.Name)
 	labels := constants.Labels(cluster.Name, ComponentPrometheus, "")
 	selector := constants.SelectorLabels(cluster.Name, ComponentPrometheus)

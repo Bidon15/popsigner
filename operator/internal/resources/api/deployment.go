@@ -1,4 +1,4 @@
-// Package api provides API resource builders for the BanhBaoRing operator.
+// Package api provides API resource builders for the POPSigner operator.
 package api
 
 import (
@@ -10,17 +10,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
 const (
-	APIImage = "banhbaoring/control-plane"
+	APIImage = "popsigner/control-plane"
 	APIPort  = 8080
 )
 
 // Deployment builds the API Deployment.
-func Deployment(cluster *banhbaoringv1.BanhBaoRingCluster) *appsv1.Deployment {
+func Deployment(cluster *popsignerv1.POPSignerCluster) *appsv1.Deployment {
 	spec := cluster.Spec.API
 	name := fmt.Sprintf("%s-api", cluster.Name)
 
@@ -98,33 +98,33 @@ func Deployment(cluster *banhbaoringv1.BanhBaoRingCluster) *appsv1.Deployment {
 }
 
 // buildEnv creates environment variables for the API container.
-// Uses BANHBAO_ prefix as expected by the control-plane's viper config.
-func buildEnv(cluster *banhbaoringv1.BanhBaoRingCluster) []corev1.EnvVar {
+// Uses POPSIGNER_ prefix as expected by the control-plane's viper config.
+func buildEnv(cluster *popsignerv1.POPSignerCluster) []corev1.EnvVar {
 	dbSecret := fmt.Sprintf("%s-postgres-credentials", cluster.Name)
 	openbaoSvc := fmt.Sprintf("%s-openbao-active", cluster.Name)
 	postgresSvc := fmt.Sprintf("%s-postgres", cluster.Name)
 	redisSvc := fmt.Sprintf("%s-redis", cluster.Name)
 
 	return []corev1.EnvVar{
-		// Database config (BANHBAO_ prefix for viper)
-		{Name: "BANHBAO_DATABASE_HOST", Value: postgresSvc},
-		{Name: "BANHBAO_DATABASE_PORT", Value: "5432"},
-		{Name: "BANHBAO_DATABASE_USER", ValueFrom: secretRef(dbSecret, "username")},
-		{Name: "BANHBAO_DATABASE_PASSWORD", ValueFrom: secretRef(dbSecret, "password")},
-		{Name: "BANHBAO_DATABASE_DATABASE", ValueFrom: secretRef(dbSecret, "database")},
-		{Name: "BANHBAO_DATABASE_SSL_MODE", Value: "disable"},
+		// Database config (POPSIGNER_ prefix for viper)
+		{Name: "POPSIGNER_DATABASE_HOST", Value: postgresSvc},
+		{Name: "POPSIGNER_DATABASE_PORT", Value: "5432"},
+		{Name: "POPSIGNER_DATABASE_USER", ValueFrom: secretRef(dbSecret, "username")},
+		{Name: "POPSIGNER_DATABASE_PASSWORD", ValueFrom: secretRef(dbSecret, "password")},
+		{Name: "POPSIGNER_DATABASE_DATABASE", ValueFrom: secretRef(dbSecret, "database")},
+		{Name: "POPSIGNER_DATABASE_SSL_MODE", Value: "disable"},
 		// Redis config
-		{Name: "BANHBAO_REDIS_HOST", Value: redisSvc},
-		{Name: "BANHBAO_REDIS_PORT", Value: "6379"},
+		{Name: "POPSIGNER_REDIS_HOST", Value: redisSvc},
+		{Name: "POPSIGNER_REDIS_PORT", Value: "6379"},
 		// OpenBao config
-		{Name: "BANHBAO_OPENBAO_ADDRESS", Value: fmt.Sprintf("https://%s:8200", openbaoSvc)},
-		{Name: "BANHBAO_OPENBAO_TOKEN", ValueFrom: secretRef(cluster.Name+"-openbao-root", "token")},
+		{Name: "POPSIGNER_OPENBAO_ADDRESS", Value: fmt.Sprintf("https://%s:8200", openbaoSvc)},
+		{Name: "POPSIGNER_OPENBAO_TOKEN", ValueFrom: secretRef(cluster.Name+"-openbao-root", "token")},
 		// OAuth config (from oauth-credentials secret)
-		{Name: "BANHBAO_AUTH_OAUTH_GITHUB_ID", ValueFrom: secretRefOptional("oauth-credentials", "github-client-id")},
-		{Name: "BANHBAO_AUTH_OAUTH_GITHUB_SECRET", ValueFrom: secretRefOptional("oauth-credentials", "github-client-secret")},
-		{Name: "BANHBAO_AUTH_OAUTH_GOOGLE_ID", ValueFrom: secretRefOptional("oauth-credentials", "google-client-id")},
-		{Name: "BANHBAO_AUTH_OAUTH_GOOGLE_SECRET", ValueFrom: secretRefOptional("oauth-credentials", "google-client-secret")},
-		{Name: "BANHBAO_AUTH_OAUTH_CALLBACK_URL", Value: fmt.Sprintf("https://%s", cluster.Spec.Domain)},
+		{Name: "POPSIGNER_AUTH_OAUTH_GITHUB_ID", ValueFrom: secretRefOptional("oauth-credentials", "github-client-id")},
+		{Name: "POPSIGNER_AUTH_OAUTH_GITHUB_SECRET", ValueFrom: secretRefOptional("oauth-credentials", "github-client-secret")},
+		{Name: "POPSIGNER_AUTH_OAUTH_GOOGLE_ID", ValueFrom: secretRefOptional("oauth-credentials", "google-client-id")},
+		{Name: "POPSIGNER_AUTH_OAUTH_GOOGLE_SECRET", ValueFrom: secretRefOptional("oauth-credentials", "google-client-secret")},
+		{Name: "POPSIGNER_AUTH_OAUTH_CALLBACK_URL", Value: fmt.Sprintf("https://%s", cluster.Spec.Domain)},
 	}
 }
 

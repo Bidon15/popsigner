@@ -6,35 +6,35 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
-func testCluster() *banhbaoringv1.BanhBaoRingCluster {
-	return &banhbaoringv1.BanhBaoRingCluster{
+func testCluster() *popsignerv1.POPSignerCluster {
+	return &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
 			Domain: "keys.example.com",
-			Monitoring: banhbaoringv1.MonitoringSpec{
+			Monitoring: popsignerv1.MonitoringSpec{
 				Enabled: true,
-				Prometheus: banhbaoringv1.PrometheusSpec{
+				Prometheus: popsignerv1.PrometheusSpec{
 					Retention: "30d",
-					Storage: banhbaoringv1.StorageSpec{
+					Storage: popsignerv1.StorageSpec{
 						Size:         resource.MustParse("100Gi"),
 						StorageClass: "fast-ssd",
 					},
 				},
-				Grafana: banhbaoringv1.GrafanaSpec{
+				Grafana: popsignerv1.GrafanaSpec{
 					Enabled: true,
-					AdminPassword: &banhbaoringv1.SecretKeyRef{
+					AdminPassword: &popsignerv1.SecretKeyRef{
 						Name: "grafana-secrets",
 						Key:  "admin-password",
 					},
 				},
-				Alerting: banhbaoringv1.AlertingSpec{
+				Alerting: popsignerv1.AlertingSpec{
 					Enabled: true,
 				},
 			},
@@ -100,7 +100,7 @@ func TestPrometheusDefaultRetention(t *testing.T) {
 
 func TestPrometheusWithoutStorage(t *testing.T) {
 	cluster := testCluster()
-	cluster.Spec.Monitoring.Prometheus.Storage = banhbaoringv1.StorageSpec{}
+	cluster.Spec.Monitoring.Prometheus.Storage = popsignerv1.StorageSpec{}
 
 	prom := Prometheus(cluster)
 
@@ -344,8 +344,8 @@ func TestPrometheusRules(t *testing.T) {
 	}
 
 	group := rules.Spec.Groups[0]
-	if group.Name != "banhbaoring.rules" {
-		t.Errorf("expected group name 'banhbaoring.rules', got %q", group.Name)
+	if group.Name != "popsigner.rules" {
+		t.Errorf("expected group name 'popsigner.rules', got %q", group.Name)
 	}
 
 	// Verify we have alert rules

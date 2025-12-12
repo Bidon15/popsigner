@@ -1,4 +1,4 @@
-package banhbaoring
+package popsigner
 
 import (
 	"context"
@@ -698,4 +698,3 @@ func TestBaoClient_SignResponseUnmarshalError(t *testing.T) {
 	_, err = client.Sign(context.Background(), "key", []byte("data"), true)
 	require.Error(t, err)
 }
-

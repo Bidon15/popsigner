@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/name: clusterrolebinding
     app.kubernetes.io/instance: manager-rolebinding
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: banhbaoring-operator
-    app.kubernetes.io/part-of: banhbaoring-operator
+    app.kubernetes.io/created-by: popsigner-operator
+    app.kubernetes.io/part-of: popsigner-operator
     app.kubernetes.io/managed-by: kustomize
   name: manager-rolebinding
 roleRef:
@@ -16,4 +16,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: controller-manager
-    namespace: banhbaoring-system
+    namespace: popsigner-system

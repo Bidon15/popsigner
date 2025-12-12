@@ -4,8 +4,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// BanhBaoRingRestoreSpec defines the desired state
-type BanhBaoRingRestoreSpec struct {
+// POPSignerRestoreSpec defines the desired state
+type POPSignerRestoreSpec struct {
 	// +kubebuilder:validation:Required
 	ClusterRef ClusterReference `json:"clusterRef"`
 
@@ -21,7 +21,7 @@ type BanhBaoRingRestoreSpec struct {
 	Options RestoreOptions `json:"options,omitempty"`
 }
 
-// BackupReference references a BanhBaoRingBackup
+// BackupReference references a POPSignerBackup
 type BackupReference struct {
 	Name string `json:"name"`
 }
@@ -35,8 +35,8 @@ type RestoreOptions struct {
 	VerifyBackup bool `json:"verifyBackup,omitempty"`
 }
 
-// BanhBaoRingRestoreStatus defines the observed state
-type BanhBaoRingRestoreStatus struct {
+// POPSignerRestoreStatus defines the observed state
+type POPSignerRestoreStatus struct {
 	// Pending, Stopping, Restoring, Starting, Completed, Failed
 	Phase string `json:"phase,omitempty"`
 
@@ -60,24 +60,25 @@ type RestoreStep struct {
 // +kubebuilder:printcolumn:name="Backup",type=string,JSONPath=`.spec.backupRef.name`
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
-// BanhBaoRingRestore is the Schema for the banhbaoringrestores API
-type BanhBaoRingRestore struct {
+// POPSignerRestore is the Schema for the popsignerrestores API
+type POPSignerRestore struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   BanhBaoRingRestoreSpec   `json:"spec,omitempty"`
-	Status BanhBaoRingRestoreStatus `json:"status,omitempty"`
+	Spec   POPSignerRestoreSpec   `json:"spec,omitempty"`
+	Status POPSignerRestoreStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// BanhBaoRingRestoreList contains a list of BanhBaoRingRestore
-type BanhBaoRingRestoreList struct {
+// POPSignerRestoreList contains a list of POPSignerRestore
+type POPSignerRestoreList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []BanhBaoRingRestore `json:"items"`
+	Items           []POPSignerRestore `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&BanhBaoRingRestore{}, &BanhBaoRingRestoreList{})
+	SchemeBuilder.Register(&POPSignerRestore{}, &POPSignerRestoreList{})
 }
+

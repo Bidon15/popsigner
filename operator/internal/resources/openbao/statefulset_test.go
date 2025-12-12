@@ -7,27 +7,27 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
 func TestStatefulSet(t *testing.T) {
 	tests := []struct {
 		name            string
-		cluster         *banhbaoringv1.BanhBaoRingCluster
+		cluster         *popsignerv1.POPSignerCluster
 		wantReplicas    int32
 		wantVersion     string
 		wantStorageSize string
 	}{
 		{
 			name: "default values",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
+			cluster: &popsignerv1.POPSignerCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-cluster",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{},
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{},
 				},
 			},
 			wantReplicas:    3,
@@ -36,16 +36,16 @@ func TestStatefulSet(t *testing.T) {
 		},
 		{
 			name: "custom replicas and version",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
+			cluster: &popsignerv1.POPSignerCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-cluster",
 					Namespace: "production",
 				},
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{
 						Replicas: 5,
 						Version:  "2.1.0",
-						Storage: banhbaoringv1.StorageSpec{
+						Storage: popsignerv1.StorageSpec{
 							Size:         resource.MustParse("20Gi"),
 							StorageClass: "fast-ssd",
 						},
@@ -121,13 +121,13 @@ func TestStatefulSet(t *testing.T) {
 }
 
 func TestBuildEnv(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			OpenBao: banhbaoringv1.OpenBaoSpec{},
+		Spec: popsignerv1.POPSignerClusterSpec{
+			OpenBao: popsignerv1.OpenBaoSpec{},
 		},
 	}
 
@@ -158,21 +158,21 @@ func TestBuildEnv(t *testing.T) {
 func TestAutoUnsealEnv(t *testing.T) {
 	tests := []struct {
 		name        string
-		cluster     *banhbaoringv1.BanhBaoRingCluster
+		cluster     *popsignerv1.POPSignerCluster
 		wantEnvVars []string
 	}{
 		{
 			name: "aws kms with credentials",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{
-						AutoUnseal: banhbaoringv1.AutoUnsealSpec{
+			cluster: &popsignerv1.POPSignerCluster{
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{
+						AutoUnseal: popsignerv1.AutoUnsealSpec{
 							Enabled:  true,
 							Provider: "awskms",
-							AWSKMS: &banhbaoringv1.AWSKMSSpec{
+							AWSKMS: &popsignerv1.AWSKMSSpec{
 								KeyID:  "key-123",
 								Region: "us-west-2",
-								Credentials: &banhbaoringv1.SecretKeyRef{
+								Credentials: &popsignerv1.SecretKeyRef{
 									Name: "aws-creds",
 									Key:  "credentials",
 								},
@@ -185,18 +185,18 @@ func TestAutoUnsealEnv(t *testing.T) {
 		},
 		{
 			name: "gcp kms",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{
-						AutoUnseal: banhbaoringv1.AutoUnsealSpec{
+			cluster: &popsignerv1.POPSignerCluster{
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{
+						AutoUnseal: popsignerv1.AutoUnsealSpec{
 							Enabled:  true,
 							Provider: "gcpkms",
-							GCPKMS: &banhbaoringv1.GCPKMSSpec{
+							GCPKMS: &popsignerv1.GCPKMSSpec{
 								Project:   "my-project",
 								Location:  "us-central1",
 								KeyRing:   "my-keyring",
 								CryptoKey: "my-key",
-								Credentials: &banhbaoringv1.SecretKeyRef{
+								Credentials: &popsignerv1.SecretKeyRef{
 									Name: "gcp-creds",
 									Key:  "key.json",
 								},
@@ -209,17 +209,17 @@ func TestAutoUnsealEnv(t *testing.T) {
 		},
 		{
 			name: "azure key vault",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{
-						AutoUnseal: banhbaoringv1.AutoUnsealSpec{
+			cluster: &popsignerv1.POPSignerCluster{
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{
+						AutoUnseal: popsignerv1.AutoUnsealSpec{
 							Enabled:  true,
 							Provider: "azurekv",
-							AzureKV: &banhbaoringv1.AzureKVSpec{
+							AzureKV: &popsignerv1.AzureKVSpec{
 								TenantID:  "tenant-123",
 								VaultName: "my-vault",
 								KeyName:   "my-key",
-								Credentials: &banhbaoringv1.SecretKeyRef{
+								Credentials: &popsignerv1.SecretKeyRef{
 									Name: "azure-creds",
 									Key:  "credentials",
 								},
@@ -273,13 +273,13 @@ func TestBuildVolumes(t *testing.T) {
 }
 
 func TestSecurityContext(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			OpenBao: banhbaoringv1.OpenBaoSpec{},
+		Spec: popsignerv1.POPSignerClusterSpec{
+			OpenBao: popsignerv1.OpenBaoSpec{},
 		},
 	}
 
@@ -315,13 +315,13 @@ func TestSecurityContext(t *testing.T) {
 }
 
 func TestProbes(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			OpenBao: banhbaoringv1.OpenBaoSpec{},
+		Spec: popsignerv1.POPSignerClusterSpec{
+			OpenBao: popsignerv1.OpenBaoSpec{},
 		},
 	}
 

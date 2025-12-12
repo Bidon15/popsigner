@@ -6,7 +6,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 )
 
 // GCPKMSProvider implements the Provider interface for GCP Cloud KMS.
@@ -18,7 +18,7 @@ func (p *GCPKMSProvider) Name() string {
 }
 
 // Validate checks if the configuration is valid.
-func (p *GCPKMSProvider) Validate(spec *banhbaoringv1.AutoUnsealSpec) error {
+func (p *GCPKMSProvider) Validate(spec *popsignerv1.AutoUnsealSpec) error {
 	if spec.GCPKMS == nil {
 		return fmt.Errorf("gcpkms configuration required")
 	}
@@ -38,7 +38,7 @@ func (p *GCPKMSProvider) Validate(spec *banhbaoringv1.AutoUnsealSpec) error {
 }
 
 // GetConfig returns the HCL configuration for the seal stanza.
-func (p *GCPKMSProvider) GetConfig(spec *banhbaoringv1.AutoUnsealSpec) string {
+func (p *GCPKMSProvider) GetConfig(spec *popsignerv1.AutoUnsealSpec) string {
 	if spec.GCPKMS == nil {
 		return ""
 	}
@@ -52,7 +52,7 @@ func (p *GCPKMSProvider) GetConfig(spec *banhbaoringv1.AutoUnsealSpec) string {
 }
 
 // GetEnvVars returns environment variables needed by the provider.
-func (p *GCPKMSProvider) GetEnvVars(ctx context.Context, spec *banhbaoringv1.AutoUnsealSpec, namespace string) ([]corev1.EnvVar, error) {
+func (p *GCPKMSProvider) GetEnvVars(ctx context.Context, spec *popsignerv1.AutoUnsealSpec, namespace string) ([]corev1.EnvVar, error) {
 	var envVars []corev1.EnvVar
 
 	if spec.GCPKMS == nil {
@@ -76,7 +76,7 @@ func (p *GCPKMSProvider) GetEnvVars(ctx context.Context, spec *banhbaoringv1.Aut
 }
 
 // GetVolumes returns additional volumes needed by the provider.
-func (p *GCPKMSProvider) GetVolumes(spec *banhbaoringv1.AutoUnsealSpec) []corev1.Volume {
+func (p *GCPKMSProvider) GetVolumes(spec *popsignerv1.AutoUnsealSpec) []corev1.Volume {
 	if spec.GCPKMS == nil || spec.GCPKMS.Credentials == nil {
 		return nil
 	}
@@ -100,7 +100,7 @@ func (p *GCPKMSProvider) GetVolumes(spec *banhbaoringv1.AutoUnsealSpec) []corev1
 }
 
 // GetVolumeMounts returns additional volume mounts needed by the provider.
-func (p *GCPKMSProvider) GetVolumeMounts(spec *banhbaoringv1.AutoUnsealSpec) []corev1.VolumeMount {
+func (p *GCPKMSProvider) GetVolumeMounts(spec *popsignerv1.AutoUnsealSpec) []corev1.VolumeMount {
 	if spec.GCPKMS == nil || spec.GCPKMS.Credentials == nil {
 		return nil
 	}

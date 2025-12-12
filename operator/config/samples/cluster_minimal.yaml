@@ -1,8 +1,8 @@
-apiVersion: banhbaoring.io/v1
-kind: BanhBaoRingCluster
+apiVersion: popsigner.com/v1
+kind: POPSignerCluster
 metadata:
   name: dev
-  namespace: banhbaoring
+  namespace: popsigner
 spec:
   domain: keys.local
   openbao:

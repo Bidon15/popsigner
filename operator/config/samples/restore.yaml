@@ -1,8 +1,8 @@
-apiVersion: banhbaoring.io/v1
-kind: BanhBaoRingRestore
+apiVersion: popsigner.com/v1
+kind: POPSignerRestore
 metadata:
   name: restore-from-backup
-  namespace: banhbaoring
+  namespace: popsigner
 spec:
   clusterRef:
     name: production

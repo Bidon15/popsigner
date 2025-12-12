@@ -6,22 +6,22 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
 func TestStatefulSet(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			Database: banhbaoringv1.DatabaseSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			Database: popsignerv1.DatabaseSpec{
 				Managed:  true,
 				Version:  "16",
 				Replicas: 1,
-				Storage: banhbaoringv1.StorageSpec{
+				Storage: popsignerv1.StorageSpec{
 					Size:         resource.MustParse("10Gi"),
 					StorageClass: "standard",
 				},
@@ -78,16 +78,16 @@ func TestStatefulSet(t *testing.T) {
 }
 
 func TestStatefulSetDefaultVersion(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			Database: banhbaoringv1.DatabaseSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			Database: popsignerv1.DatabaseSpec{
 				Managed: true,
 				// Version not set
-				Storage: banhbaoringv1.StorageSpec{
+				Storage: popsignerv1.StorageSpec{
 					Size: resource.MustParse("10Gi"),
 				},
 			},
@@ -104,17 +104,17 @@ func TestStatefulSetDefaultVersion(t *testing.T) {
 }
 
 func TestStatefulSetDefaultReplicas(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			Database: banhbaoringv1.DatabaseSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			Database: popsignerv1.DatabaseSpec{
 				Managed: true,
 				Version: "16",
 				// Replicas not set (0)
-				Storage: banhbaoringv1.StorageSpec{
+				Storage: popsignerv1.StorageSpec{
 					Size: resource.MustParse("10Gi"),
 				},
 			},
@@ -130,13 +130,13 @@ func TestStatefulSetDefaultReplicas(t *testing.T) {
 }
 
 func TestService(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			Database: banhbaoringv1.DatabaseSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			Database: popsignerv1.DatabaseSpec{
 				Managed: true,
 				Version: "16",
 			},
@@ -166,13 +166,13 @@ func TestService(t *testing.T) {
 }
 
 func TestCredentialsSecret(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			Database: banhbaoringv1.DatabaseSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			Database: popsignerv1.DatabaseSpec{
 				Managed: true,
 				Version: "16",
 			},
@@ -212,13 +212,13 @@ func TestCredentialsSecret(t *testing.T) {
 }
 
 func TestInitConfigMap(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			Database: banhbaoringv1.DatabaseSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			Database: popsignerv1.DatabaseSpec{
 				Managed: true,
 				Version: "16",
 			},
@@ -261,13 +261,13 @@ func TestInitConfigMap(t *testing.T) {
 }
 
 func TestMigrationJob(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			Database: banhbaoringv1.DatabaseSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			Database: popsignerv1.DatabaseSpec{
 				Managed: true,
 			},
 		},
@@ -292,7 +292,7 @@ func TestMigrationJob(t *testing.T) {
 	}
 
 	// Verify image
-	expectedImage := "banhbaoring/control-plane:1.0.0"
+	expectedImage := "popsigner/control-plane:1.0.0"
 	if job.Spec.Template.Spec.Containers[0].Image != expectedImage {
 		t.Errorf("expected image %q, got %q", expectedImage, job.Spec.Template.Spec.Containers[0].Image)
 	}

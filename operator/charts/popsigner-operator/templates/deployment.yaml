@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "banhbaoring-operator.fullname" . }}
+  name: {{ include "popsigner-operator.fullname" . }}
   labels:
-    {{- include "banhbaoring-operator.labels" . | nindent 4 }}
+    {{- include "popsigner-operator.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "banhbaoring-operator.selectorLabels" . | nindent 6 }}
+      {{- include "popsigner-operator.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "banhbaoring-operator.selectorLabels" . | nindent 8 }}
+        {{- include "popsigner-operator.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "banhbaoring-operator.serviceAccountName" . }}
+      serviceAccountName: {{ include "popsigner-operator.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:

@@ -13,35 +13,35 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/openbao"
 	"github.com/Bidon15/banhbaoring/operator/internal/plans"
 )
 
-// TenantReconciler reconciles a BanhBaoRingTenant object
+// TenantReconciler reconciles a POPSignerTenant object
 type TenantReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=banhbaoring.io,resources=banhbaoringtenants,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=banhbaoring.io,resources=banhbaoringtenants/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=banhbaoring.io,resources=banhbaoringtenants/finalizers,verbs=update
+// +kubebuilder:rbac:groups=popsigner.com,resources=popsignertenants,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=popsigner.com,resources=popsignertenants/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=popsigner.com,resources=popsignertenants/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop
 func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
-	log.Info("Reconciling BanhBaoRingTenant", "name", req.Name)
+	log.Info("Reconciling POPSignerTenant", "name", req.Name)
 
 	// Fetch the tenant
-	tenant := &banhbaoringv1.BanhBaoRingTenant{}
+	tenant := &popsignerv1.POPSignerTenant{}
 	if err := r.Get(ctx, req.NamespacedName, tenant); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	// Get parent cluster
-	cluster := &banhbaoringv1.BanhBaoRingCluster{}
+	cluster := &popsignerv1.POPSignerCluster{}
 	clusterKey := client.ObjectKey{
 		Name:      tenant.Spec.ClusterRef.Name,
 		Namespace: tenant.Namespace,
@@ -90,7 +90,7 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 }
 
 // getOpenBaoClient creates an OpenBao client for the cluster
-func (r *TenantReconciler) getOpenBaoClient(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) (*openbao.Client, error) {
+func (r *TenantReconciler) getOpenBaoClient(ctx context.Context, cluster *popsignerv1.POPSignerCluster) (*openbao.Client, error) {
 	// Get root token from secret
 	// The secret name follows the pattern: {cluster-name}-openbao-root-token
 	secretName := fmt.Sprintf("%s-openbao-root-token", cluster.Name)
@@ -118,7 +118,7 @@ func (r *TenantReconciler) getOpenBaoClient(ctx context.Context, cluster *banhba
 }
 
 // reconcileTenantNamespace creates an OpenBao namespace for tenant isolation
-func (r *TenantReconciler) reconcileTenantNamespace(ctx context.Context, tenant *banhbaoringv1.BanhBaoRingTenant, cluster *banhbaoringv1.BanhBaoRingCluster, baoClient *openbao.Client) error {
+func (r *TenantReconciler) reconcileTenantNamespace(ctx context.Context, tenant *popsignerv1.POPSignerTenant, cluster *popsignerv1.POPSignerCluster, baoClient *openbao.Client) error {
 	log := log.FromContext(ctx)
 
 	namespaceName := fmt.Sprintf("tenant-%s", tenant.Name)
@@ -152,7 +152,7 @@ func (r *TenantReconciler) reconcileTenantNamespace(ctx context.Context, tenant 
 }
 
 // reconcileTenantPolicies creates OpenBao policies for tenant
-func (r *TenantReconciler) reconcileTenantPolicies(ctx context.Context, tenant *banhbaoringv1.BanhBaoRingTenant, cluster *banhbaoringv1.BanhBaoRingCluster, baoClient *openbao.Client) error {
+func (r *TenantReconciler) reconcileTenantPolicies(ctx context.Context, tenant *popsignerv1.POPSignerTenant, cluster *popsignerv1.POPSignerCluster, baoClient *openbao.Client) error {
 	log := log.FromContext(ctx)
 
 	policyName := fmt.Sprintf("tenant-%s", tenant.Name)
@@ -193,7 +193,7 @@ path "%s/keys/export/*" {
 }
 
 // reconcileTenantQuotas applies quotas based on plan
-func (r *TenantReconciler) reconcileTenantQuotas(ctx context.Context, tenant *banhbaoringv1.BanhBaoRingTenant, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *TenantReconciler) reconcileTenantQuotas(ctx context.Context, tenant *popsignerv1.POPSignerTenant, cluster *popsignerv1.POPSignerCluster) error {
 	log := log.FromContext(ctx)
 
 	// Get quotas for the plan
@@ -229,7 +229,7 @@ func (r *TenantReconciler) reconcileTenantQuotas(ctx context.Context, tenant *ba
 }
 
 // reconcileTenantAdmin creates the initial admin user
-func (r *TenantReconciler) reconcileTenantAdmin(ctx context.Context, tenant *banhbaoringv1.BanhBaoRingTenant, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *TenantReconciler) reconcileTenantAdmin(ctx context.Context, tenant *popsignerv1.POPSignerTenant, cluster *popsignerv1.POPSignerCluster) error {
 	if tenant.Spec.Admin.Email == "" {
 		return nil
 	}
@@ -249,7 +249,7 @@ func (r *TenantReconciler) reconcileTenantAdmin(ctx context.Context, tenant *ban
 }
 
 // updateTenantStatus updates the tenant status
-func (r *TenantReconciler) updateTenantStatus(ctx context.Context, tenant *banhbaoringv1.BanhBaoRingTenant, phase, message string) (ctrl.Result, error) {
+func (r *TenantReconciler) updateTenantStatus(ctx context.Context, tenant *popsignerv1.POPSignerTenant, phase, message string) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
 	tenant.Status.Phase = phase
@@ -308,6 +308,6 @@ func setCondition(conditions *[]metav1.Condition, condition metav1.Condition) {
 // SetupWithManager sets up the controller with the Manager.
 func (r *TenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&banhbaoringv1.BanhBaoRingTenant{}).
+		For(&popsignerv1.POPSignerTenant{}).
 		Complete(r)
 }

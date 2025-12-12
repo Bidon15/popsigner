@@ -1,6 +1,7 @@
-# BanhBaoRing Control Plane Configuration
+# POPSigner Control Plane Configuration
+# Point-of-Presence signing infrastructure
 # This is a sample configuration file for local development.
-# In production, use environment variables with BANHBAO_ prefix.
+# In production, use environment variables with POPSIGNER_ prefix.
 
 server:
   port: 8080
@@ -12,9 +13,9 @@ server:
 database:
   host: "localhost"
   port: 5432
-  user: "banhbao"
-  password: "banhbao"
-  database: "banhbaoring"
+  user: "popsigner"
+  password: "popsigner"
+  database: "popsigner"
   ssl_mode: "disable"
   max_open_conns: 25
   max_idle_conns: 5

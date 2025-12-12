@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 )
 
 var _ = Describe("TenantController", func() {
@@ -18,16 +18,16 @@ var _ = Describe("TenantController", func() {
 		interval = time.Millisecond * 250
 	)
 
-	Context("When creating a BanhBaoRingTenant", func() {
+	Context("When creating a POPSignerTenant", func() {
 		It("Should update status when parent cluster is not found", func() {
 			By("Creating a tenant without a parent cluster")
-			tenant := &banhbaoringv1.BanhBaoRingTenant{
+			tenant := &popsignerv1.POPSignerTenant{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-tenant-no-cluster",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingTenantSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerTenantSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "non-existent-cluster",
 					},
 					Plan: "free",
@@ -41,7 +41,7 @@ var _ = Describe("TenantController", func() {
 			}()
 
 			tenantLookupKey := types.NamespacedName{Name: "test-tenant-no-cluster", Namespace: "default"}
-			createdTenant := &banhbaoringv1.BanhBaoRingTenant{}
+			createdTenant := &popsignerv1.POPSignerTenant{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, tenantLookupKey, createdTenant)
@@ -51,13 +51,13 @@ var _ = Describe("TenantController", func() {
 
 		It("Should create tenant with default quotas for free plan", func() {
 			By("Creating a tenant with free plan")
-			tenant := &banhbaoringv1.BanhBaoRingTenant{
+			tenant := &popsignerv1.POPSignerTenant{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-tenant-free",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingTenantSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerTenantSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "test-cluster",
 					},
 					DisplayName: "Test Tenant",
@@ -72,7 +72,7 @@ var _ = Describe("TenantController", func() {
 			}()
 
 			tenantLookupKey := types.NamespacedName{Name: "test-tenant-free", Namespace: "default"}
-			createdTenant := &banhbaoringv1.BanhBaoRingTenant{}
+			createdTenant := &popsignerv1.POPSignerTenant{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, tenantLookupKey, createdTenant)
@@ -84,18 +84,18 @@ var _ = Describe("TenantController", func() {
 
 		It("Should create tenant with custom quotas", func() {
 			By("Creating a tenant with custom quotas")
-			tenant := &banhbaoringv1.BanhBaoRingTenant{
+			tenant := &popsignerv1.POPSignerTenant{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-tenant-custom",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingTenantSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerTenantSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "test-cluster",
 					},
 					DisplayName: "Custom Tenant",
 					Plan:        "pro",
-					Quotas: banhbaoringv1.TenantQuotas{
+					Quotas: popsignerv1.TenantQuotas{
 						Keys:               15,
 						SignaturesPerMonth: 250000,
 						Namespaces:         3,
@@ -112,7 +112,7 @@ var _ = Describe("TenantController", func() {
 			}()
 
 			tenantLookupKey := types.NamespacedName{Name: "test-tenant-custom", Namespace: "default"}
-			createdTenant := &banhbaoringv1.BanhBaoRingTenant{}
+			createdTenant := &popsignerv1.POPSignerTenant{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, tenantLookupKey, createdTenant)
@@ -126,18 +126,18 @@ var _ = Describe("TenantController", func() {
 
 		It("Should create tenant with admin user", func() {
 			By("Creating a tenant with admin settings")
-			tenant := &banhbaoringv1.BanhBaoRingTenant{
+			tenant := &popsignerv1.POPSignerTenant{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-tenant-admin",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingTenantSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerTenantSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "test-cluster",
 					},
 					DisplayName: "Admin Tenant",
 					Plan:        "starter",
-					Admin: banhbaoringv1.TenantAdmin{
+					Admin: popsignerv1.TenantAdmin{
 						Email: "admin@example.com",
 					},
 				},
@@ -150,7 +150,7 @@ var _ = Describe("TenantController", func() {
 			}()
 
 			tenantLookupKey := types.NamespacedName{Name: "test-tenant-admin", Namespace: "default"}
-			createdTenant := &banhbaoringv1.BanhBaoRingTenant{}
+			createdTenant := &popsignerv1.POPSignerTenant{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, tenantLookupKey, createdTenant)
@@ -162,17 +162,17 @@ var _ = Describe("TenantController", func() {
 	})
 
 	Context("When tenant has a ready cluster", func() {
-		var cluster *banhbaoringv1.BanhBaoRingCluster
+		var cluster *popsignerv1.POPSignerCluster
 		var secret *corev1.Secret
 
 		BeforeEach(func() {
 			By("Creating a parent cluster")
-			cluster = &banhbaoringv1.BanhBaoRingCluster{
+			cluster = &popsignerv1.POPSignerCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "ready-cluster",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+				Spec: popsignerv1.POPSignerClusterSpec{
 					Domain: "keys.example.com",
 				},
 			}
@@ -202,13 +202,13 @@ var _ = Describe("TenantController", func() {
 
 		It("Should set OpenBao namespace in status", func() {
 			By("Creating a tenant with a ready cluster")
-			tenant := &banhbaoringv1.BanhBaoRingTenant{
+			tenant := &popsignerv1.POPSignerTenant{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-tenant-ready",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingTenantSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerTenantSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "ready-cluster",
 					},
 					Plan: "pro",
@@ -221,7 +221,7 @@ var _ = Describe("TenantController", func() {
 			}()
 
 			tenantLookupKey := types.NamespacedName{Name: "test-tenant-ready", Namespace: "default"}
-			createdTenant := &banhbaoringv1.BanhBaoRingTenant{}
+			createdTenant := &popsignerv1.POPSignerTenant{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, tenantLookupKey, createdTenant)
@@ -235,17 +235,17 @@ var _ = Describe("TenantController", func() {
 	Context("When testing tenant settings", func() {
 		It("Should create tenant with webhook configuration", func() {
 			By("Creating a tenant with webhooks")
-			tenant := &banhbaoringv1.BanhBaoRingTenant{
+			tenant := &popsignerv1.POPSignerTenant{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-tenant-webhooks",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingTenantSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerTenantSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "test-cluster",
 					},
 					Plan: "enterprise",
-					Settings: banhbaoringv1.TenantSettings{
+					Settings: popsignerv1.TenantSettings{
 						AuditRetentionDays:  90,
 						AllowExportableKeys: true,
 						AllowedIPRanges:     []string{"10.0.0.0/8", "192.168.0.0/16"},
@@ -259,7 +259,7 @@ var _ = Describe("TenantController", func() {
 			}()
 
 			tenantLookupKey := types.NamespacedName{Name: "test-tenant-webhooks", Namespace: "default"}
-			createdTenant := &banhbaoringv1.BanhBaoRingTenant{}
+			createdTenant := &popsignerv1.POPSignerTenant{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, tenantLookupKey, createdTenant)

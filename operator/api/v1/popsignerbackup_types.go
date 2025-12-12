@@ -4,8 +4,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// BanhBaoRingBackupSpec defines the desired state
-type BanhBaoRingBackupSpec struct {
+// POPSignerBackupSpec defines the desired state
+type POPSignerBackupSpec struct {
 	// +kubebuilder:validation:Required
 	ClusterRef ClusterReference `json:"clusterRef"`
 
@@ -22,8 +22,8 @@ type BanhBaoRingBackupSpec struct {
 	Destination *BackupDestination `json:"destination,omitempty"`
 }
 
-// BanhBaoRingBackupStatus defines the observed state
-type BanhBaoRingBackupStatus struct {
+// POPSignerBackupStatus defines the observed state
+type POPSignerBackupStatus struct {
 	// Pending, Running, Completed, Failed
 	Phase string `json:"phase,omitempty"`
 
@@ -50,24 +50,25 @@ type BackupComponentStatus struct {
 // +kubebuilder:printcolumn:name="Size",type=string,JSONPath=`.status.totalSize`
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
-// BanhBaoRingBackup is the Schema for the banhbaoringbackups API
-type BanhBaoRingBackup struct {
+// POPSignerBackup is the Schema for the popsignerbackups API
+type POPSignerBackup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   BanhBaoRingBackupSpec   `json:"spec,omitempty"`
-	Status BanhBaoRingBackupStatus `json:"status,omitempty"`
+	Spec   POPSignerBackupSpec   `json:"spec,omitempty"`
+	Status POPSignerBackupStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// BanhBaoRingBackupList contains a list of BanhBaoRingBackup
-type BanhBaoRingBackupList struct {
+// POPSignerBackupList contains a list of POPSignerBackup
+type POPSignerBackupList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []BanhBaoRingBackup `json:"items"`
+	Items           []POPSignerBackup `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&BanhBaoRingBackup{}, &BanhBaoRingBackupList{})
+	SchemeBuilder.Register(&POPSignerBackup{}, &POPSignerBackupList{})
 }
+

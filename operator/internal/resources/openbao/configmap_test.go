@@ -6,27 +6,27 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
 func TestConfigMap(t *testing.T) {
 	tests := []struct {
 		name         string
-		cluster      *banhbaoringv1.BanhBaoRingCluster
+		cluster      *popsignerv1.POPSignerCluster
 		wantReplicas int
 		wantAutoSeal bool
 		wantSealType string
 	}{
 		{
 			name: "default configuration",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
+			cluster: &popsignerv1.POPSignerCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-cluster",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{},
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{},
 				},
 			},
 			wantReplicas: 3,
@@ -34,13 +34,13 @@ func TestConfigMap(t *testing.T) {
 		},
 		{
 			name: "custom replicas",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
+			cluster: &popsignerv1.POPSignerCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-cluster",
 					Namespace: "production",
 				},
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{
 						Replicas: 5,
 						Version:  "2.1.0",
 					},
@@ -51,17 +51,17 @@ func TestConfigMap(t *testing.T) {
 		},
 		{
 			name: "with AWS KMS auto-unseal",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
+			cluster: &popsignerv1.POPSignerCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-cluster",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{
-						AutoUnseal: banhbaoringv1.AutoUnsealSpec{
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{
+						AutoUnseal: popsignerv1.AutoUnsealSpec{
 							Enabled:  true,
 							Provider: "awskms",
-							AWSKMS: &banhbaoringv1.AWSKMSSpec{
+							AWSKMS: &popsignerv1.AWSKMSSpec{
 								KeyID:  "key-123",
 								Region: "us-west-2",
 							},
@@ -137,17 +137,17 @@ func TestConfigMap(t *testing.T) {
 func TestBuildSealConfig(t *testing.T) {
 	tests := []struct {
 		name         string
-		cluster      *banhbaoringv1.BanhBaoRingCluster
+		cluster      *popsignerv1.POPSignerCluster
 		wantEmpty    bool
 		wantSealType string
 		wantContains []string
 	}{
 		{
 			name: "no auto-unseal",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{
-						AutoUnseal: banhbaoringv1.AutoUnsealSpec{
+			cluster: &popsignerv1.POPSignerCluster{
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{
+						AutoUnseal: popsignerv1.AutoUnsealSpec{
 							Enabled: false,
 						},
 					},
@@ -157,13 +157,13 @@ func TestBuildSealConfig(t *testing.T) {
 		},
 		{
 			name: "aws kms",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{
-						AutoUnseal: banhbaoringv1.AutoUnsealSpec{
+			cluster: &popsignerv1.POPSignerCluster{
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{
+						AutoUnseal: popsignerv1.AutoUnsealSpec{
 							Enabled:  true,
 							Provider: "awskms",
-							AWSKMS: &banhbaoringv1.AWSKMSSpec{
+							AWSKMS: &popsignerv1.AWSKMSSpec{
 								KeyID:  "alias/my-key",
 								Region: "eu-west-1",
 							},
@@ -177,13 +177,13 @@ func TestBuildSealConfig(t *testing.T) {
 		},
 		{
 			name: "gcp kms",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{
-						AutoUnseal: banhbaoringv1.AutoUnsealSpec{
+			cluster: &popsignerv1.POPSignerCluster{
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{
+						AutoUnseal: popsignerv1.AutoUnsealSpec{
 							Enabled:  true,
 							Provider: "gcpkms",
-							GCPKMS: &banhbaoringv1.GCPKMSSpec{
+							GCPKMS: &popsignerv1.GCPKMSSpec{
 								Project:   "my-project",
 								Location:  "global",
 								KeyRing:   "my-keyring",
@@ -199,13 +199,13 @@ func TestBuildSealConfig(t *testing.T) {
 		},
 		{
 			name: "azure key vault",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{
-						AutoUnseal: banhbaoringv1.AutoUnsealSpec{
+			cluster: &popsignerv1.POPSignerCluster{
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{
+						AutoUnseal: popsignerv1.AutoUnsealSpec{
 							Enabled:  true,
 							Provider: "azurekv",
-							AzureKV: &banhbaoringv1.AzureKVSpec{
+							AzureKV: &popsignerv1.AzureKVSpec{
 								TenantID:  "my-tenant",
 								VaultName: "my-vault",
 								KeyName:   "my-key",
@@ -220,13 +220,13 @@ func TestBuildSealConfig(t *testing.T) {
 		},
 		{
 			name: "transit",
-			cluster: &banhbaoringv1.BanhBaoRingCluster{
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-					OpenBao: banhbaoringv1.OpenBaoSpec{
-						AutoUnseal: banhbaoringv1.AutoUnsealSpec{
+			cluster: &popsignerv1.POPSignerCluster{
+				Spec: popsignerv1.POPSignerClusterSpec{
+					OpenBao: popsignerv1.OpenBaoSpec{
+						AutoUnseal: popsignerv1.AutoUnsealSpec{
 							Enabled:  true,
 							Provider: "transit",
-							Transit: &banhbaoringv1.TransitSpec{
+							Transit: &popsignerv1.TransitSpec{
 								Address:   "https://vault.example.com:8200",
 								MountPath: "transit",
 								KeyName:   "autounseal",

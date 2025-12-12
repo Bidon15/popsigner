@@ -5,19 +5,19 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
 func TestDeployment(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
 			Domain: "keys.example.com",
-			API: banhbaoringv1.APISpec{
+			API: popsignerv1.APISpec{
 				Version:  "1.0.0",
 				Replicas: 3,
 			},
@@ -48,7 +48,7 @@ func TestDeployment(t *testing.T) {
 	}
 
 	// Verify container image
-	expectedImage := "banhbaoring/control-plane:1.0.0"
+	expectedImage := "popsigner/control-plane:1.0.0"
 	if deployment.Spec.Template.Spec.Containers[0].Image != expectedImage {
 		t.Errorf("expected image %q, got %q", expectedImage, deployment.Spec.Template.Spec.Containers[0].Image)
 	}
@@ -91,14 +91,14 @@ func TestDeployment(t *testing.T) {
 }
 
 func TestDeploymentDefaultVersion(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
 			Domain: "keys.example.com",
-			API:    banhbaoringv1.APISpec{
+			API:    popsignerv1.APISpec{
 				// Version not set
 			},
 		},
@@ -107,21 +107,21 @@ func TestDeploymentDefaultVersion(t *testing.T) {
 	deployment := Deployment(cluster)
 
 	// Verify default version is used
-	expectedImage := "banhbaoring/control-plane:" + constants.DefaultAPIVersion
+	expectedImage := "popsigner/control-plane:" + constants.DefaultAPIVersion
 	if deployment.Spec.Template.Spec.Containers[0].Image != expectedImage {
 		t.Errorf("expected image %q, got %q", expectedImage, deployment.Spec.Template.Spec.Containers[0].Image)
 	}
 }
 
 func TestDeploymentDefaultReplicas(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
 			Domain: "keys.example.com",
-			API: banhbaoringv1.APISpec{
+			API: popsignerv1.APISpec{
 				Version: "1.0.0",
 				// Replicas not set (0)
 			},
@@ -137,14 +137,14 @@ func TestDeploymentDefaultReplicas(t *testing.T) {
 }
 
 func TestService(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
 			Domain: "keys.example.com",
-			API: banhbaoringv1.APISpec{
+			API: popsignerv1.APISpec{
 				Version: "1.0.0",
 			},
 		},
@@ -178,16 +178,16 @@ func TestService(t *testing.T) {
 }
 
 func TestHPA(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
 			Domain: "keys.example.com",
-			API: banhbaoringv1.APISpec{
+			API: popsignerv1.APISpec{
 				Version: "1.0.0",
-				Autoscaling: banhbaoringv1.AutoscalingSpec{
+				Autoscaling: popsignerv1.AutoscalingSpec{
 					Enabled:     true,
 					MinReplicas: 2,
 					MaxReplicas: 20,
@@ -238,16 +238,16 @@ func TestHPA(t *testing.T) {
 }
 
 func TestHPADefaultValues(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
 			Domain: "keys.example.com",
-			API: banhbaoringv1.APISpec{
+			API: popsignerv1.APISpec{
 				Version: "1.0.0",
-				Autoscaling: banhbaoringv1.AutoscalingSpec{
+				Autoscaling: popsignerv1.AutoscalingSpec{
 					Enabled: true,
 					// Other values not set
 				},
@@ -274,12 +274,12 @@ func TestHPADefaultValues(t *testing.T) {
 }
 
 func TestBuildEnv(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
 			Domain: "keys.example.com",
 		},
 	}

@@ -2,15 +2,15 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "banhbaoring-operator.fullname" . }}-manager
+  name: {{ include "popsigner-operator.fullname" . }}-manager
   labels:
-    {{- include "banhbaoring-operator.labels" . | nindent 4 }}
+    {{- include "popsigner-operator.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "banhbaoring-operator.fullname" . }}-manager
+  name: {{ include "popsigner-operator.fullname" . }}-manager
 subjects:
   - kind: ServiceAccount
-    name: {{ include "banhbaoring-operator.serviceAccountName" . }}
+    name: {{ include "popsigner-operator.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}
 {{- end }}

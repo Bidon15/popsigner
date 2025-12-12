@@ -105,7 +105,7 @@ db-reset:
 
 ## Show help
 help:
-	@echo "BanhBaoRing Control Plane - Available commands:"
+	@echo "POPSigner Control Plane - Available commands:"
 	@echo ""
 	@grep -E '^## ' $(MAKEFILE_LIST) | sed 's/## /  /'
 	@echo ""

@@ -7,7 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
@@ -17,7 +17,7 @@ const (
 )
 
 // PrometheusRules creates a PrometheusRule for the cluster.
-func PrometheusRules(cluster *banhbaoringv1.BanhBaoRingCluster) *monitoringv1.PrometheusRule {
+func PrometheusRules(cluster *popsignerv1.POPSignerCluster) *monitoringv1.PrometheusRule {
 	name := fmt.Sprintf("%s-alerts", cluster.Name)
 	labels := constants.Labels(cluster.Name, ComponentAlerts, "")
 
@@ -30,7 +30,7 @@ func PrometheusRules(cluster *banhbaoringv1.BanhBaoRingCluster) *monitoringv1.Pr
 		Spec: monitoringv1.PrometheusRuleSpec{
 			Groups: []monitoringv1.RuleGroup{
 				{
-					Name:  "banhbaoring.rules",
+					Name:  "popsigner.rules",
 					Rules: buildAlertRules(),
 				},
 			},
@@ -66,7 +66,7 @@ func buildAlertRules() []monitoringv1.Rule {
 		},
 		{
 			Alert: "HighSigningLatency",
-			Expr:  intstr.FromString(`histogram_quantile(0.99, sum(rate(banhbaoring_sign_duration_seconds_bucket[5m])) by (le)) > 1`),
+			Expr:  intstr.FromString(`histogram_quantile(0.99, sum(rate(popsigner_sign_duration_seconds_bucket[5m])) by (le)) > 1`),
 			For:   durationPtr("5m"),
 			Labels: map[string]string{
 				"severity": "warning",

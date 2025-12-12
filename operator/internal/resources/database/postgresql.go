@@ -1,4 +1,4 @@
-// Package database provides PostgreSQL resource builders for the BanhBaoRing operator.
+// Package database provides PostgreSQL resource builders for the POPSigner operator.
 package database
 
 import (
@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
@@ -20,7 +20,7 @@ const (
 )
 
 // StatefulSet builds the PostgreSQL StatefulSet
-func StatefulSet(cluster *banhbaoringv1.BanhBaoRingCluster) *appsv1.StatefulSet {
+func StatefulSet(cluster *popsignerv1.POPSignerCluster) *appsv1.StatefulSet {
 	spec := cluster.Spec.Database
 	name := fmt.Sprintf("%s-postgres", cluster.Name)
 	labels := constants.Labels(cluster.Name, constants.ComponentPostgres, spec.Version)
@@ -80,7 +80,7 @@ func StatefulSet(cluster *banhbaoringv1.BanhBaoRingCluster) *appsv1.StatefulSet 
 								},
 								{
 									Name:  "POSTGRES_DB",
-									Value: "banhbaoring",
+									Value: "popsigner",
 								},
 								{
 									Name:  "PGDATA",
@@ -96,8 +96,8 @@ func StatefulSet(cluster *banhbaoringv1.BanhBaoRingCluster) *appsv1.StatefulSet 
 									Exec: &corev1.ExecAction{
 										Command: []string{
 											"pg_isready",
-											"-U", "banhbaoring",
-											"-d", "banhbaoring",
+											"-U", "popsigner",
+											"-d", "popsigner",
 										},
 									},
 								},
@@ -109,8 +109,8 @@ func StatefulSet(cluster *banhbaoringv1.BanhBaoRingCluster) *appsv1.StatefulSet 
 									Exec: &corev1.ExecAction{
 										Command: []string{
 											"pg_isready",
-											"-U", "banhbaoring",
-											"-d", "banhbaoring",
+											"-U", "popsigner",
+											"-d", "popsigner",
 										},
 									},
 								},
@@ -166,7 +166,7 @@ func StatefulSet(cluster *banhbaoringv1.BanhBaoRingCluster) *appsv1.StatefulSet 
 }
 
 // Service builds the PostgreSQL Service
-func Service(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.Service {
+func Service(cluster *popsignerv1.POPSignerCluster) *corev1.Service {
 	name := fmt.Sprintf("%s-postgres", cluster.Name)
 	labels := constants.Labels(cluster.Name, constants.ComponentPostgres, cluster.Spec.Database.Version)
 
@@ -187,7 +187,7 @@ func Service(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.Service {
 }
 
 // CredentialsSecret builds the PostgreSQL credentials Secret
-func CredentialsSecret(cluster *banhbaoringv1.BanhBaoRingCluster, password string) *corev1.Secret {
+func CredentialsSecret(cluster *popsignerv1.POPSignerCluster, password string) *corev1.Secret {
 	name := fmt.Sprintf("%s-postgres", cluster.Name)
 	labels := constants.Labels(cluster.Name, constants.ComponentPostgres, cluster.Spec.Database.Version)
 
@@ -199,16 +199,16 @@ func CredentialsSecret(cluster *banhbaoringv1.BanhBaoRingCluster, password strin
 		},
 		Type: corev1.SecretTypeOpaque,
 		StringData: map[string]string{
-			"username": "banhbaoring",
+			"username": "popsigner",
 			"password": password,
-			"database": "banhbaoring",
-			"url":      fmt.Sprintf("postgres://banhbaoring:%s@%s:5432/banhbaoring?sslmode=disable", password, name),
+			"database": "popsigner",
+			"url":      fmt.Sprintf("postgres://popsigner:%s@%s:5432/popsigner?sslmode=disable", password, name),
 		},
 	}
 }
 
 // InitConfigMap builds the init scripts ConfigMap
-func InitConfigMap(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.ConfigMap {
+func InitConfigMap(cluster *popsignerv1.POPSignerCluster) *corev1.ConfigMap {
 	name := fmt.Sprintf("%s-postgres", cluster.Name)
 	labels := constants.Labels(cluster.Name, constants.ComponentPostgres, cluster.Spec.Database.Version)
 

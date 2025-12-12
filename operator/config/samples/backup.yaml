@@ -1,8 +1,8 @@
-apiVersion: banhbaoring.io/v1
-kind: BanhBaoRingBackup
+apiVersion: popsigner.com/v1
+kind: POPSignerBackup
 metadata:
   name: daily-backup
-  namespace: banhbaoring
+  namespace: popsigner
 spec:
   clusterRef:
     name: production

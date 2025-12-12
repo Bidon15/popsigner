@@ -7,7 +7,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 )
 
 // Provider defines the interface for auto-unseal providers.
@@ -16,19 +16,19 @@ type Provider interface {
 	Name() string
 
 	// Validate checks if the configuration is valid.
-	Validate(spec *banhbaoringv1.AutoUnsealSpec) error
+	Validate(spec *popsignerv1.AutoUnsealSpec) error
 
 	// GetConfig returns the HCL configuration for the seal stanza.
-	GetConfig(spec *banhbaoringv1.AutoUnsealSpec) string
+	GetConfig(spec *popsignerv1.AutoUnsealSpec) string
 
 	// GetEnvVars returns environment variables needed by the provider.
-	GetEnvVars(ctx context.Context, spec *banhbaoringv1.AutoUnsealSpec, namespace string) ([]corev1.EnvVar, error)
+	GetEnvVars(ctx context.Context, spec *popsignerv1.AutoUnsealSpec, namespace string) ([]corev1.EnvVar, error)
 
 	// GetVolumes returns additional volumes needed by the provider.
-	GetVolumes(spec *banhbaoringv1.AutoUnsealSpec) []corev1.Volume
+	GetVolumes(spec *popsignerv1.AutoUnsealSpec) []corev1.Volume
 
 	// GetVolumeMounts returns additional volume mounts needed by the provider.
-	GetVolumeMounts(spec *banhbaoringv1.AutoUnsealSpec) []corev1.VolumeMount
+	GetVolumeMounts(spec *popsignerv1.AutoUnsealSpec) []corev1.VolumeMount
 }
 
 // NewProvider creates the appropriate unseal provider.
@@ -48,7 +48,7 @@ func NewProvider(providerType string) (Provider, error) {
 }
 
 // GetProviderForCluster returns the appropriate provider for a cluster.
-func GetProviderForCluster(cluster *banhbaoringv1.BanhBaoRingCluster) (Provider, error) {
+func GetProviderForCluster(cluster *popsignerv1.POPSignerCluster) (Provider, error) {
 	if !cluster.Spec.OpenBao.AutoUnseal.Enabled {
 		return nil, nil
 	}

@@ -15,27 +15,27 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 )
 
-// BackupReconciler reconciles a BanhBaoRingBackup object
+// BackupReconciler reconciles a POPSignerBackup object
 type BackupReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=banhbaoring.io,resources=banhbaoringbackups,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=banhbaoring.io,resources=banhbaoringbackups/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=banhbaoring.io,resources=banhbaoringbackups/finalizers,verbs=update
+// +kubebuilder:rbac:groups=popsigner.com,resources=popsignerbackups,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=popsigner.com,resources=popsignerbackups/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=popsigner.com,resources=popsignerbackups/finalizers,verbs=update
 // +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop
 func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
-	log.Info("Reconciling BanhBaoRingBackup", "name", req.Name)
+	log.Info("Reconciling POPSignerBackup", "name", req.Name)
 
 	// Fetch the backup
-	backup := &banhbaoringv1.BanhBaoRingBackup{}
+	backup := &popsignerv1.POPSignerBackup{}
 	if err := r.Get(ctx, req.NamespacedName, backup); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
@@ -46,7 +46,7 @@ func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	}
 
 	// Get parent cluster
-	cluster := &banhbaoringv1.BanhBaoRingCluster{}
+	cluster := &popsignerv1.POPSignerCluster{}
 	if err := r.Get(ctx, client.ObjectKey{
 		Name:      backup.Spec.ClusterRef.Name,
 		Namespace: backup.Namespace,
@@ -115,7 +115,7 @@ func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 }
 
-func (r *BackupReconciler) buildBackupJob(backup *banhbaoringv1.BanhBaoRingBackup, cluster *banhbaoringv1.BanhBaoRingCluster) *batchv1.Job {
+func (r *BackupReconciler) buildBackupJob(backup *popsignerv1.POPSignerBackup, cluster *popsignerv1.POPSignerCluster) *batchv1.Job {
 	name := fmt.Sprintf("%s-backup", backup.Name)
 	backoffLimit := int32(2)
 
@@ -127,10 +127,10 @@ func (r *BackupReconciler) buildBackupJob(backup *banhbaoringv1.BanhBaoRingBacku
 			Name:      name,
 			Namespace: backup.Namespace,
 			Labels: map[string]string{
-				"app.kubernetes.io/name":       "banhbaoring-backup",
+				"app.kubernetes.io/name":       "popsigner-backup",
 				"app.kubernetes.io/instance":   backup.Name,
-				"app.kubernetes.io/managed-by": "banhbaoring-operator",
-				"banhbaoring.io/cluster":       cluster.Name,
+				"app.kubernetes.io/managed-by": "popsigner-operator",
+				"popsigner.com/cluster":        cluster.Name,
 			},
 		},
 		Spec: batchv1.JobSpec{
@@ -138,7 +138,7 @@ func (r *BackupReconciler) buildBackupJob(backup *banhbaoringv1.BanhBaoRingBacku
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app.kubernetes.io/name":     "banhbaoring-backup",
+						"app.kubernetes.io/name":     "popsigner-backup",
 						"app.kubernetes.io/instance": backup.Name,
 					},
 				},
@@ -146,7 +146,7 @@ func (r *BackupReconciler) buildBackupJob(backup *banhbaoringv1.BanhBaoRingBacku
 					RestartPolicy: corev1.RestartPolicyNever,
 					Containers: []corev1.Container{{
 						Name:            "backup",
-						Image:           "banhbaoring/backup:latest",
+						Image:           "popsigner/backup:latest",
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Command:         []string{"/bin/sh", "-c", script},
 						Env:             r.buildBackupEnv(backup, cluster),
@@ -157,7 +157,7 @@ func (r *BackupReconciler) buildBackupJob(backup *banhbaoringv1.BanhBaoRingBacku
 	}
 }
 
-func (r *BackupReconciler) buildBackupScript(backup *banhbaoringv1.BanhBaoRingBackup, cluster *banhbaoringv1.BanhBaoRingCluster) string {
+func (r *BackupReconciler) buildBackupScript(backup *popsignerv1.POPSignerBackup, cluster *popsignerv1.POPSignerCluster) string {
 	return `#!/bin/sh
 set -e
 
@@ -180,7 +180,7 @@ fi
 # Backup secrets metadata
 if echo "$COMPONENTS" | grep -q "secrets"; then
     echo "Backing up secrets metadata..."
-    kubectl get secrets -n ${NAMESPACE} -l banhbaoring.io/cluster=${CLUSTER_NAME} -o yaml > /tmp/secrets-${TIMESTAMP}.yaml
+    kubectl get secrets -n ${NAMESPACE} -l popsigner.com/cluster=${CLUSTER_NAME} -o yaml > /tmp/secrets-${TIMESTAMP}.yaml
     aws s3 cp /tmp/secrets-${TIMESTAMP}.yaml s3://${S3_BUCKET}/${S3_PREFIX}secrets-${TIMESTAMP}.yaml
 fi
 
@@ -188,7 +188,7 @@ echo "Backup completed successfully"
 `
 }
 
-func (r *BackupReconciler) buildBackupEnv(backup *banhbaoringv1.BanhBaoRingBackup, cluster *banhbaoringv1.BanhBaoRingCluster) []corev1.EnvVar {
+func (r *BackupReconciler) buildBackupEnv(backup *popsignerv1.POPSignerBackup, cluster *popsignerv1.POPSignerCluster) []corev1.EnvVar {
 	// Determine components to backup
 	components := backup.Spec.Components
 	if len(components) == 0 {
@@ -270,15 +270,15 @@ func (r *BackupReconciler) buildBackupEnv(backup *banhbaoringv1.BanhBaoRingBacku
 	return env
 }
 
-func (r *BackupReconciler) buildComponentStatus(backup *banhbaoringv1.BanhBaoRingBackup, status string) []banhbaoringv1.BackupComponentStatus {
+func (r *BackupReconciler) buildComponentStatus(backup *popsignerv1.POPSignerBackup, status string) []popsignerv1.BackupComponentStatus {
 	components := backup.Spec.Components
 	if len(components) == 0 {
 		components = []string{"openbao", "database", "secrets"}
 	}
 
-	result := make([]banhbaoringv1.BackupComponentStatus, len(components))
+	result := make([]popsignerv1.BackupComponentStatus, len(components))
 	for i, comp := range components {
-		result[i] = banhbaoringv1.BackupComponentStatus{
+		result[i] = popsignerv1.BackupComponentStatus{
 			Name:   comp,
 			Status: status,
 		}
@@ -286,7 +286,7 @@ func (r *BackupReconciler) buildComponentStatus(backup *banhbaoringv1.BanhBaoRin
 	return result
 }
 
-func (r *BackupReconciler) updateBackupStatus(ctx context.Context, backup *banhbaoringv1.BanhBaoRingBackup, phase, message string) (ctrl.Result, error) {
+func (r *BackupReconciler) updateBackupStatus(ctx context.Context, backup *popsignerv1.POPSignerBackup, phase, message string) (ctrl.Result, error) {
 	backup.Status.Phase = phase
 
 	// Update conditions
@@ -332,7 +332,7 @@ func boolPtr(b bool) *bool {
 // SetupWithManager sets up the controller with the Manager.
 func (r *BackupReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&banhbaoringv1.BanhBaoRingBackup{}).
+		For(&popsignerv1.POPSignerBackup{}).
 		Owns(&batchv1.Job{}).
 		Complete(r)
 }

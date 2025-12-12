@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 )
 
 var _ = Describe("BackupController", func() {
@@ -18,16 +18,16 @@ var _ = Describe("BackupController", func() {
 		interval = time.Millisecond * 250
 	)
 
-	Context("When creating a BanhBaoRingBackup", func() {
+	Context("When creating a POPSignerBackup", func() {
 		It("Should fail when parent cluster is not found", func() {
 			By("Creating a backup without a parent cluster")
-			backup := &banhbaoringv1.BanhBaoRingBackup{
+			backup := &popsignerv1.POPSignerBackup{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-backup-no-cluster",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingBackupSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerBackupSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "non-existent-cluster",
 					},
 					Type:       "full",
@@ -42,7 +42,7 @@ var _ = Describe("BackupController", func() {
 			}()
 
 			backupLookupKey := types.NamespacedName{Name: "test-backup-no-cluster", Namespace: "default"}
-			createdBackup := &banhbaoringv1.BanhBaoRingBackup{}
+			createdBackup := &popsignerv1.POPSignerBackup{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, backupLookupKey, createdBackup)
@@ -52,13 +52,13 @@ var _ = Describe("BackupController", func() {
 
 		It("Should create backup with default components", func() {
 			By("Creating a backup with minimal spec")
-			backup := &banhbaoringv1.BanhBaoRingBackup{
+			backup := &popsignerv1.POPSignerBackup{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-backup-defaults",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingBackupSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerBackupSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "test-cluster",
 					},
 				},
@@ -71,7 +71,7 @@ var _ = Describe("BackupController", func() {
 			}()
 
 			backupLookupKey := types.NamespacedName{Name: "test-backup-defaults", Namespace: "default"}
-			createdBackup := &banhbaoringv1.BanhBaoRingBackup{}
+			createdBackup := &popsignerv1.POPSignerBackup{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, backupLookupKey, createdBackup)
@@ -84,13 +84,13 @@ var _ = Describe("BackupController", func() {
 
 		It("Should create backup with custom components", func() {
 			By("Creating a backup with specific components")
-			backup := &banhbaoringv1.BanhBaoRingBackup{
+			backup := &popsignerv1.POPSignerBackup{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-backup-custom",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingBackupSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerBackupSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "test-cluster",
 					},
 					Type:       "incremental",
@@ -105,7 +105,7 @@ var _ = Describe("BackupController", func() {
 			}()
 
 			backupLookupKey := types.NamespacedName{Name: "test-backup-custom", Namespace: "default"}
-			createdBackup := &banhbaoringv1.BanhBaoRingBackup{}
+			createdBackup := &popsignerv1.POPSignerBackup{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, backupLookupKey, createdBackup)
@@ -119,23 +119,23 @@ var _ = Describe("BackupController", func() {
 
 		It("Should create backup with S3 destination", func() {
 			By("Creating a backup with S3 destination")
-			backup := &banhbaoringv1.BanhBaoRingBackup{
+			backup := &popsignerv1.POPSignerBackup{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-backup-s3",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingBackupSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerBackupSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "test-cluster",
 					},
 					Type:       "full",
 					Components: []string{"openbao", "database", "secrets"},
-					Destination: &banhbaoringv1.BackupDestination{
-						S3: &banhbaoringv1.S3Destination{
+					Destination: &popsignerv1.BackupDestination{
+						S3: &popsignerv1.S3Destination{
 							Bucket: "my-backup-bucket",
 							Region: "us-west-2",
 							Prefix: "backups/prod/",
-							Credentials: banhbaoringv1.SecretKeyRef{
+							Credentials: popsignerv1.SecretKeyRef{
 								Name: "aws-credentials",
 								Key:  "credentials",
 							},
@@ -151,7 +151,7 @@ var _ = Describe("BackupController", func() {
 			}()
 
 			backupLookupKey := types.NamespacedName{Name: "test-backup-s3", Namespace: "default"}
-			createdBackup := &banhbaoringv1.BanhBaoRingBackup{}
+			createdBackup := &popsignerv1.POPSignerBackup{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, backupLookupKey, createdBackup)
@@ -166,25 +166,25 @@ var _ = Describe("BackupController", func() {
 	})
 
 	Context("When backup has a ready cluster", func() {
-		var cluster *banhbaoringv1.BanhBaoRingCluster
+		var cluster *popsignerv1.POPSignerCluster
 
 		BeforeEach(func() {
 			By("Creating a parent cluster")
-			cluster = &banhbaoringv1.BanhBaoRingCluster{
+			cluster = &popsignerv1.POPSignerCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "backup-test-cluster",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+				Spec: popsignerv1.POPSignerClusterSpec{
 					Domain: "keys.example.com",
-					Backup: banhbaoringv1.BackupSpec{
+					Backup: popsignerv1.BackupSpec{
 						Enabled:  true,
 						Schedule: "0 3 * * *",
-						Destination: banhbaoringv1.BackupDestination{
-							S3: &banhbaoringv1.S3Destination{
+						Destination: popsignerv1.BackupDestination{
+							S3: &popsignerv1.S3Destination{
 								Bucket: "cluster-backup-bucket",
 								Region: "us-east-1",
-								Credentials: banhbaoringv1.SecretKeyRef{
+								Credentials: popsignerv1.SecretKeyRef{
 									Name: "aws-creds",
 									Key:  "key",
 								},
@@ -206,13 +206,13 @@ var _ = Describe("BackupController", func() {
 
 		It("Should use cluster backup destination when not overridden", func() {
 			By("Creating a backup without destination override")
-			backup := &banhbaoringv1.BanhBaoRingBackup{
+			backup := &popsignerv1.POPSignerBackup{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-backup-inherit",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingBackupSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerBackupSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "backup-test-cluster",
 					},
 					Type: "full",
@@ -225,7 +225,7 @@ var _ = Describe("BackupController", func() {
 			}()
 
 			backupLookupKey := types.NamespacedName{Name: "test-backup-inherit", Namespace: "default"}
-			createdBackup := &banhbaoringv1.BanhBaoRingBackup{}
+			createdBackup := &popsignerv1.POPSignerBackup{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, backupLookupKey, createdBackup)
@@ -239,7 +239,7 @@ var _ = Describe("BackupController", func() {
 
 	Context("When testing backup job creation", func() {
 		It("Should build correct backup job name", func() {
-			backup := &banhbaoringv1.BanhBaoRingBackup{
+			backup := &popsignerv1.POPSignerBackup{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "my-backup",
 					Namespace: "default",
@@ -256,8 +256,8 @@ var _ = Describe("BackupController", func() {
 		It("Should create component status for all components", func() {
 			reconciler := &BackupReconciler{}
 
-			backup := &banhbaoringv1.BanhBaoRingBackup{
-				Spec: banhbaoringv1.BanhBaoRingBackupSpec{
+			backup := &popsignerv1.POPSignerBackup{
+				Spec: popsignerv1.POPSignerBackupSpec{
 					Components: []string{"openbao", "database", "secrets"},
 				},
 			}
@@ -274,8 +274,8 @@ var _ = Describe("BackupController", func() {
 		It("Should use default components when none specified", func() {
 			reconciler := &BackupReconciler{}
 
-			backup := &banhbaoringv1.BanhBaoRingBackup{
-				Spec: banhbaoringv1.BanhBaoRingBackupSpec{},
+			backup := &popsignerv1.POPSignerBackup{
+				Spec: popsignerv1.POPSignerBackupSpec{},
 			}
 
 			status := reconciler.buildComponentStatus(backup, "Running")
@@ -293,13 +293,13 @@ var _ = Describe("BackupJob", func() {
 		It("Should create job with correct structure", func() {
 			reconciler := &BackupReconciler{}
 
-			backup := &banhbaoringv1.BanhBaoRingBackup{
+			backup := &popsignerv1.POPSignerBackup{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-backup",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingBackupSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerBackupSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "test-cluster",
 					},
 					Type:       "full",
@@ -307,12 +307,12 @@ var _ = Describe("BackupJob", func() {
 				},
 			}
 
-			cluster := &banhbaoringv1.BanhBaoRingCluster{
+			cluster := &popsignerv1.POPSignerCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-cluster",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+				Spec: popsignerv1.POPSignerClusterSpec{
 					Domain: "keys.example.com",
 				},
 			}
@@ -321,10 +321,10 @@ var _ = Describe("BackupJob", func() {
 
 			Expect(job.Name).Should(Equal("test-backup-backup"))
 			Expect(job.Namespace).Should(Equal("default"))
-			Expect(job.Labels["banhbaoring.io/cluster"]).Should(Equal("test-cluster"))
+			Expect(job.Labels["popsigner.com/cluster"]).Should(Equal("test-cluster"))
 			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1))
 			Expect(job.Spec.Template.Spec.Containers[0].Name).Should(Equal("backup"))
-			Expect(job.Spec.Template.Spec.Containers[0].Image).Should(Equal("banhbaoring/backup:latest"))
+			Expect(job.Spec.Template.Spec.Containers[0].Image).Should(Equal("popsigner/backup:latest"))
 			Expect(*job.Spec.BackoffLimit).Should(Equal(int32(2)))
 		})
 	})

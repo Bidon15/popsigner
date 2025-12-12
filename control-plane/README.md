@@ -1,6 +1,6 @@
-# BanhBaoRing Control Plane API
+# POPSigner Control Plane API
 
-Multi-tenant API for managing cryptographic key operations, authentication, billing, and tenant isolation.
+Point-of-Presence signing infrastructure - Control Plane API for managing cryptographic key operations, authentication, billing, and tenant isolation.
 
 ## Quick Start
 
@@ -78,23 +78,23 @@ control-plane/
 
 Configuration can be provided via:
 
-1. **YAML file** (`config.yaml` in current dir or `/etc/banhbaoring/`)
-2. **Environment variables** (prefix: `BANHBAO_`)
+1. **YAML file** (`config.yaml` in current dir or `/etc/popsigner/`)
+2. **Environment variables** (prefix: `POPSIGNER_`)
 
 ### Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `BANHBAO_SERVER_PORT` | HTTP port | 8080 |
-| `BANHBAO_SERVER_ENVIRONMENT` | dev/staging/prod | dev |
-| `BANHBAO_DATABASE_HOST` | PostgreSQL host | localhost |
-| `BANHBAO_DATABASE_PORT` | PostgreSQL port | 5432 |
-| `BANHBAO_DATABASE_USER` | PostgreSQL user | banhbao |
-| `BANHBAO_DATABASE_PASSWORD` | PostgreSQL password | banhbao |
-| `BANHBAO_DATABASE_DATABASE` | PostgreSQL database | banhbaoring |
-| `BANHBAO_REDIS_HOST` | Redis host | localhost |
-| `BANHBAO_REDIS_PORT` | Redis port | 6379 |
-| `BANHBAO_AUTH_JWT_SECRET` | JWT signing secret | - |
+| `POPSIGNER_SERVER_PORT` | HTTP port | 8080 |
+| `POPSIGNER_SERVER_ENVIRONMENT` | dev/staging/prod | dev |
+| `POPSIGNER_DATABASE_HOST` | PostgreSQL host | localhost |
+| `POPSIGNER_DATABASE_PORT` | PostgreSQL port | 5432 |
+| `POPSIGNER_DATABASE_USER` | PostgreSQL user | popsigner |
+| `POPSIGNER_DATABASE_PASSWORD` | PostgreSQL password | popsigner |
+| `POPSIGNER_DATABASE_DATABASE` | PostgreSQL database | popsigner |
+| `POPSIGNER_REDIS_HOST` | Redis host | localhost |
+| `POPSIGNER_REDIS_PORT` | Redis port | 6379 |
+| `POPSIGNER_AUTH_JWT_SECRET` | JWT signing secret | - |
 
 ## API Endpoints
 
@@ -142,4 +142,3 @@ make migrate-down
 ## License
 
 MIT
-

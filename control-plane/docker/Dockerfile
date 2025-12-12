@@ -19,6 +19,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /server ./cmd/server
 # Runtime stage
 FROM alpine:3.19
 
+LABEL org.opencontainers.image.title="POPSigner Control Plane"
+LABEL org.opencontainers.image.description="POPSigner - Point-of-Presence signing infrastructure"
+LABEL org.opencontainers.image.vendor="POPSigner"
+
 WORKDIR /app
 
 # Install runtime dependencies

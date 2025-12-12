@@ -20,7 +20,7 @@ import (
     "fmt"
     "log"
 
-    "github.com/popsigner/sdk-go"
+    popsigner "github.com/popsigner/sdk-go"
     "github.com/google/uuid"
 )
 

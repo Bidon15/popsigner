@@ -9,7 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 )
 
 // ExternalConfig holds external database configuration
@@ -24,7 +24,7 @@ type ExternalConfig struct {
 }
 
 // GetExternalConfig retrieves external database config from secret
-func GetExternalConfig(ctx context.Context, c client.Client, cluster *banhbaoringv1.BanhBaoRingCluster) (*ExternalConfig, error) {
+func GetExternalConfig(ctx context.Context, c client.Client, cluster *popsignerv1.POPSignerCluster) (*ExternalConfig, error) {
 	if cluster.Spec.Database.Managed {
 		return nil, fmt.Errorf("database is managed, not external")
 	}
@@ -55,7 +55,7 @@ func GetExternalConfig(ctx context.Context, c client.Client, cluster *banhbaorin
 }
 
 // ConnectionStringSecret returns the connection string for applications
-func ConnectionStringSecret(cluster *banhbaoringv1.BanhBaoRingCluster, connString string) *corev1.Secret {
+func ConnectionStringSecret(cluster *popsignerv1.POPSignerCluster, connString string) *corev1.Secret {
 	name := fmt.Sprintf("%s-database-url", cluster.Name)
 
 	return &corev1.Secret{

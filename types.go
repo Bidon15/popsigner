@@ -1,6 +1,6 @@
-// Package banhbaoring provides a Cosmos SDK keyring implementation
+// Package popsigner provides a Cosmos SDK keyring implementation
 // backed by OpenBao for secure secp256k1 signing.
-package banhbaoring
+package popsigner
 
 import (
 	"crypto/tls"

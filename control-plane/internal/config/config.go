@@ -70,7 +70,7 @@ type OpenBaoConfig struct {
 }
 
 // AuthConfig holds authentication configuration.
-// BanhBaoRing uses OAuth-only authentication (no email/password).
+// POPSigner uses OAuth-only authentication (no email/password).
 type AuthConfig struct {
 	JWTSecret         string        `mapstructure:"jwt_secret"`
 	JWTExpiry         time.Duration `mapstructure:"jwt_expiry"`
@@ -91,10 +91,10 @@ func Load() (*Config, error) {
 	v.SetConfigType("yaml")
 	v.AddConfigPath(".")
 	v.AddConfigPath("./config")
-	v.AddConfigPath("/etc/banhbaoring")
+	v.AddConfigPath("/etc/popsigner")
 
 	// Enable environment variable override
-	v.SetEnvPrefix("BANHBAO")
+	v.SetEnvPrefix("POPSIGNER")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
@@ -102,17 +102,17 @@ func Load() (*Config, error) {
 	setDefaults(v)
 
 	// Explicitly bind OAuth environment variables (nested struct issue with viper)
-	v.BindEnv("auth.oauth_github_id", "BANHBAO_AUTH_OAUTH_GITHUB_ID")
-	v.BindEnv("auth.oauth_github_secret", "BANHBAO_AUTH_OAUTH_GITHUB_SECRET")
-	v.BindEnv("auth.oauth_google_id", "BANHBAO_AUTH_OAUTH_GOOGLE_ID")
-	v.BindEnv("auth.oauth_google_secret", "BANHBAO_AUTH_OAUTH_GOOGLE_SECRET")
-	v.BindEnv("auth.oauth_callback_url", "BANHBAO_AUTH_OAUTH_CALLBACK_URL")
+	v.BindEnv("auth.oauth_github_id", "POPSIGNER_AUTH_OAUTH_GITHUB_ID")
+	v.BindEnv("auth.oauth_github_secret", "POPSIGNER_AUTH_OAUTH_GITHUB_SECRET")
+	v.BindEnv("auth.oauth_google_id", "POPSIGNER_AUTH_OAUTH_GOOGLE_ID")
+	v.BindEnv("auth.oauth_google_secret", "POPSIGNER_AUTH_OAUTH_GOOGLE_SECRET")
+	v.BindEnv("auth.oauth_callback_url", "POPSIGNER_AUTH_OAUTH_CALLBACK_URL")
 
 	// Explicitly bind OpenBao environment variables
-	v.BindEnv("openbao.address", "BANHBAO_OPENBAO_ADDRESS")
-	v.BindEnv("openbao.token", "BANHBAO_OPENBAO_TOKEN")
-	v.BindEnv("openbao.namespace", "BANHBAO_OPENBAO_NAMESPACE")
-	v.BindEnv("openbao.secp256k1_path", "BANHBAO_OPENBAO_SECP256K1_PATH")
+	v.BindEnv("openbao.address", "POPSIGNER_OPENBAO_ADDRESS")
+	v.BindEnv("openbao.token", "POPSIGNER_OPENBAO_TOKEN")
+	v.BindEnv("openbao.namespace", "POPSIGNER_OPENBAO_NAMESPACE")
+	v.BindEnv("openbao.secp256k1_path", "POPSIGNER_OPENBAO_SECP256K1_PATH")
 
 	// Read config file (optional)
 	if err := v.ReadInConfig(); err != nil {
@@ -142,9 +142,9 @@ func setDefaults(v *viper.Viper) {
 	// Database defaults
 	v.SetDefault("database.host", "localhost")
 	v.SetDefault("database.port", 5432)
-	v.SetDefault("database.user", "banhbao")
-	v.SetDefault("database.password", "banhbao")
-	v.SetDefault("database.database", "banhbaoring")
+	v.SetDefault("database.user", "popsigner")
+	v.SetDefault("database.password", "popsigner")
+	v.SetDefault("database.database", "popsigner")
 	v.SetDefault("database.ssl_mode", "disable")
 	v.SetDefault("database.max_open_conns", 25)
 	v.SetDefault("database.max_idle_conns", 5)

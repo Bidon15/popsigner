@@ -1,4 +1,4 @@
-// Package main is the entry point for the BanhBaoRing Kubernetes Operator.
+// Package main is the entry point for the POPSigner Kubernetes Operator.
 package main
 
 import (
@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/controllers"
 )
 
@@ -25,7 +25,7 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(banhbaoringv1.AddToScheme(scheme))
+	utilruntime.Must(popsignerv1.AddToScheme(scheme))
 }
 
 func main() {
@@ -52,7 +52,7 @@ func main() {
 		Metrics:                metricsserver.Options{BindAddress: metricsAddr},
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "banhbaoring-operator.banhbaoring.io",
+		LeaderElectionID:       "popsigner-operator.popsigner.com",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -64,7 +64,7 @@ func main() {
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "BanhBaoRingCluster")
+		setupLog.Error(err, "unable to create controller", "controller", "POPSignerCluster")
 		os.Exit(1)
 	}
 
@@ -72,7 +72,7 @@ func main() {
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "BanhBaoRingTenant")
+		setupLog.Error(err, "unable to create controller", "controller", "POPSignerTenant")
 		os.Exit(1)
 	}
 
@@ -80,7 +80,7 @@ func main() {
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "BanhBaoRingBackup")
+		setupLog.Error(err, "unable to create controller", "controller", "POPSignerBackup")
 		os.Exit(1)
 	}
 
@@ -88,7 +88,7 @@ func main() {
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "BanhBaoRingRestore")
+		setupLog.Error(err, "unable to create controller", "controller", "POPSignerRestore")
 		os.Exit(1)
 	}
 

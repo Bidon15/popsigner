@@ -13,14 +13,14 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/conditions"
 	"github.com/Bidon15/banhbaoring/operator/internal/resources/database"
 	"github.com/Bidon15/banhbaoring/operator/internal/resources/redis"
 )
 
 // reconcilePostgreSQL handles PostgreSQL resources
-func (r *ClusterReconciler) reconcilePostgreSQL(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *ClusterReconciler) reconcilePostgreSQL(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	log := log.FromContext(ctx)
 
 	if !cluster.Spec.Database.Managed {
@@ -73,7 +73,7 @@ func (r *ClusterReconciler) reconcilePostgreSQL(ctx context.Context, cluster *ba
 }
 
 // reconcileRedis handles Redis resources
-func (r *ClusterReconciler) reconcileRedis(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *ClusterReconciler) reconcileRedis(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	log := log.FromContext(ctx)
 
 	if !cluster.Spec.Redis.Managed {
@@ -110,7 +110,7 @@ func (r *ClusterReconciler) reconcileRedis(ctx context.Context, cluster *banhbao
 }
 
 // isDataLayerReady checks if PostgreSQL and Redis are ready
-func (r *ClusterReconciler) isDataLayerReady(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) bool {
+func (r *ClusterReconciler) isDataLayerReady(ctx context.Context, cluster *popsignerv1.POPSignerCluster) bool {
 	// Check PostgreSQL
 	if cluster.Spec.Database.Managed {
 		name := fmt.Sprintf("%s-postgres", cluster.Name)
@@ -139,7 +139,7 @@ func (r *ClusterReconciler) isDataLayerReady(ctx context.Context, cluster *banhb
 }
 
 // updateDatabaseStatus updates the cluster status with database info
-func (r *ClusterReconciler) updateDatabaseStatus(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *ClusterReconciler) updateDatabaseStatus(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	// PostgreSQL status
 	if cluster.Spec.Database.Managed {
 		name := fmt.Sprintf("%s-postgres", cluster.Name)
@@ -148,20 +148,20 @@ func (r *ClusterReconciler) updateDatabaseStatus(ctx context.Context, cluster *b
 			if !errors.IsNotFound(err) {
 				return err
 			}
-			cluster.Status.Database = banhbaoringv1.ComponentStatus{
+			cluster.Status.Database = popsignerv1.ComponentStatus{
 				Ready:   false,
 				Message: "StatefulSet not found",
 			}
 		} else {
 			ready := sts.Status.ReadyReplicas >= 1
-			cluster.Status.Database = banhbaoringv1.ComponentStatus{
+			cluster.Status.Database = popsignerv1.ComponentStatus{
 				Ready:    ready,
 				Version:  cluster.Spec.Database.Version,
 				Replicas: fmt.Sprintf("%d/%d", sts.Status.ReadyReplicas, *sts.Spec.Replicas),
 			}
 		}
 	} else {
-		cluster.Status.Database = banhbaoringv1.ComponentStatus{
+		cluster.Status.Database = popsignerv1.ComponentStatus{
 			Ready:   true,
 			Message: "Using external database",
 		}
@@ -175,20 +175,20 @@ func (r *ClusterReconciler) updateDatabaseStatus(ctx context.Context, cluster *b
 			if !errors.IsNotFound(err) {
 				return err
 			}
-			cluster.Status.Redis = banhbaoringv1.ComponentStatus{
+			cluster.Status.Redis = popsignerv1.ComponentStatus{
 				Ready:   false,
 				Message: "StatefulSet not found",
 			}
 		} else {
 			ready := sts.Status.ReadyReplicas >= 1
-			cluster.Status.Redis = banhbaoringv1.ComponentStatus{
+			cluster.Status.Redis = popsignerv1.ComponentStatus{
 				Ready:    ready,
 				Version:  cluster.Spec.Redis.Version,
 				Replicas: fmt.Sprintf("%d/%d", sts.Status.ReadyReplicas, *sts.Spec.Replicas),
 			}
 		}
 	} else {
-		cluster.Status.Redis = banhbaoringv1.ComponentStatus{
+		cluster.Status.Redis = popsignerv1.ComponentStatus{
 			Ready:   true,
 			Message: "Using external Redis",
 		}

@@ -4,13 +4,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 	"github.com/Bidon15/banhbaoring/operator/internal/resources"
 )
 
 // ServiceAccount builds the ServiceAccount for OpenBao.
-func ServiceAccount(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.ServiceAccount {
+func ServiceAccount(cluster *popsignerv1.POPSignerCluster) *corev1.ServiceAccount {
 	name := resources.ResourceName(cluster.Name, constants.ComponentOpenBao)
 	labels := resources.Labels(cluster.Name, constants.ComponentOpenBao, cluster.Spec.OpenBao.Version)
 
@@ -20,7 +20,7 @@ func ServiceAccount(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.ServiceAc
 }
 
 // HeadlessService builds the headless service for StatefulSet DNS.
-func HeadlessService(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.Service {
+func HeadlessService(cluster *popsignerv1.POPSignerCluster) *corev1.Service {
 	name := resources.ResourceName(cluster.Name, constants.ComponentOpenBao)
 	labels := resources.Labels(cluster.Name, constants.ComponentOpenBao, cluster.Spec.OpenBao.Version)
 	selectorLabels := resources.SelectorLabels(cluster.Name, constants.ComponentOpenBao)
@@ -50,7 +50,7 @@ func HeadlessService(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.Service 
 }
 
 // ActiveService builds the service that routes to all OpenBao pods.
-func ActiveService(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.Service {
+func ActiveService(cluster *popsignerv1.POPSignerCluster) *corev1.Service {
 	name := resources.ResourceName(cluster.Name, constants.ComponentOpenBao)
 	labels := resources.Labels(cluster.Name, constants.ComponentOpenBao, cluster.Spec.OpenBao.Version)
 	selectorLabels := resources.SelectorLabels(cluster.Name, constants.ComponentOpenBao)
@@ -73,7 +73,7 @@ func ActiveService(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.Service {
 }
 
 // InternalService builds an internal service for control plane components.
-func InternalService(cluster *banhbaoringv1.BanhBaoRingCluster) *corev1.Service {
+func InternalService(cluster *popsignerv1.POPSignerCluster) *corev1.Service {
 	name := resources.ResourceName(cluster.Name, constants.ComponentOpenBao)
 	labels := resources.Labels(cluster.Name, constants.ComponentOpenBao, cluster.Spec.OpenBao.Version)
 	selectorLabels := resources.SelectorLabels(cluster.Name, constants.ComponentOpenBao)

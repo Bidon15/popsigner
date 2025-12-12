@@ -1,7 +1,7 @@
-// Example: Basic BanhBaoRing SDK usage
+// Example: Basic POPSigner SDK usage
 //
 // This example demonstrates basic key management and signing operations
-// using the BanhBaoRing Go SDK.
+// using the POPSigner Go SDK.
 package main
 
 import (
@@ -10,24 +10,24 @@ import (
 	"log"
 	"os"
 
-	"github.com/banhbaoring/sdk-go"
+	popsigner "github.com/popsigner/sdk-go"
 	"github.com/google/uuid"
 )
 
 func main() {
 	// Initialize the client with your API key
-	apiKey := os.Getenv("BANHBAORING_API_KEY")
+	apiKey := os.Getenv("POPSIGNER_API_KEY")
 	if apiKey == "" {
-		log.Fatal("BANHBAORING_API_KEY environment variable is required")
+		log.Fatal("POPSIGNER_API_KEY environment variable is required")
 	}
 
 	// Create client with default settings
-	client := banhbaoring.NewClient(apiKey)
+	client := popsigner.NewClient(apiKey)
 
 	// Or use custom options:
-	// client := banhbaoring.NewClient(apiKey,
-	//     banhbaoring.WithBaseURL("https://api.banhbaoring.io"),
-	//     banhbaoring.WithTimeout(60*time.Second),
+	// client := popsigner.NewClient(apiKey,
+	//     popsigner.WithBaseURL("https://api.popsigner.com"),
+	//     popsigner.WithTimeout(60*time.Second),
 	// )
 
 	ctx := context.Background()
@@ -49,7 +49,7 @@ func main() {
 	fmt.Println("=== Key Management ===")
 
 	// Create a new key
-	key, err := client.Keys.Create(ctx, banhbaoring.CreateKeyRequest{
+	key, err := client.Keys.Create(ctx, popsigner.CreateKeyRequest{
 		Name:        "example-key",
 		NamespaceID: namespaceID,
 		Algorithm:   "secp256k1",
@@ -75,7 +75,7 @@ func main() {
 	fmt.Printf("\nFetched key: %s (version %d)\n", fetchedKey.Name, fetchedKey.Version)
 
 	// List all keys in the namespace
-	keys, err := client.Keys.List(ctx, &banhbaoring.ListOptions{
+	keys, err := client.Keys.List(ctx, &popsigner.ListOptions{
 		NamespaceID: &namespaceID,
 	})
 	if err != nil {
@@ -93,7 +93,7 @@ func main() {
 	fmt.Println("\n=== Signing Operations ===")
 
 	// Sign a message
-	message := []byte("Hello, BanhBaoRing!")
+	message := []byte("Hello, POPSigner!")
 	signResult, err := client.Sign.Sign(ctx, key.ID, message, false)
 	if err != nil {
 		log.Fatalf("Failed to sign: %v", err)
@@ -147,7 +147,7 @@ func main() {
 	// Try to get a non-existent key
 	_, err = client.Keys.Get(ctx, uuid.New())
 	if err != nil {
-		if apiErr, ok := banhbaoring.IsAPIError(err); ok {
+		if apiErr, ok := popsigner.IsAPIError(err); ok {
 			fmt.Printf("API Error: %s (code: %s)\n", apiErr.Message, apiErr.Code)
 			if apiErr.IsNotFound() {
 				fmt.Println("  -> This is a not found error")
@@ -159,4 +159,3 @@ func main() {
 
 	fmt.Println("\nExample completed successfully!")
 }
-

@@ -4,33 +4,30 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-  name: banhbaoringtenants.banhbaoring.io
+  name: popsignerbackups.popsigner.com
 spec:
-  group: banhbaoring.io
+  group: popsigner.com
   names:
-    kind: BanhBaoRingTenant
-    listKind: BanhBaoRingTenantList
-    plural: banhbaoringtenants
-    singular: banhbaoringtenant
+    kind: POPSignerBackup
+    listKind: POPSignerBackupList
+    plural: popsignerbackups
+    singular: popsignerbackup
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
     - jsonPath: .status.phase
       name: Phase
       type: string
-    - jsonPath: .spec.plan
-      name: Plan
+    - jsonPath: .status.totalSize
+      name: Size
       type: string
-    - jsonPath: .status.usage.keys
-      name: Keys
-      type: integer
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
     name: v1
     schema:
       openAPIV3Schema:
-        description: BanhBaoRingTenant is the Schema for the banhbaoringtenants API
+        description: POPSignerBackup is the Schema for the popsignerbackups API
         properties:
           apiVersion:
             description: |-
@@ -50,117 +47,109 @@ spec:
           metadata:
             type: object
           spec:
-            description: BanhBaoRingTenantSpec defines the desired state
+            description: POPSignerBackupSpec defines the desired state
             properties:
-              admin:
-                description: Initial admin user
-                properties:
-                  email:
-                    type: string
-                  password:
-                    description: SecretKeyRef references a key in a Secret
-                    properties:
-                      key:
-                        type: string
-                      name:
-                        type: string
-                    required:
-                    - key
-                    - name
-                    type: object
-                required:
-                - email
-                type: object
               clusterRef:
-                description: Reference to the parent cluster
+                description: ClusterReference references a POPSignerCluster
                 properties:
                   name:
                     type: string
                 required:
                 - name
                 type: object
-              displayName:
-                description: Display name for the tenant
-                type: string
-              plan:
-                default: free
-                description: 'Plan: free, starter, pro, enterprise'
-                enum:
-                - free
-                - starter
-                - pro
-                - enterprise
-                type: string
-              quotas:
-                description: Resource quotas
+              components:
+                default:
+                - openbao
+                - database
+                - secrets
+                description: Components to backup
+                items:
+                  type: string
+                type: array
+              destination:
+                description: Override cluster backup destination
                 properties:
-                  apiKeys:
-                    default: 2
-                    format: int32
-                    type: integer
-                  keys:
-                    default: 5
-                    format: int32
-                    type: integer
-                  namespaces:
-                    default: 1
-                    format: int32
-                    type: integer
-                  signaturesPerMonth:
-                    default: 10000
-                    format: int64
-                    type: integer
-                  teamMembers:
-                    default: 1
-                    format: int32
-                    type: integer
-                type: object
-              settings:
-                description: Custom settings
-                properties:
-                  allowExportableKeys:
-                    type: boolean
-                  allowedIPRanges:
-                    items:
-                      type: string
-                    type: array
-                  auditRetentionDays:
-                    default: 30
-                    format: int32
-                    type: integer
-                  webhooks:
-                    items:
-                      description: WebhookConfig defines a webhook endpoint
-                      properties:
-                        events:
-                          items:
+                  gcs:
+                    description: GCSDestination configures Google Cloud Storage
+                    properties:
+                      bucket:
+                        type: string
+                      credentials:
+                        description: SecretKeyRef references a key in a Secret
+                        properties:
+                          key:
                             type: string
-                          type: array
-                        secret:
-                          description: SecretKeyRef references a key in a Secret
-                          properties:
-                            key:
-                              type: string
-                            name:
-                              type: string
-                          required:
-                          - key
-                          - name
-                          type: object
-                        url:
-                          type: string
-                      required:
-                      - secret
-                      - url
-                      type: object
-                    type: array
+                          name:
+                            type: string
+                        required:
+                        - key
+                        - name
+                        type: object
+                      prefix:
+                        type: string
+                    required:
+                    - bucket
+                    - credentials
+                    type: object
+                  s3:
+                    description: S3Destination configures S3-compatible storage
+                    properties:
+                      bucket:
+                        type: string
+                      credentials:
+                        description: SecretKeyRef references a key in a Secret
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - key
+                        - name
+                        type: object
+                      prefix:
+                        type: string
+                      region:
+                        type: string
+                    required:
+                    - bucket
+                    - credentials
+                    type: object
                 type: object
+              type:
+                default: full
+                description: full or incremental
+                enum:
+                - full
+                - incremental
+                type: string
             required:
             - clusterRef
             type: object
           status:
-            description: BanhBaoRingTenantStatus defines the observed state
+            description: POPSignerBackupStatus defines the observed state
             properties:
+              completedAt:
+                format: date-time
+                type: string
+              components:
+                items:
+                  description: BackupComponentStatus represents the backup status
+                    of a component
+                  properties:
+                    location:
+                      type: string
+                    name:
+                      type: string
+                    size:
+                      type: string
+                    status:
+                      type: string
+                  required:
+                  - name
+                  - status
+                  type: object
+                type: array
               conditions:
                 items:
                   description: Condition contains details for one aspect of the current
@@ -217,35 +206,14 @@ spec:
                   - type
                   type: object
                 type: array
-              createdAt:
-                format: date-time
-                type: string
-              lastActiveAt:
-                format: date-time
-                type: string
-              openbaoNamespace:
-                description: OpenBao namespace for this tenant
-                type: string
               phase:
-                default: Pending
-                description: 'Phase: Pending, Active, Suspended, Deleted'
+                description: Pending, Running, Completed, Failed
                 type: string
-              usage:
-                description: Current usage
-                properties:
-                  apiKeys:
-                    format: int32
-                    type: integer
-                  keys:
-                    format: int32
-                    type: integer
-                  signaturesThisMonth:
-                    format: int64
-                    type: integer
-                  teamMembers:
-                    format: int32
-                    type: integer
-                type: object
+              startedAt:
+                format: date-time
+                type: string
+              totalSize:
+                type: string
             type: object
         type: object
     served: true

@@ -6,13 +6,13 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 	"github.com/Bidon15/banhbaoring/operator/internal/resources/monitoring"
 )
 
 // reconcileMonitoring handles monitoring stack resources (Prometheus, Grafana, alerts).
-func (r *ClusterReconciler) reconcileMonitoring(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *ClusterReconciler) reconcileMonitoring(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	if !cluster.Spec.Monitoring.Enabled {
 		return nil
 	}
@@ -74,7 +74,7 @@ func (r *ClusterReconciler) reconcileMonitoring(ctx context.Context, cluster *ba
 }
 
 // reconcileGrafana handles Grafana resources.
-func (r *ClusterReconciler) reconcileGrafana(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *ClusterReconciler) reconcileGrafana(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	log := log.FromContext(ctx)
 	log.Info("Reconciling Grafana")
 

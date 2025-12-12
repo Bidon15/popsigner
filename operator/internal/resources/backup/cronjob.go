@@ -8,7 +8,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/resources"
 )
 
@@ -17,11 +17,11 @@ const (
 	DefaultSchedule = "0 2 * * *"
 
 	// BackupImage is the default backup container image
-	BackupImage = "banhbaoring/backup:latest"
+	BackupImage = "popsigner/backup:latest"
 )
 
-// CronJob creates a CronJob for scheduled backups of a BanhBaoRingCluster.
-func CronJob(cluster *banhbaoringv1.BanhBaoRingCluster) *batchv1.CronJob {
+// CronJob creates a CronJob for scheduled backups of a POPSignerCluster.
+func CronJob(cluster *popsignerv1.POPSignerCluster) *batchv1.CronJob {
 	spec := cluster.Spec.Backup
 	name := fmt.Sprintf("%s-backup", cluster.Name)
 
@@ -74,7 +74,7 @@ func CronJob(cluster *banhbaoringv1.BanhBaoRingCluster) *batchv1.CronJob {
 }
 
 // buildEnv creates environment variables for the backup container.
-func buildEnv(cluster *banhbaoringv1.BanhBaoRingCluster) []corev1.EnvVar {
+func buildEnv(cluster *popsignerv1.POPSignerCluster) []corev1.EnvVar {
 	dest := cluster.Spec.Backup.Destination
 	var env []corev1.EnvVar
 

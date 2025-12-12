@@ -7,12 +7,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
 // HPA builds the HorizontalPodAutoscaler for the API.
-func HPA(cluster *banhbaoringv1.BanhBaoRingCluster) *autoscalingv2.HorizontalPodAutoscaler {
+func HPA(cluster *popsignerv1.POPSignerCluster) *autoscalingv2.HorizontalPodAutoscaler {
 	spec := cluster.Spec.API.Autoscaling
 	name := fmt.Sprintf("%s-api", cluster.Name)
 

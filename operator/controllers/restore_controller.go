@@ -15,28 +15,28 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 )
 
-// RestoreReconciler reconciles a BanhBaoRingRestore object
+// RestoreReconciler reconciles a POPSignerRestore object
 type RestoreReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=banhbaoring.io,resources=banhbaoringrestores,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=banhbaoring.io,resources=banhbaoringrestores/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=banhbaoring.io,resources=banhbaoringrestores/finalizers,verbs=update
+// +kubebuilder:rbac:groups=popsigner.com,resources=popsignerrestores,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=popsigner.com,resources=popsignerrestores/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=popsigner.com,resources=popsignerrestores/finalizers,verbs=update
 // +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;update;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop
 func (r *RestoreReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
-	log.Info("Reconciling BanhBaoRingRestore", "name", req.Name)
+	log.Info("Reconciling POPSignerRestore", "name", req.Name)
 
 	// Fetch the restore
-	restore := &banhbaoringv1.BanhBaoRingRestore{}
+	restore := &popsignerv1.POPSignerRestore{}
 	if err := r.Get(ctx, req.NamespacedName, restore); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
@@ -47,7 +47,7 @@ func (r *RestoreReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	// Get parent cluster
-	cluster := &banhbaoringv1.BanhBaoRingCluster{}
+	cluster := &popsignerv1.POPSignerCluster{}
 	if err := r.Get(ctx, client.ObjectKey{
 		Name:      restore.Spec.ClusterRef.Name,
 		Namespace: restore.Namespace,
@@ -58,7 +58,7 @@ func (r *RestoreReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	// Verify backup exists and is complete (if referencing a backup)
 	if restore.Spec.BackupRef != nil {
-		backup := &banhbaoringv1.BanhBaoRingBackup{}
+		backup := &popsignerv1.POPSignerBackup{}
 		if err := r.Get(ctx, client.ObjectKey{
 			Name:      restore.Spec.BackupRef.Name,
 			Namespace: restore.Namespace,
@@ -155,15 +155,15 @@ func (r *RestoreReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	return ctrl.Result{}, nil
 }
 
-func (r *RestoreReconciler) initializeSteps() []banhbaoringv1.RestoreStep {
-	return []banhbaoringv1.RestoreStep{
+func (r *RestoreReconciler) initializeSteps() []popsignerv1.RestoreStep {
+	return []popsignerv1.RestoreStep{
 		{Name: "stop-applications", Status: "Pending"},
 		{Name: "restore-data", Status: "Pending"},
 		{Name: "start-applications", Status: "Pending"},
 	}
 }
 
-func (r *RestoreReconciler) updateStep(restore *banhbaoringv1.BanhBaoRingRestore, stepName, status string) {
+func (r *RestoreReconciler) updateStep(restore *popsignerv1.POPSignerRestore, stepName, status string) {
 	for i, step := range restore.Status.Steps {
 		if step.Name == stepName {
 			restore.Status.Steps[i].Status = status
@@ -172,7 +172,7 @@ func (r *RestoreReconciler) updateStep(restore *banhbaoringv1.BanhBaoRingRestore
 	}
 }
 
-func (r *RestoreReconciler) scaleDownApps(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *RestoreReconciler) scaleDownApps(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	zero := int32(0)
 
 	// Scale API deployment to 0
@@ -198,7 +198,7 @@ func (r *RestoreReconciler) scaleDownApps(ctx context.Context, cluster *banhbaor
 	return nil
 }
 
-func (r *RestoreReconciler) scaleUpApps(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *RestoreReconciler) scaleUpApps(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	// Scale API deployment back up
 	apiDeployment := &appsv1.Deployment{}
 	apiName := fmt.Sprintf("%s-api", cluster.Name)
@@ -230,7 +230,7 @@ func (r *RestoreReconciler) scaleUpApps(ctx context.Context, cluster *banhbaorin
 	return nil
 }
 
-func (r *RestoreReconciler) appsScaledDown(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) bool {
+func (r *RestoreReconciler) appsScaledDown(ctx context.Context, cluster *popsignerv1.POPSignerCluster) bool {
 	// Check API deployment
 	apiDeployment := &appsv1.Deployment{}
 	apiName := fmt.Sprintf("%s-api", cluster.Name)
@@ -252,7 +252,7 @@ func (r *RestoreReconciler) appsScaledDown(ctx context.Context, cluster *banhbao
 	return true
 }
 
-func (r *RestoreReconciler) appsReady(ctx context.Context, cluster *banhbaoringv1.BanhBaoRingCluster) bool {
+func (r *RestoreReconciler) appsReady(ctx context.Context, cluster *popsignerv1.POPSignerCluster) bool {
 	// Check API deployment
 	apiDeployment := &appsv1.Deployment{}
 	apiName := fmt.Sprintf("%s-api", cluster.Name)
@@ -274,7 +274,7 @@ func (r *RestoreReconciler) appsReady(ctx context.Context, cluster *banhbaoringv
 	return true
 }
 
-func (r *RestoreReconciler) runRestore(ctx context.Context, restore *banhbaoringv1.BanhBaoRingRestore, cluster *banhbaoringv1.BanhBaoRingCluster) error {
+func (r *RestoreReconciler) runRestore(ctx context.Context, restore *popsignerv1.POPSignerRestore, cluster *popsignerv1.POPSignerCluster) error {
 	name := fmt.Sprintf("%s-restore", restore.Name)
 	backoffLimit := int32(2)
 
@@ -285,10 +285,10 @@ func (r *RestoreReconciler) runRestore(ctx context.Context, restore *banhbaoring
 			Name:      name,
 			Namespace: restore.Namespace,
 			Labels: map[string]string{
-				"app.kubernetes.io/name":       "banhbaoring-restore",
+				"app.kubernetes.io/name":       "popsigner-restore",
 				"app.kubernetes.io/instance":   restore.Name,
-				"app.kubernetes.io/managed-by": "banhbaoring-operator",
-				"banhbaoring.io/cluster":       cluster.Name,
+				"app.kubernetes.io/managed-by": "popsigner-operator",
+				"popsigner.com/cluster":        cluster.Name,
 			},
 		},
 		Spec: batchv1.JobSpec{
@@ -296,7 +296,7 @@ func (r *RestoreReconciler) runRestore(ctx context.Context, restore *banhbaoring
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app.kubernetes.io/name":     "banhbaoring-restore",
+						"app.kubernetes.io/name":     "popsigner-restore",
 						"app.kubernetes.io/instance": restore.Name,
 					},
 				},
@@ -304,7 +304,7 @@ func (r *RestoreReconciler) runRestore(ctx context.Context, restore *banhbaoring
 					RestartPolicy: corev1.RestartPolicyNever,
 					Containers: []corev1.Container{{
 						Name:            "restore",
-						Image:           "banhbaoring/backup:latest",
+						Image:           "popsigner/backup:latest",
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Command:         []string{"/bin/sh", "-c", script},
 						Env:             r.buildRestoreEnv(restore, cluster),
@@ -321,7 +321,7 @@ func (r *RestoreReconciler) runRestore(ctx context.Context, restore *banhbaoring
 	return r.Create(ctx, job)
 }
 
-func (r *RestoreReconciler) buildRestoreScript(restore *banhbaoringv1.BanhBaoRingRestore) string {
+func (r *RestoreReconciler) buildRestoreScript(restore *popsignerv1.POPSignerRestore) string {
 	return `#!/bin/sh
 set -e
 
@@ -345,7 +345,7 @@ echo "Restore completed successfully"
 `
 }
 
-func (r *RestoreReconciler) buildRestoreEnv(restore *banhbaoringv1.BanhBaoRingRestore, cluster *banhbaoringv1.BanhBaoRingCluster) []corev1.EnvVar {
+func (r *RestoreReconciler) buildRestoreEnv(restore *popsignerv1.POPSignerRestore, cluster *popsignerv1.POPSignerCluster) []corev1.EnvVar {
 	// Determine components to restore
 	components := restore.Spec.Components
 	if len(components) == 0 {
@@ -418,7 +418,7 @@ func (r *RestoreReconciler) buildRestoreEnv(restore *banhbaoringv1.BanhBaoRingRe
 	return env
 }
 
-func (r *RestoreReconciler) updateRestoreStatus(ctx context.Context, restore *banhbaoringv1.BanhBaoRingRestore, phase, message string) (ctrl.Result, error) {
+func (r *RestoreReconciler) updateRestoreStatus(ctx context.Context, restore *popsignerv1.POPSignerRestore, phase, message string) (ctrl.Result, error) {
 	restore.Status.Phase = phase
 
 	// Update conditions
@@ -460,7 +460,7 @@ func (r *RestoreReconciler) updateRestoreStatus(ctx context.Context, restore *ba
 // SetupWithManager sets up the controller with the Manager.
 func (r *RestoreReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&banhbaoringv1.BanhBaoRingRestore{}).
+		For(&popsignerv1.POPSignerRestore{}).
 		Owns(&batchv1.Job{}).
 		Complete(r)
 }

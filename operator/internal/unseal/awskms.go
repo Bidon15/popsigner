@@ -6,7 +6,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 )
 
 // AWSKMSProvider implements the Provider interface for AWS KMS.
@@ -18,7 +18,7 @@ func (p *AWSKMSProvider) Name() string {
 }
 
 // Validate checks if the configuration is valid.
-func (p *AWSKMSProvider) Validate(spec *banhbaoringv1.AutoUnsealSpec) error {
+func (p *AWSKMSProvider) Validate(spec *popsignerv1.AutoUnsealSpec) error {
 	if spec.AWSKMS == nil {
 		return fmt.Errorf("awskms configuration required")
 	}
@@ -29,7 +29,7 @@ func (p *AWSKMSProvider) Validate(spec *banhbaoringv1.AutoUnsealSpec) error {
 }
 
 // GetConfig returns the HCL configuration for the seal stanza.
-func (p *AWSKMSProvider) GetConfig(spec *banhbaoringv1.AutoUnsealSpec) string {
+func (p *AWSKMSProvider) GetConfig(spec *popsignerv1.AutoUnsealSpec) string {
 	if spec.AWSKMS == nil {
 		return ""
 	}
@@ -46,7 +46,7 @@ func (p *AWSKMSProvider) GetConfig(spec *banhbaoringv1.AutoUnsealSpec) string {
 }
 
 // GetEnvVars returns environment variables needed by the provider.
-func (p *AWSKMSProvider) GetEnvVars(ctx context.Context, spec *banhbaoringv1.AutoUnsealSpec, namespace string) ([]corev1.EnvVar, error) {
+func (p *AWSKMSProvider) GetEnvVars(ctx context.Context, spec *popsignerv1.AutoUnsealSpec, namespace string) ([]corev1.EnvVar, error) {
 	var envVars []corev1.EnvVar
 
 	if spec.AWSKMS == nil {
@@ -92,13 +92,13 @@ func (p *AWSKMSProvider) GetEnvVars(ctx context.Context, spec *banhbaoringv1.Aut
 }
 
 // GetVolumes returns additional volumes needed by the provider.
-func (p *AWSKMSProvider) GetVolumes(spec *banhbaoringv1.AutoUnsealSpec) []corev1.Volume {
+func (p *AWSKMSProvider) GetVolumes(spec *popsignerv1.AutoUnsealSpec) []corev1.Volume {
 	// AWS KMS doesn't require additional volumes
 	return nil
 }
 
 // GetVolumeMounts returns additional volume mounts needed by the provider.
-func (p *AWSKMSProvider) GetVolumeMounts(spec *banhbaoringv1.AutoUnsealSpec) []corev1.VolumeMount {
+func (p *AWSKMSProvider) GetVolumeMounts(spec *popsignerv1.AutoUnsealSpec) []corev1.VolumeMount {
 	// AWS KMS doesn't require additional volume mounts
 	return nil
 }

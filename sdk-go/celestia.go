@@ -1,12 +1,12 @@
-// Celestia integration for BanhBaoRing SDK.
+// Celestia integration for POPSigner SDK.
 //
 // This package provides a drop-in keyring implementation for the Celestia Node client,
-// allowing you to use BanhBaoRing as a secure remote signer for blob submission.
+// allowing you to use POPSigner as a secure remote signer for blob submission.
 //
 // Example usage:
 //
-//	// Create a Celestia-compatible keyring backed by BanhBaoRing
-//	kr, err := banhbaoring.NewCelestiaKeyring("your-api-key", "your-key-id")
+//	// Create a Celestia-compatible keyring backed by POPSigner
+//	kr, err := popsigner.NewCelestiaKeyring("your-api-key", "your-key-id")
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
@@ -24,7 +24,7 @@
 //	}
 //
 //	celestiaClient, err := client.New(ctx, cfg, kr)
-package banhbaoring
+package popsigner
 
 import (
 	"context"
@@ -35,7 +35,7 @@ import (
 )
 
 // CelestiaKeyring implements keyring functionality for the Celestia Node client.
-// It uses BanhBaoRing as the backend for secure remote signing.
+// It uses POPSigner as the backend for secure remote signing.
 //
 // This keyring can be passed directly to the Celestia client.New() function.
 type CelestiaKeyring struct {
@@ -61,14 +61,14 @@ func WithCelestiaBaseURL(url string) CelestiaKeyringOption {
 	}
 }
 
-// NewCelestiaKeyring creates a new Celestia-compatible keyring backed by BanhBaoRing.
+// NewCelestiaKeyring creates a new Celestia-compatible keyring backed by POPSigner.
 //
-// The apiKey is your BanhBaoRing API key.
+// The apiKey is your POPSigner API key.
 // The keyID is the UUID of the signing key to use.
 //
 // Example:
 //
-//	kr, err := banhbaoring.NewCelestiaKeyring("bbr_live_xxx", "344399b0-1234-5678-9abc-def012345678")
+//	kr, err := popsigner.NewCelestiaKeyring("psk_live_xxx", "344399b0-1234-5678-9abc-def012345678")
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
@@ -80,7 +80,7 @@ func NewCelestiaKeyring(apiKey, keyID string, opts ...CelestiaKeyringOption) (*C
 		opt(cfg)
 	}
 
-	// Create BanhBaoRing client
+	// Create POPSigner client
 	clientOpts := []Option{}
 	if cfg.baseURL != "" {
 		clientOpts = append(clientOpts, WithBaseURL(cfg.baseURL))
@@ -123,7 +123,7 @@ func (k *CelestiaKeyring) KeyName() string {
 	return k.keyName
 }
 
-// KeyID returns the BanhBaoRing key ID.
+// KeyID returns the POPSigner key ID.
 func (k *CelestiaKeyring) KeyID() string {
 	return k.keyID
 }
@@ -143,7 +143,7 @@ func (k *CelestiaKeyring) PublicKey() []byte {
 	return k.pubKey
 }
 
-// Sign signs a message using BanhBaoRing.
+// Sign signs a message using POPSigner.
 // This implements the signing interface expected by the Celestia client.
 func (k *CelestiaKeyring) Sign(name string, msg []byte) ([]byte, []byte, error) {
 	keyUUID, err := uuid.Parse(k.keyID)
@@ -241,4 +241,3 @@ func bech32Polymod(values []byte) int {
 	}
 	return chk
 }
-

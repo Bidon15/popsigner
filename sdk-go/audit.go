@@ -1,4 +1,4 @@
-package banhbaoring
+package popsigner
 
 import (
 	"context"
@@ -51,15 +51,15 @@ type AuditListResponse struct {
 //
 //	// Get logs for a specific key
 //	keyID := uuid.MustParse("...")
-//	resp, err := client.Audit.List(ctx, &banhbaoring.AuditFilter{
-//	    ResourceType: banhbaoring.Ptr(banhbaoring.ResourceTypeKey),
+//	resp, err := client.Audit.List(ctx, &popsigner.AuditFilter{
+//	    ResourceType: popsigner.Ptr(popsigner.ResourceTypeKey),
 //	    ResourceID:   &keyID,
 //	})
 //
 //	// Paginate through results
 //	resp, _ := client.Audit.List(ctx, nil)
 //	for resp.NextCursor != "" {
-//	    resp, _ = client.Audit.List(ctx, &banhbaoring.AuditFilter{Cursor: resp.NextCursor})
+//	    resp, _ = client.Audit.List(ctx, &popsigner.AuditFilter{Cursor: resp.NextCursor})
 //	}
 func (s *AuditService) List(ctx context.Context, filter *AuditFilter) (*AuditListResponse, error) {
 	// Build query parameters
@@ -174,10 +174,9 @@ func (r *auditLogResponse) toAuditLog() *AuditLog {
 //
 // Example:
 //
-//	filter := &banhbaoring.AuditFilter{
-//	    Event: banhbaoring.Ptr(banhbaoring.AuditEventKeySigned),
+//	filter := &popsigner.AuditFilter{
+//	    Event: popsigner.Ptr(popsigner.AuditEventKeySigned),
 //	}
 func Ptr[T any](v T) *T {
 	return &v
 }
-

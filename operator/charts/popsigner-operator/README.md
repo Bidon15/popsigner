@@ -1,6 +1,6 @@
-# BanhBaoRing Operator Helm Chart
+# POPSigner Operator Helm Chart
 
-Deploy and manage secure key infrastructure with the BanhBaoRing Kubernetes Operator.
+Deploy and manage secure key infrastructure with the POPSigner Kubernetes Operator.
 
 ## Prerequisites
 
@@ -14,23 +14,23 @@ Deploy and manage secure key infrastructure with the BanhBaoRing Kubernetes Oper
 ### Add the Helm repository
 
 ```bash
-helm repo add banhbaoring https://charts.banhbaoring.io
+helm repo add popsigner https://charts.popsigner.com
 helm repo update
 ```
 
 ### Install the chart
 
 ```bash
-helm install banhbaoring-operator banhbaoring/banhbaoring-operator \
-  --namespace banhbaoring-system \
+helm install popsigner-operator popsigner/popsigner-operator \
+  --namespace popsigner-system \
   --create-namespace
 ```
 
 ### Install from local chart
 
 ```bash
-helm install banhbaoring-operator ./charts/banhbaoring-operator \
-  --namespace banhbaoring-system \
+helm install popsigner-operator ./charts/popsigner-operator \
+  --namespace popsigner-system \
   --create-namespace
 ```
 
@@ -41,7 +41,7 @@ The following table lists the configurable parameters:
 | Parameter                    | Description                          | Default                |
 | ---------------------------- | ------------------------------------ | ---------------------- |
 | `replicaCount`               | Number of operator replicas          | `1`                    |
-| `image.repository`           | Operator image repository            | `banhbaoring/operator` |
+| `image.repository`           | Operator image repository            | `popsigner/operator`   |
 | `image.tag`                  | Operator image tag                   | `""` (uses appVersion) |
 | `image.pullPolicy`           | Image pull policy                    | `IfNotPresent`         |
 | `imagePullSecrets`           | Image pull secrets                   | `[]`                   |
@@ -67,22 +67,22 @@ The following table lists the configurable parameters:
 
 ## Usage
 
-After installing the operator, you can deploy BanhBaoRing clusters:
+After installing the operator, you can deploy POPSigner clusters:
 
 ### Create a namespace
 
 ```bash
-kubectl create namespace banhbaoring
+kubectl create namespace popsigner
 ```
 
 ### Deploy a minimal cluster
 
 ```yaml
-apiVersion: banhbaoring.io/v1
-kind: BanhBaoRingCluster
+apiVersion: popsigner.com/v1
+kind: POPSignerCluster
 metadata:
   name: production
-  namespace: banhbaoring
+  namespace: popsigner
 spec:
   domain: keys.mycompany.com
   openbao:
@@ -96,11 +96,11 @@ spec:
 ### Deploy a tenant
 
 ```yaml
-apiVersion: banhbaoring.io/v1
-kind: BanhBaoRingTenant
+apiVersion: popsigner.com/v1
+kind: POPSignerTenant
 metadata:
   name: my-org
-  namespace: banhbaoring
+  namespace: popsigner
 spec:
   clusterRef:
     name: production
@@ -112,36 +112,36 @@ spec:
 
 This chart installs the following Custom Resource Definitions:
 
-- `BanhBaoRingCluster` - Manages the full BanhBaoRing infrastructure
-- `BanhBaoRingTenant` - Manages tenant organizations
-- `BanhBaoRingBackup` - Manages backup operations
-- `BanhBaoRingRestore` - Manages restore operations
+- `POPSignerCluster` - Manages the full POPSigner infrastructure
+- `POPSignerTenant` - Manages tenant organizations
+- `POPSignerBackup` - Manages backup operations
+- `POPSignerRestore` - Manages restore operations
 
 ## Upgrading
 
 ### From 0.x to 1.x
 
 ```bash
-helm upgrade banhbaoring-operator banhbaoring/banhbaoring-operator \
-  --namespace banhbaoring-system
+helm upgrade popsigner-operator popsigner/popsigner-operator \
+  --namespace popsigner-system
 ```
 
 ## Uninstallation
 
 ```bash
-helm uninstall banhbaoring-operator --namespace banhbaoring-system
+helm uninstall popsigner-operator --namespace popsigner-system
 ```
 
 **Note:** CRDs are not automatically deleted. To remove them:
 
 ```bash
-kubectl delete crd banhbaoringclusters.banhbaoring.io
-kubectl delete crd banhbaoringtenants.banhbaoring.io
-kubectl delete crd banhbaoringbackups.banhbaoring.io
-kubectl delete crd banhbaoringrestores.banhbaoring.io
+kubectl delete crd popsignerclusters.popsigner.com
+kubectl delete crd popsignertenants.popsigner.com
+kubectl delete crd popsignerbackups.popsigner.com
+kubectl delete crd popsignerrestores.popsigner.com
 ```
 
 ## Support
 
-- Documentation: https://banhbaoring.io/docs
+- Documentation: https://popsigner.com/docs
 - Issues: https://github.com/Bidon15/banhbaoring/issues

@@ -7,12 +7,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
 // MigrationJob creates a Job to run database migrations
-func MigrationJob(cluster *banhbaoringv1.BanhBaoRingCluster, apiVersion string) *batchv1.Job {
+func MigrationJob(cluster *popsignerv1.POPSignerCluster, apiVersion string) *batchv1.Job {
 	name := fmt.Sprintf("%s-migrate", cluster.Name)
 	labels := constants.Labels(cluster.Name, "migration", apiVersion)
 
@@ -36,7 +36,7 @@ func MigrationJob(cluster *banhbaoringv1.BanhBaoRingCluster, apiVersion string) 
 					Containers: []corev1.Container{
 						{
 							Name:  "migrate",
-							Image: fmt.Sprintf("banhbaoring/control-plane:%s", apiVersion),
+							Image: fmt.Sprintf("popsigner/control-plane:%s", apiVersion),
 							Command: []string{
 								"/app/control-plane",
 								"migrate",

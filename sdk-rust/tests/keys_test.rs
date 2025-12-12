@@ -1,6 +1,6 @@
 //! Integration tests for key management.
 
-use banhbaoring::{Client, ClientConfig, CreateBatchRequest, CreateKeyRequest, Key};
+use popsigner::{Client, ClientConfig, CreateBatchRequest, CreateKeyRequest, Key};
 use wiremock::matchers::{body_json, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -214,4 +214,3 @@ async fn test_delete_key() {
 
     assert!(result.is_ok());
 }
-

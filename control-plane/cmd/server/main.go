@@ -271,7 +271,11 @@ func signupPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		errorMsg := r.URL.Query().Get("error")
-		pages.SignupPage(errorMsg).Render(r.Context(), w)
+		formValues := pages.SignupFormValues{
+			Name:  r.URL.Query().Get("name"),
+			Email: r.URL.Query().Get("email"),
+		}
+		pages.SignupPage(errorMsg, formValues).Render(r.Context(), w)
 	}
 }
 

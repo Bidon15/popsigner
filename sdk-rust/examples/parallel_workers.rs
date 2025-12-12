@@ -1,23 +1,23 @@
-//! Parallel workers example for the BanhBaoRing SDK.
+//! Parallel workers example for the POPSigner SDK.
 //!
-//! This example demonstrates Celestia's parallel blob submission pattern:
+//! This example demonstrates the parallel signing pattern:
 //! - Creating multiple worker keys in a batch
 //! - Signing multiple transactions in parallel
 //!
 //! Run with:
 //! ```bash
-//! BANHBAORING_API_KEY=bbr_live_xxx NAMESPACE_ID=... cargo run --example parallel_workers
+//! POPSIGNER_API_KEY=psk_live_xxx NAMESPACE_ID=... cargo run --example parallel_workers
 //! ```
 
-use banhbaoring::{BatchSignItem, BatchSignRequest, Client, CreateBatchRequest};
+use popsigner::{BatchSignItem, BatchSignRequest, Client, CreateBatchRequest};
 use std::time::Instant;
 use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Get API key from environment
-    let api_key = std::env::var("BANHBAORING_API_KEY")
-        .expect("BANHBAORING_API_KEY environment variable required");
+    let api_key = std::env::var("POPSIGNER_API_KEY")
+        .expect("POPSIGNER_API_KEY environment variable required");
     let namespace_id: Uuid = std::env::var("NAMESPACE_ID")
         .expect("NAMESPACE_ID environment variable required")
         .parse()
@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let client = Client::new(&api_key);
 
-    // Create 4 worker keys for parallel blob submission
+    // Create 4 worker keys for parallel signing
     println!("Creating worker keys...");
     let start = Instant::now();
 
@@ -48,12 +48,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("  - {}: {}", key.name, key.address);
     }
 
-    // Simulate parallel blob transactions
+    // Simulate parallel transactions
     let transactions: Vec<Vec<u8>> = vec![
-        b"blob-tx-1: data for namespace A".to_vec(),
-        b"blob-tx-2: data for namespace B".to_vec(),
-        b"blob-tx-3: data for namespace C".to_vec(),
-        b"blob-tx-4: data for namespace D".to_vec(),
+        b"tx-1: data for namespace A".to_vec(),
+        b"tx-2: data for namespace B".to_vec(),
+        b"tx-3: data for namespace C".to_vec(),
+        b"tx-4: data for namespace D".to_vec(),
     ];
 
     // Sign all 4 transactions in parallel with one API call
@@ -113,4 +113,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nDone!");
     Ok(())
 }
-

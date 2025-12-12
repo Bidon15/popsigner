@@ -1,4 +1,4 @@
-package banhbaoring
+package popsigner
 
 import (
 	"errors"
@@ -7,33 +7,33 @@ import (
 
 // Sentinel errors - Configuration
 var (
-	ErrMissingBaoAddr   = errors.New("banhbaoring: BaoAddr is required")
-	ErrMissingBaoToken  = errors.New("banhbaoring: BaoToken is required")
-	ErrMissingStorePath = errors.New("banhbaoring: StorePath is required")
+	ErrMissingBaoAddr   = errors.New("popsigner: BaoAddr is required")
+	ErrMissingBaoToken  = errors.New("popsigner: BaoToken is required")
+	ErrMissingStorePath = errors.New("popsigner: StorePath is required")
 )
 
 // Sentinel errors - Keys
 var (
-	ErrKeyNotFound      = errors.New("banhbaoring: key not found")
-	ErrKeyExists        = errors.New("banhbaoring: key already exists")
-	ErrKeyNotExportable = errors.New("banhbaoring: key is not exportable")
+	ErrKeyNotFound      = errors.New("popsigner: key not found")
+	ErrKeyExists        = errors.New("popsigner: key already exists")
+	ErrKeyNotExportable = errors.New("popsigner: key is not exportable")
 )
 
 // Sentinel errors - OpenBao
 var (
-	ErrBaoConnection  = errors.New("banhbaoring: failed to connect to OpenBao")
-	ErrBaoAuth        = errors.New("banhbaoring: authentication failed")
-	ErrBaoSealed      = errors.New("banhbaoring: OpenBao is sealed")
-	ErrBaoUnavailable = errors.New("banhbaoring: OpenBao is unavailable")
+	ErrBaoConnection  = errors.New("popsigner: failed to connect to OpenBao")
+	ErrBaoAuth        = errors.New("popsigner: authentication failed")
+	ErrBaoSealed      = errors.New("popsigner: OpenBao is sealed")
+	ErrBaoUnavailable = errors.New("popsigner: OpenBao is unavailable")
 )
 
 // Sentinel errors - Operations
 var (
-	ErrSigningFailed    = errors.New("banhbaoring: signing failed")
-	ErrInvalidSignature = errors.New("banhbaoring: invalid signature")
-	ErrUnsupportedAlgo  = errors.New("banhbaoring: unsupported algorithm")
-	ErrStorePersist     = errors.New("banhbaoring: failed to persist")
-	ErrStoreCorrupted   = errors.New("banhbaoring: store corrupted")
+	ErrSigningFailed    = errors.New("popsigner: signing failed")
+	ErrInvalidSignature = errors.New("popsigner: invalid signature")
+	ErrUnsupportedAlgo  = errors.New("popsigner: unsupported algorithm")
+	ErrStorePersist     = errors.New("popsigner: failed to persist")
+	ErrStoreCorrupted   = errors.New("popsigner: store corrupted")
 )
 
 // BaoError represents an OpenBao API error.

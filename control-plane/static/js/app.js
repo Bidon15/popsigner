@@ -1,6 +1,7 @@
 /**
- * BanhBaoRing Dashboard JavaScript
+ * POPSigner Dashboard JavaScript
  * Utilities and integrations for HTMX + Alpine.js
+ * Point-of-Presence signing infrastructure
  */
 
 // ============================================
@@ -46,8 +47,8 @@ window.showToast = (message, variant = 'info') => {
   const colors = {
     success: 'bg-emerald-500/90 border-emerald-400/50 text-white',
     error: 'bg-red-500/90 border-red-400/50 text-white',
-    warning: 'bg-amber-500/90 border-amber-400/50 text-bao-bg',
-    info: 'bg-bao-accent/90 border-bao-accent/50 text-white',
+    warning: 'bg-amber-500/90 border-amber-400/50 text-black',
+    info: 'bg-phosphor-amber/90 border-phosphor-amber/50 text-black',
   };
 
   const toast = document.createElement('div');
@@ -153,21 +154,21 @@ window.confirmAction = (options) => {
 
   modalContent.innerHTML = `
     <div class="max-w-sm w-full">
-      <div class="flex items-center justify-between p-5 border-b border-bao-border">
-        <h3 class="text-lg font-heading font-semibold text-bao-text">${escapeHtml(title)}</h3>
-        <button onclick="closeModal()" class="p-1.5 text-bao-muted hover:text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors">
+      <div class="flex items-center justify-between p-5 border-b border-phosphor-amber-dark">
+        <h3 class="text-lg font-mono font-semibold text-phosphor-amber">${escapeHtml(title)}</h3>
+        <button onclick="closeModal()" class="p-1.5 text-phosphor-amber-dim hover:text-phosphor-amber hover:bg-phosphor-amber/10 rounded transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
       </div>
       <div class="p-5">
-        <p class="text-bao-muted mb-6">${escapeHtml(message)}</p>
+        <p class="text-phosphor-amber-dim mb-6">${escapeHtml(message)}</p>
         <div class="flex items-center justify-end gap-3">
-          <button onclick="closeModal()" class="px-4 py-2 text-sm font-medium text-bao-muted hover:text-bao-text hover:bg-bao-border/30 rounded-lg transition-colors">
+          <button onclick="closeModal()" class="px-4 py-2 text-sm font-medium text-phosphor-amber-dim hover:text-phosphor-amber hover:bg-phosphor-amber/10 rounded transition-colors">
             ${escapeHtml(cancelText)}
           </button>
-          <button id="confirm-action-btn" class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${variant === 'danger' ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-gradient-to-r from-amber-400 to-rose-500 text-bao-bg hover:shadow-lg'}">
+          <button id="confirm-action-btn" class="px-4 py-2 text-sm font-medium rounded transition-all duration-200 ${variant === 'danger' ? 'bg-terminal-red text-white hover:bg-terminal-red-dim' : 'bg-phosphor-amber text-black hover:shadow-glow-amber'}">
             ${escapeHtml(confirmText)}
           </button>
         </div>
@@ -255,6 +256,6 @@ document.addEventListener('keydown', (e) => {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('🔔 BanhBaoRing Dashboard initialized');
+  console.log('⚡ POPSigner Dashboard initialized');
 });
 

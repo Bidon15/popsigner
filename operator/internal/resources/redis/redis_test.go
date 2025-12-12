@@ -6,23 +6,23 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
 func TestStatefulSet(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			Redis: banhbaoringv1.RedisSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			Redis: popsignerv1.RedisSpec{
 				Managed:  true,
 				Version:  "7",
 				Mode:     "standalone",
 				Replicas: 1,
-				Storage: banhbaoringv1.StorageSpec{
+				Storage: popsignerv1.StorageSpec{
 					Size:         resource.MustParse("5Gi"),
 					StorageClass: "standard",
 				},
@@ -88,16 +88,16 @@ func TestStatefulSet(t *testing.T) {
 }
 
 func TestStatefulSetDefaultVersion(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			Redis: banhbaoringv1.RedisSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			Redis: popsignerv1.RedisSpec{
 				Managed: true,
 				// Version not set
-				Storage: banhbaoringv1.StorageSpec{
+				Storage: popsignerv1.StorageSpec{
 					Size: resource.MustParse("5Gi"),
 				},
 			},
@@ -114,17 +114,17 @@ func TestStatefulSetDefaultVersion(t *testing.T) {
 }
 
 func TestStatefulSetDefaultReplicas(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			Redis: banhbaoringv1.RedisSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			Redis: popsignerv1.RedisSpec{
 				Managed: true,
 				Version: "7",
 				// Replicas not set (0)
-				Storage: banhbaoringv1.StorageSpec{
+				Storage: popsignerv1.StorageSpec{
 					Size: resource.MustParse("5Gi"),
 				},
 			},
@@ -140,13 +140,13 @@ func TestStatefulSetDefaultReplicas(t *testing.T) {
 }
 
 func TestService(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			Redis: banhbaoringv1.RedisSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			Redis: popsignerv1.RedisSpec{
 				Managed: true,
 				Version: "7",
 			},
@@ -176,13 +176,13 @@ func TestService(t *testing.T) {
 }
 
 func TestConnectionSecret(t *testing.T) {
-	cluster := &banhbaoringv1.BanhBaoRingCluster{
+	cluster := &popsignerv1.POPSignerCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
 			Namespace: "default",
 		},
-		Spec: banhbaoringv1.BanhBaoRingClusterSpec{
-			Redis: banhbaoringv1.RedisSpec{
+		Spec: popsignerv1.POPSignerClusterSpec{
+			Redis: popsignerv1.RedisSpec{
 				Managed: true,
 				Version: "7",
 			},

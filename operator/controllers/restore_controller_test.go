@@ -8,7 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 )
 
 var _ = Describe("RestoreController", func() {
@@ -17,16 +17,16 @@ var _ = Describe("RestoreController", func() {
 		interval = time.Millisecond * 250
 	)
 
-	Context("When creating a BanhBaoRingRestore", func() {
+	Context("When creating a POPSignerRestore", func() {
 		It("Should fail when parent cluster is not found", func() {
 			By("Creating a restore without a parent cluster")
-			restore := &banhbaoringv1.BanhBaoRingRestore{
+			restore := &popsignerv1.POPSignerRestore{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-restore-no-cluster",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingRestoreSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerRestoreSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "non-existent-cluster",
 					},
 				},
@@ -39,7 +39,7 @@ var _ = Describe("RestoreController", func() {
 			}()
 
 			restoreLookupKey := types.NamespacedName{Name: "test-restore-no-cluster", Namespace: "default"}
-			createdRestore := &banhbaoringv1.BanhBaoRingRestore{}
+			createdRestore := &popsignerv1.POPSignerRestore{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, restoreLookupKey, createdRestore)
@@ -49,16 +49,16 @@ var _ = Describe("RestoreController", func() {
 
 		It("Should create restore with backup reference", func() {
 			By("Creating a restore with backup reference")
-			restore := &banhbaoringv1.BanhBaoRingRestore{
+			restore := &popsignerv1.POPSignerRestore{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-restore-with-backup",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingRestoreSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerRestoreSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "test-cluster",
 					},
-					BackupRef: &banhbaoringv1.BackupReference{
+					BackupRef: &popsignerv1.BackupReference{
 						Name: "my-backup",
 					},
 				},
@@ -71,7 +71,7 @@ var _ = Describe("RestoreController", func() {
 			}()
 
 			restoreLookupKey := types.NamespacedName{Name: "test-restore-with-backup", Namespace: "default"}
-			createdRestore := &banhbaoringv1.BanhBaoRingRestore{}
+			createdRestore := &popsignerv1.POPSignerRestore{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, restoreLookupKey, createdRestore)
@@ -84,21 +84,21 @@ var _ = Describe("RestoreController", func() {
 
 		It("Should create restore with direct source", func() {
 			By("Creating a restore with direct S3 source")
-			restore := &banhbaoringv1.BanhBaoRingRestore{
+			restore := &popsignerv1.POPSignerRestore{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-restore-direct",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingRestoreSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerRestoreSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "test-cluster",
 					},
-					Source: &banhbaoringv1.BackupDestination{
-						S3: &banhbaoringv1.S3Destination{
+					Source: &popsignerv1.BackupDestination{
+						S3: &popsignerv1.S3Destination{
 							Bucket: "restore-bucket",
 							Region: "us-west-2",
 							Prefix: "backups/20241210-020000/",
-							Credentials: banhbaoringv1.SecretKeyRef{
+							Credentials: popsignerv1.SecretKeyRef{
 								Name: "aws-credentials",
 								Key:  "credentials",
 							},
@@ -114,7 +114,7 @@ var _ = Describe("RestoreController", func() {
 			}()
 
 			restoreLookupKey := types.NamespacedName{Name: "test-restore-direct", Namespace: "default"}
-			createdRestore := &banhbaoringv1.BanhBaoRingRestore{}
+			createdRestore := &popsignerv1.POPSignerRestore{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, restoreLookupKey, createdRestore)
@@ -128,20 +128,20 @@ var _ = Describe("RestoreController", func() {
 
 		It("Should create restore with custom options", func() {
 			By("Creating a restore with custom options")
-			restore := &banhbaoringv1.BanhBaoRingRestore{
+			restore := &popsignerv1.POPSignerRestore{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-restore-options",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingRestoreSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerRestoreSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "test-cluster",
 					},
-					BackupRef: &banhbaoringv1.BackupReference{
+					BackupRef: &popsignerv1.BackupReference{
 						Name: "my-backup",
 					},
 					Components: []string{"openbao"},
-					Options: banhbaoringv1.RestoreOptions{
+					Options: popsignerv1.RestoreOptions{
 						StopApplications: true,
 						VerifyBackup:     true,
 					},
@@ -155,7 +155,7 @@ var _ = Describe("RestoreController", func() {
 			}()
 
 			restoreLookupKey := types.NamespacedName{Name: "test-restore-options", Namespace: "default"}
-			createdRestore := &banhbaoringv1.BanhBaoRingRestore{}
+			createdRestore := &popsignerv1.POPSignerRestore{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, restoreLookupKey, createdRestore)
@@ -187,9 +187,9 @@ var _ = Describe("RestoreController", func() {
 		It("Should update step status correctly", func() {
 			reconciler := &RestoreReconciler{}
 
-			restore := &banhbaoringv1.BanhBaoRingRestore{
-				Status: banhbaoringv1.BanhBaoRingRestoreStatus{
-					Steps: []banhbaoringv1.RestoreStep{
+			restore := &popsignerv1.POPSignerRestore{
+				Status: popsignerv1.POPSignerRestoreStatus{
+					Steps: []popsignerv1.RestoreStep{
 						{Name: "stop-applications", Status: "Pending"},
 						{Name: "restore-data", Status: "Pending"},
 						{Name: "start-applications", Status: "Pending"},
@@ -209,21 +209,21 @@ var _ = Describe("RestoreController", func() {
 	})
 
 	Context("When restore has a ready cluster", func() {
-		var cluster *banhbaoringv1.BanhBaoRingCluster
+		var cluster *popsignerv1.POPSignerCluster
 
 		BeforeEach(func() {
 			By("Creating a parent cluster for restore tests")
-			cluster = &banhbaoringv1.BanhBaoRingCluster{
+			cluster = &popsignerv1.POPSignerCluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "restore-test-cluster",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingClusterSpec{
+				Spec: popsignerv1.POPSignerClusterSpec{
 					Domain: "keys.example.com",
-					API: banhbaoringv1.APISpec{
+					API: popsignerv1.APISpec{
 						Replicas: 2,
 					},
-					Dashboard: banhbaoringv1.DashboardSpec{
+					Dashboard: popsignerv1.DashboardSpec{
 						Replicas: 2,
 					},
 				},
@@ -241,19 +241,19 @@ var _ = Describe("RestoreController", func() {
 
 		It("Should create restore for the cluster", func() {
 			By("Creating a restore for the ready cluster")
-			restore := &banhbaoringv1.BanhBaoRingRestore{
+			restore := &popsignerv1.POPSignerRestore{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-restore-ready",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingRestoreSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerRestoreSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "restore-test-cluster",
 					},
-					BackupRef: &banhbaoringv1.BackupReference{
+					BackupRef: &popsignerv1.BackupReference{
 						Name: "latest-backup",
 					},
-					Options: banhbaoringv1.RestoreOptions{
+					Options: popsignerv1.RestoreOptions{
 						StopApplications: true,
 					},
 				},
@@ -265,7 +265,7 @@ var _ = Describe("RestoreController", func() {
 			}()
 
 			restoreLookupKey := types.NamespacedName{Name: "test-restore-ready", Namespace: "default"}
-			createdRestore := &banhbaoringv1.BanhBaoRingRestore{}
+			createdRestore := &popsignerv1.POPSignerRestore{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, restoreLookupKey, createdRestore)
@@ -282,13 +282,13 @@ var _ = Describe("RestoreJob", func() {
 		It("Should create job with correct structure", func() {
 			reconciler := &RestoreReconciler{}
 
-			restore := &banhbaoringv1.BanhBaoRingRestore{
+			restore := &popsignerv1.POPSignerRestore{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-restore",
 					Namespace: "default",
 				},
-				Spec: banhbaoringv1.BanhBaoRingRestoreSpec{
-					ClusterRef: banhbaoringv1.ClusterReference{
+				Spec: popsignerv1.POPSignerRestoreSpec{
+					ClusterRef: popsignerv1.ClusterReference{
 						Name: "test-cluster",
 					},
 					Components: []string{"openbao", "database"},

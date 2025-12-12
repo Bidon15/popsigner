@@ -1,4 +1,4 @@
-// Package dashboard provides Dashboard resource builders for the BanhBaoRing operator.
+// Package dashboard provides Dashboard resource builders for the POPSigner operator.
 package dashboard
 
 import (
@@ -10,17 +10,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	banhbaoringv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
+	popsignerv1 "github.com/Bidon15/banhbaoring/operator/api/v1"
 	"github.com/Bidon15/banhbaoring/operator/internal/constants"
 )
 
 const (
-	DashboardImage = "banhbaoring/dashboard"
+	DashboardImage = "popsigner/dashboard"
 	DashboardPort  = 3000
 )
 
 // Deployment builds the Dashboard Deployment.
-func Deployment(cluster *banhbaoringv1.BanhBaoRingCluster) *appsv1.Deployment {
+func Deployment(cluster *popsignerv1.POPSignerCluster) *appsv1.Deployment {
 	spec := cluster.Spec.Dashboard
 	name := fmt.Sprintf("%s-dashboard", cluster.Name)
 

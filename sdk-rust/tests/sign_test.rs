@@ -1,7 +1,7 @@
 //! Integration tests for signing operations.
 
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
-use banhbaoring::{BatchSignItem, BatchSignRequest, Client, ClientConfig};
+use popsigner::{BatchSignItem, BatchSignRequest, Client, ClientConfig};
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -245,4 +245,3 @@ async fn test_verify_invalid_signature() {
 
     assert!(!valid);
 }
-

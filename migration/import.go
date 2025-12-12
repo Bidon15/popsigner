@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Bidon15/banhbaoring"
+	popsigner "github.com/Bidon15/banhbaoring"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -171,7 +171,7 @@ func BatchImport(ctx context.Context, cfg BatchImportConfig) (*BatchImportResult
 }
 
 // verifyImportedKey verifies that a key was successfully imported by signing a test message.
-func verifyImportedKey(_ context.Context, kr *banhbaoring.BaoKeyring, name string, _ []byte) bool {
+func verifyImportedKey(_ context.Context, kr *popsigner.BaoKeyring, name string, _ []byte) bool {
 	// Sign a test message using the imported key
 	testMessage := []byte("verification-test-message")
 	sig, pubKey, err := kr.Sign(name, testMessage, signing.SignMode_SIGN_MODE_DIRECT)
