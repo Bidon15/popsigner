@@ -323,7 +323,7 @@ All signatures **MUST** match Cosmos expected format:
 - Private keys remain sealed inside OpenBao at all times
 - Only signatures are returned to callers
 - Maximum security for production rollups
-- Comparable to HSM-level protection
+- Vault-grade security (HSM optional for future)
 
 **Portability:** Users who prefer AWS KMS or GCP Cloud KMS can fork the client library and implement a hybrid approach. The `keyring.Keyring` interface remains the same.
 

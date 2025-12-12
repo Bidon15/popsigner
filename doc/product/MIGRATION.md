@@ -22,7 +22,7 @@ This document provides detailed instructions for migrating keys between local Co
 
 **Export (OpenBao → Local):**
 - Only works for keys created with `exportable: true`
-- Compromises security model (key leaves HSM/Transit)
+- Compromises security model (key leaves OpenBao vault)
 - Should be rare, deliberate operation
 - Requires explicit user confirmation
 

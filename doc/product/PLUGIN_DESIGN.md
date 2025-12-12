@@ -687,7 +687,7 @@ func (k *BaoKeyring) Sign(uid string, msg []byte, signMode signing.SignMode) ([]
 | Feature | AWS KMS | GCP Cloud KMS | BanhBao Plugin |
 |---------|---------|---------------|----------------|
 | secp256k1 support | ❌ | ❌ | ✅ Native |
-| Key leaves HSM | Yes (decrypt) | Yes (decrypt) | **Never** |
+| Key leaves vault | Yes (decrypt) | Yes (decrypt) | **Never** |
 | Open source | ❌ | ❌ | ✅ |
 | Self-hostable | ❌ | ❌ | ✅ |
 | Cosmos signature format | Manual | Manual | ✅ Built-in |

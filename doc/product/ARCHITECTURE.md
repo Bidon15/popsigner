@@ -4,7 +4,7 @@
 
 This document describes the technical architecture for the OpenBao Keyring Backend, a custom `keyring.Keyring` implementation that delegates cryptographic operations to a **custom secp256k1 OpenBao plugin** for maximum security.
 
-> **🎯 Target Users:** Rollup developers and operators building on Celestia who need HSM-level key security for their sequencers, provers, and bridge operators.
+> **🎯 Target Users:** Rollup developers and operators building on Celestia who need the fastest, lowest-latency remote signing for their sequencers, provers, and bridge operators.
 
 ### ⚠️ CRITICAL: Celestia Fork Dependencies
 
@@ -898,7 +898,7 @@ var testVectors = []struct {
 
 | Enhancement       | Description                       | Priority |
 | ----------------- | --------------------------------- | -------- |
-| HSM Support       | Backend HSM for Transit engine    | Medium   |
+| HSM Support       | Optional HSM backend for Transit  | Low      |
 | Key Rotation      | Automatic key version rotation    | Low      |
 | Multi-Key Signing | Batch signing operations          | Low      |
 | Metrics           | Prometheus metrics for operations | Medium   |
