@@ -12,27 +12,38 @@ Update dashboard, auth, and layout templates with POPSigner branding and **Bloom
 
 ---
 
-## Design Aesthetic
+## Design Aesthetic: 1980s CRT Terminal
 
-**CRITICAL:** Match the landing page terminal aesthetic.
+**CRITICAL:** Match the landing page 80s terminal aesthetic. Stranger Things S5 vibes.
 
 ### Visual Direction
-- **True black background** (`#000000`, `bg-black`)
-- **Bloomberg Orange/Amber accents** (`#f59e0b`, `amber-500/600`)
-- **Cyan for data highlights** (`#06b6d4`)
-- **No violet/purple** - that's crypto wallet, not infrastructure
-- **Dark mode ONLY** - terminals are dark
+- **CRT black background** (`#000000`)
+- **Amber phosphor** (`#FFB000`) - primary text, headers
+- **Green phosphor** (`#33FF00`) - data, success states
+- **Terminal red** (`#FF3333`) - errors only
+- **Dark mode ONLY** - CRTs were black
+
+### Color Palette
+```
+#FFB000 - Amber (headers, highlights)
+#FFCC00 - Bright amber (hover)
+#33FF00 - Green phosphor (data)
+#228B22 - Dark green (dimmed)
+#1A4D1A - Very dark green (borders)
+#FF3333 - Red (errors)
+#333300 - Dark amber (borders)
+```
 
 ### Dashboard Specific
-- Data-dense layouts
-- Monospace for keys, addresses, metrics
-- Subtle borders (`border-neutral-800`)
-- Orange accent for primary actions
-- Green/Red for success/error states (trading terminal colors)
+- ALL CAPS for headers
+- Monospace ONLY (IBM Plex Mono, VT323)
+- Phosphor glow on important data
+- Data tables like trading terminals
+- Status indicators: `ACTIVE`, `OFFLINE`, `EXIT_OK`
 
 ### Typography
-- **IBM Plex Sans** for body text
-- **IBM Plex Mono** for data, keys, addresses, metrics
+- **MONOSPACE ONLY** - This is a terminal
+- Add glow: `text-shadow: 0 0 8px currentColor`
 
 ---
 
@@ -81,12 +92,20 @@ Update dashboard, auth, and layout templates with POPSigner branding and **Bloom
     <span>BanhBaoRing</span>
 </div>
 
-// After - Terminal aesthetic
-<div class="min-h-screen bg-black flex items-center justify-center">
-  <div class="max-w-md w-full">
+// After - 80s CRT Auth Layout
+<div class="min-h-screen bg-black flex items-center justify-center font-mono">
+  <!-- Optional scanlines -->
+  <div class="absolute inset-0 pointer-events-none opacity-5
+              bg-[repeating-linear-gradient(0deg,transparent,transparent_1px,rgba(0,0,0,0.3)_1px,rgba(0,0,0,0.3)_2px)]">
+  </div>
+  
+  <div class="max-w-md w-full relative z-10">
     <div class="text-center mb-8">
-      <span class="text-amber-500 text-2xl">◇</span>
-      <span class="font-mono text-white text-xl ml-2">POPSigner</span>
+      <span class="text-[#FFB000] text-3xl">◇</span>
+      <span class="text-[#FFB000] text-2xl ml-2 uppercase tracking-wider
+                   text-shadow-[0_0_15px_#FFB000]">
+        POPSIGNER
+      </span>
     </div>
     { children... }
   </div>
@@ -102,28 +121,40 @@ Update dashboard, auth, and layout templates with POPSigner branding and **Bloom
     <span>BanhBaoRing</span>
 </a>
 
-// After - Terminal sidebar
-<aside class="w-64 bg-neutral-950 border-r border-neutral-800 min-h-screen">
-  <div class="p-4 border-b border-neutral-800">
-    <a href="/" class="flex items-center gap-2">
-      <span class="text-amber-500">◇</span>
-      <span class="font-mono text-white font-semibold">POPSigner</span>
+// After - 80s CRT Sidebar
+<aside class="w-64 bg-black border-r border-[#333300] min-h-screen font-mono">
+  <div class="p-4 border-b border-[#333300]">
+    <a href="/" class="flex items-center gap-2 group">
+      <span class="text-[#FFB000] text-xl">◇</span>
+      <span class="text-[#FFB000] font-bold uppercase tracking-wider
+                   group-hover:text-shadow-[0_0_10px_#FFB000]">
+        POPSIGNER
+      </span>
     </a>
   </div>
   
-  // Nav items with terminal styling
+  <!-- Terminal status bar -->
+  <div class="px-4 py-2 text-[#666600] text-xs border-b border-[#1A1A1A]">
+    > SYSTEM READY_
+  </div>
+  
+  <!-- Nav items - terminal style -->
   <nav class="p-4 space-y-1">
-    <a href="/dashboard" class="flex items-center gap-2 px-3 py-2 text-neutral-400 hover:text-white hover:bg-neutral-900">
-      <span class="font-mono text-sm">dashboard</span>
+    <a href="/dashboard" class="block px-3 py-2 text-[#33FF00] uppercase text-sm
+                                hover:bg-[#0D1A0D] hover:text-shadow-[0_0_8px_#33FF00]">
+      > DASHBOARD
     </a>
-    <a href="/keys" class="flex items-center gap-2 px-3 py-2 text-neutral-400 hover:text-white hover:bg-neutral-900">
-      <span class="font-mono text-sm">keys</span>
+    <a href="/keys" class="block px-3 py-2 text-[#33FF00] uppercase text-sm
+                          hover:bg-[#0D1A0D] hover:text-shadow-[0_0_8px_#33FF00]">
+      > KEYS
     </a>
-    <a href="/audit" class="flex items-center gap-2 px-3 py-2 text-neutral-400 hover:text-white hover:bg-neutral-900">
-      <span class="font-mono text-sm">audit_log</span>
+    <a href="/audit" class="block px-3 py-2 text-[#33FF00] uppercase text-sm
+                           hover:bg-[#0D1A0D] hover:text-shadow-[0_0_8px_#33FF00]">
+      > AUDIT_LOG
     </a>
-    <a href="/settings" class="flex items-center gap-2 px-3 py-2 text-neutral-400 hover:text-white hover:bg-neutral-900">
-      <span class="font-mono text-sm">settings</span>
+    <a href="/settings" class="block px-3 py-2 text-[#228B22] uppercase text-sm
+                              hover:bg-[#0D1A0D] hover:text-[#33FF00]">
+      > SETTINGS
     </a>
   </nav>
 </aside>
@@ -136,25 +167,32 @@ Update dashboard, auth, and layout templates with POPSigner branding and **Bloom
 <h1>Sign in to BanhBaoRing</h1>
 <p>Secure key management for your rollup</p>
 
-// After - Terminal login
-<div class="bg-neutral-950 border border-neutral-800 p-8">
-  <h1 class="font-mono text-xl text-white mb-2">
-    <span class="text-amber-500">$</span> login
+// After - 80s CRT Login
+<div class="bg-black border border-[#333300] p-8 font-mono">
+  <h1 class="text-xl text-[#FFB000] mb-2 uppercase text-shadow-[0_0_10px_#FFB000]">
+    > LOGIN_
   </h1>
-  <p class="text-neutral-500 text-sm mb-6">Point-of-Presence signing infrastructure</p>
+  <p class="text-[#666600] text-sm mb-6">POINT-OF-PRESENCE SIGNING INFRASTRUCTURE</p>
   
-  // Form with terminal styling
   <form class="space-y-4">
     <div>
-      <label class="font-mono text-sm text-neutral-400">email</label>
-      <input type="email" class="w-full bg-black border border-neutral-700 text-white p-2 mt-1 font-mono focus:border-amber-600">
+      <label class="text-sm text-[#228B22] uppercase">EMAIL:</label>
+      <input type="email" 
+             class="w-full bg-black border border-[#1A4D1A] text-[#33FF00] p-2 mt-1
+                    focus:border-[#33FF00] focus:shadow-[0_0_10px_rgba(51,255,0,0.3)]
+                    placeholder-[#336633]"
+             placeholder="user@example.com">
     </div>
     <div>
-      <label class="font-mono text-sm text-neutral-400">password</label>
-      <input type="password" class="w-full bg-black border border-neutral-700 text-white p-2 mt-1 font-mono focus:border-amber-600">
+      <label class="text-sm text-[#228B22] uppercase">PASSWORD:</label>
+      <input type="password" 
+             class="w-full bg-black border border-[#1A4D1A] text-[#33FF00] p-2 mt-1
+                    focus:border-[#33FF00] focus:shadow-[0_0_10px_rgba(51,255,0,0.3)]">
     </div>
-    <button type="submit" class="w-full bg-amber-600 text-black font-semibold py-2 hover:bg-amber-500">
-      Sign In →
+    <button type="submit" 
+            class="w-full bg-[#FFB000] text-black font-bold py-3 uppercase
+                   hover:bg-[#FFCC00] hover:shadow-[0_0_20px_#FFB000]">
+      [ AUTHENTICATE ]
     </button>
   </form>
 </div>
@@ -167,18 +205,19 @@ Update dashboard, auth, and layout templates with POPSigner branding and **Bloom
 <h1>Create your BanhBaoRing account</h1>
 <p>Get started with secure key management</p>
 
-// After - Terminal signup
-<div class="bg-neutral-950 border border-neutral-800 p-8">
-  <h1 class="font-mono text-xl text-white mb-2">
-    <span class="text-amber-500">$</span> deploy
+// After - 80s CRT Signup
+<div class="bg-black border border-[#333300] p-8 font-mono">
+  <h1 class="text-xl text-[#FFB000] mb-2 uppercase text-shadow-[0_0_10px_#FFB000]">
+    > DEPLOY_
   </h1>
-  <p class="text-neutral-500 text-sm mb-6">Create your POPSigner account</p>
+  <p class="text-[#666600] text-sm mb-6">CREATE YOUR POPSIGNER ACCOUNT</p>
   
-  // Form with terminal styling
   <form class="space-y-4">
     <div>
-      <label class="font-mono text-sm text-neutral-400">email</label>
-      <input type="email" class="w-full bg-black border border-neutral-700 text-white p-2 mt-1 font-mono focus:border-amber-600">
+      <label class="text-sm text-[#228B22] uppercase">EMAIL:</label>
+      <input type="email" 
+             class="w-full bg-black border border-[#1A4D1A] text-[#33FF00] p-2 mt-1
+                    focus:border-[#33FF00] placeholder-[#336633]">
     </div>
     <div>
       <label class="font-mono text-sm text-neutral-400">password</label>
@@ -205,51 +244,111 @@ Update dashboard, auth, and layout templates with POPSigner branding and **Bloom
 
 ### pages/keys_list.templ
 
-Add export visibility:
+Terminal-style keys table:
 
 ```go
-// Add "Exportable" badge to key cards
-if key.Exportable {
-    <span class="badge badge-success">Exportable</span>
-}
-
-// Add Export button to actions
-<button hx-get={ "/keys/" + key.ID + "/export" }>
-    Export Key
-</button>
+// Terminal aesthetic keys list
+<div class="bg-black min-h-screen">
+  <header class="border-b border-neutral-800 p-6">
+    <h1 class="font-mono text-xl text-white">
+      <span class="text-amber-500">_</span>keys
+    </h1>
+  </header>
+  
+  // Data table - trading terminal style
+  <table class="w-full">
+    <thead class="border-b border-neutral-800">
+      <tr class="text-left font-mono text-xs text-neutral-500 uppercase">
+        <th class="px-6 py-3">name</th>
+        <th class="px-6 py-3">address</th>
+        <th class="px-6 py-3">algorithm</th>
+        <th class="px-6 py-3">created</th>
+        <th class="px-6 py-3">exportable</th>
+        <th class="px-6 py-3">actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      for _, key := range keys {
+        <tr class="border-b border-neutral-900 hover:bg-neutral-950">
+          <td class="px-6 py-4 font-mono text-white">{ key.Name }</td>
+          <td class="px-6 py-4 font-mono text-neutral-400 text-sm">{ key.Address }</td>
+          <td class="px-6 py-4 font-mono text-cyan-400 text-sm">{ key.Algorithm }</td>
+          <td class="px-6 py-4 font-mono text-neutral-500 text-sm">{ key.CreatedAt }</td>
+          <td class="px-6 py-4">
+            if key.Exportable {
+              <span class="font-mono text-green-500 text-sm">EXIT_OK</span>
+            } else {
+              <span class="font-mono text-neutral-600 text-sm">LOCKED</span>
+            }
+          </td>
+          <td class="px-6 py-4">
+            <a href={ "/keys/" + key.ID } class="text-amber-500 hover:text-amber-400 text-sm">
+              view →
+            </a>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
 ```
 
 ### pages/keys_detail.templ
 
-Add export section:
+Terminal-style key detail:
 
 ```go
-// Add to key details
-<div class="detail-row">
-    <span class="label">Exportable</span>
-    <span class="value">
-        if key.Exportable {
-            ✓ Yes (exit guaranteed)
-        } else {
-            ✗ No
-        }
-    </span>
-</div>
-
-// Add export action
-if key.Exportable {
-    <div class="action-section">
-        <h3>Export Key</h3>
-        <p class="text-sm text-zinc-400">
-            Download this key for use in local keyrings. 
-            This is your exit guarantee.
-        </p>
-        <button hx-post={ "/keys/" + key.ID + "/export" }
-                class="btn-secondary">
-            Export Private Key
-        </button>
+// Terminal aesthetic key detail
+<div class="bg-black min-h-screen p-6">
+  <header class="mb-8">
+    <h1 class="font-mono text-xl text-white">
+      <span class="text-amber-500">_</span>key<span class="text-neutral-600">/</span>{ key.Name }
+    </h1>
+  </header>
+  
+  // Key info card
+  <div class="bg-neutral-950 border border-neutral-800 p-6 mb-6">
+    <div class="grid grid-cols-2 gap-4 font-mono text-sm">
+      <div>
+        <span class="text-neutral-500">address</span>
+        <div class="text-white mt-1">{ key.Address }</div>
+      </div>
+      <div>
+        <span class="text-neutral-500">algorithm</span>
+        <div class="text-cyan-400 mt-1">{ key.Algorithm }</div>
+      </div>
+      <div>
+        <span class="text-neutral-500">created</span>
+        <div class="text-neutral-400 mt-1">{ key.CreatedAt }</div>
+      </div>
+      <div>
+        <span class="text-neutral-500">exit_status</span>
+        <div class="mt-1">
+          if key.Exportable {
+            <span class="text-green-500">EXIT_GUARANTEED</span>
+          } else {
+            <span class="text-red-500">LOCKED</span>
+          }
+        </div>
+      </div>
     </div>
-}
+  </div>
+  
+  // Exit guarantee section (only if exportable)
+  if key.Exportable {
+    <div class="bg-neutral-950 border border-amber-900 p-6">
+      <h3 class="font-mono text-amber-500 mb-2">exit_guarantee</h3>
+      <p class="text-neutral-400 text-sm mb-4">
+        Export this key for use in local keyrings. 
+        Your sovereignty is non-negotiable.
+      </p>
+      <button hx-post={ "/keys/" + key.ID + "/export" }
+              class="bg-amber-600 text-black font-mono text-sm px-4 py-2 hover:bg-amber-500">
+        export_key →
+      </button>
+    </div>
+  }
+</div>
 ```
 
 ---

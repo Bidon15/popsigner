@@ -12,28 +12,41 @@ Update all landing page templates with POPSigner branding, new copy, and **Bloom
 
 ---
 
-## Design Aesthetic
+## Design Aesthetic: 1980s CRT Terminal
 
-**IMPORTANT:** The design must reflect Point-of-Presence / HFT / Trading Terminal vibes.
+**IMPORTANT:** Authentic 80s Bloomberg terminal. Stranger Things S5 vibes. CRT phosphor glow.
 
 ### Visual Direction
-- **Bloomberg Terminal aesthetic** - professional, data-dense, utilitarian
-- **True black background** (`#000000`) - not gray, not dark gray, BLACK
-- **Bloomberg Orange/Amber accents** (`#f59e0b`, `#d97706`) - signature color
-- **Cyan for data highlights** (`#06b6d4`) - terminal feel
-- **No violet/purple** - that's crypto wallet aesthetic, we're infrastructure
-- **Dark mode ONLY** - no light theme
+- **CRT phosphor colors** - amber and green glow on black
+- **True black background** (`#000000`) - like a CRT monitor
+- **Amber phosphor** (`#FFB000`) - primary text/headlines
+- **Green phosphor** (`#33FF00`) - data, secondary text
+- **Red terminal** (`#FF3333`) - errors/alerts only
+- **Dark mode ONLY** - CRTs were always black
+
+### Color Palette
+```
+#FFB000 - Amber phosphor (primary)
+#FFCC00 - Bright amber (highlights)
+#33FF00 - Green phosphor (data)
+#228B22 - Dark green (dimmed)
+#1A4D1A - Very dark green (borders)
+#FF3333 - Terminal red (alerts)
+#333300 - Dark amber (borders)
+#000000 - CRT black (background)
+```
 
 ### Typography
-- **IBM Plex Sans** for headings and body
-- **IBM Plex Mono** for data, keys, code blocks
-- Tabular numbers for any numeric data
+- **MONOSPACE ONLY** - This is a terminal
+- **IBM Plex Mono** or **VT323** for retro feel
+- Phosphor glow: `text-shadow: 0 0 8px currentColor`
 
 ### UI Elements
-- Flat colors, no gradients
-- Subtle borders (`#262626`)
-- Orange hover states
-- Monospace for technical content
+- ALL CAPS for headers
+- Square brackets for buttons: `[ DEPLOY ]`
+- Phosphor glow on hover
+- Borders in dark amber/green
+- Optional scanline overlay
 
 ---
 
@@ -86,22 +99,26 @@ Refer to `doc/design/DESIGN_SYSTEM.md` for approved copy.
 <span class="text-2xl">🔔</span>
 <span class="...">BanhBaoRing</span>
 
-// After - Terminal aesthetic nav
-<nav class="bg-black border-b border-neutral-900 sticky top-0 z-50">
+// After - 80s CRT Terminal Nav
+<nav class="bg-black border-b border-[#333300] sticky top-0 z-50 font-mono">
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-    <a href="/" class="flex items-center gap-2">
-      <span class="text-amber-500 text-xl">◇</span>
-      <span class="font-mono text-white font-semibold">POPSigner</span>
+    <a href="/" class="flex items-center gap-2 group">
+      <span class="text-[#FFB000] text-xl">◇</span>
+      <span class="text-[#FFB000] font-bold uppercase tracking-wider
+                   group-hover:text-shadow-[0_0_10px_#FFB000]">
+        POPSIGNER
+      </span>
     </a>
     
-    <div class="flex items-center gap-8">
-      <a href="/docs" class="text-neutral-400 hover:text-white text-sm">Docs</a>
-      <a href="/pricing" class="text-neutral-400 hover:text-white text-sm">Pricing</a>
-      <a href="https://github.com/..." class="text-neutral-400 hover:text-white text-sm">GitHub</a>
-      <a href="/login" class="text-neutral-400 hover:text-white text-sm">Login</a>
+    <div class="flex items-center gap-8 text-sm uppercase">
+      <a href="/docs" class="text-[#33FF00] hover:text-shadow-[0_0_8px_#33FF00]">DOCS</a>
+      <a href="/pricing" class="text-[#33FF00] hover:text-shadow-[0_0_8px_#33FF00]">PRICING</a>
+      <a href="https://github.com/..." class="text-[#33FF00] hover:text-shadow-[0_0_8px_#33FF00]">GITHUB</a>
+      <a href="/login" class="text-[#666600] hover:text-[#FFB000]">LOGIN</a>
       <a href="/signup" 
-         class="bg-amber-600 text-black text-sm font-semibold px-4 py-2 hover:bg-amber-500">
-        Deploy →
+         class="bg-[#FFB000] text-black font-bold px-4 py-2 
+                hover:bg-[#FFCC00] hover:shadow-[0_0_15px_#FFB000]">
+        [ DEPLOY ]
       </a>
     </div>
   </div>
@@ -117,36 +134,57 @@ Refer to `doc/design/DESIGN_SYSTEM.md` for approved copy.
 <p>📍 Point of Presence key management for sovereign rollups.</p>
 <p>Deploy next to your nodes. Same region. Same datacenter.</p>
 
-// After - Bloomberg Terminal aesthetic
-<section class="bg-black min-h-screen flex items-center">
-  <div class="max-w-6xl mx-auto px-6">
-    // Headline in monospace for terminal feel
-    <h1 class="font-mono text-5xl md:text-6xl font-bold text-white tracking-tight">
-      Point-of-Presence<br/>
-      <span class="text-amber-500">Signing Infrastructure</span>
+// After - 80s CRT Terminal Hero
+<section class="bg-black min-h-screen flex items-center font-mono">
+  <!-- Optional: CRT scanline overlay -->
+  <div class="absolute inset-0 pointer-events-none opacity-10
+              bg-[repeating-linear-gradient(0deg,transparent,transparent_1px,rgba(0,0,0,0.3)_1px,rgba(0,0,0,0.3)_2px)]">
+  </div>
+  
+  <div class="max-w-6xl mx-auto px-6 relative z-10">
+    <!-- Blinking cursor effect -->
+    <div class="text-[#33FF00] text-sm mb-4 opacity-70">
+      > INITIALIZING POPSIGNER..._
+    </div>
+    
+    <!-- Headline - Amber phosphor with glow -->
+    <h1 class="text-5xl md:text-6xl font-bold uppercase tracking-wider
+               text-[#FFB000] text-shadow-[0_0_20px_#FFB000]">
+      POINT-OF-PRESENCE<br/>
+      SIGNING INFRASTRUCTURE
     </h1>
     
-    // Subhead
-    <p class="text-xl text-neutral-400 mt-6 max-w-2xl">
-      A distributed signing layer designed to live inline with 
-      execution—not behind an API queue.
+    <!-- Subhead - Green phosphor -->
+    <p class="text-xl text-[#33FF00] mt-8 max-w-2xl opacity-90">
+      A DISTRIBUTED SIGNING LAYER DESIGNED TO LIVE INLINE WITH 
+      EXECUTION—NOT BEHIND AN API QUEUE.
     </p>
     
-    // Secondary
-    <p class="text-lg text-neutral-500 mt-4">
-      Deploy next to your systems. Keys remain remote. You remain sovereign.
+    <!-- Secondary - Dimmed green -->
+    <p class="text-lg text-[#228B22] mt-4">
+      DEPLOY NEXT TO YOUR SYSTEMS. KEYS REMAIN REMOTE. YOU REMAIN SOVEREIGN.
     </p>
     
-    // CTAs - Orange primary
-    <div class="mt-10 flex gap-4">
+    <!-- CTAs - Terminal button style -->
+    <div class="mt-12 flex gap-6">
       <a href="/signup" 
-         class="bg-amber-600 text-black font-semibold px-6 py-3 hover:bg-amber-500">
-        Deploy POPSigner →
+         class="bg-[#FFB000] text-black font-bold px-8 py-4 uppercase
+                hover:bg-[#FFCC00] hover:shadow-[0_0_25px_#FFB000]
+                transition-all duration-150">
+        [ DEPLOY POPSIGNER ]
       </a>
       <a href="/docs" 
-         class="border border-neutral-700 text-neutral-300 px-6 py-3 hover:border-amber-600">
-        Documentation
+         class="border-2 border-[#33FF00] text-[#33FF00] px-8 py-4 uppercase
+                hover:bg-[#33FF00] hover:text-black
+                hover:shadow-[0_0_20px_#33FF00]
+                transition-all duration-150">
+        [ DOCUMENTATION ]
       </a>
+    </div>
+    
+    <!-- Version/status bar -->
+    <div class="mt-16 text-[#666600] text-xs">
+      STATUS: OPERATIONAL | VERSION: 1.0.0 | (FORMERLY BANHBAORING)
     </div>
   </div>
 </section>
@@ -160,68 +198,71 @@ PricingTier{Name: "Free", Price: "$0", ...}
 PricingTier{Name: "Pro", Price: "$49", ...}
 PricingTier{Name: "Enterprise", Price: "Custom", ...}
 
-// After - Terminal aesthetic pricing grid
-<section class="bg-black py-24">
+// After - 80s CRT Terminal Pricing
+<section class="bg-black py-24 font-mono">
   <div class="max-w-6xl mx-auto px-6">
-    <h2 class="font-mono text-3xl text-white mb-4">
-      <span class="text-amber-500">_</span>pricing
+    <h2 class="text-3xl text-[#FFB000] mb-4 uppercase text-shadow-[0_0_10px_#FFB000]">
+      > PRICING_
     </h2>
-    <p class="text-neutral-500 mb-12">We sell placement, not transactions.</p>
+    <p class="text-[#666600] mb-12">WE SELL PLACEMENT, NOT TRANSACTIONS.</p>
     
     <div class="grid md:grid-cols-3 gap-6">
-      // Tier 1 - Shared
-      <div class="bg-neutral-950 border border-neutral-800 p-8">
-        <h3 class="font-mono text-lg text-neutral-400 mb-4">shared</h3>
-        <div class="font-mono text-4xl text-white mb-2">
-          €49<span class="text-lg text-neutral-500">/mo</span>
+      // Tier 1 - Shared (Green border)
+      <div class="bg-black border border-[#1A4D1A] p-8 hover:border-[#33FF00]">
+        <h3 class="text-lg text-[#228B22] mb-4 uppercase">SHARED</h3>
+        <div class="text-4xl text-[#33FF00] mb-2 text-shadow-[0_0_8px_#33FF00]">
+          €49<span class="text-lg text-[#228B22]">/MO</span>
         </div>
-        <p class="text-neutral-500 text-sm mb-6">Shared POP infrastructure</p>
-        <ul class="text-neutral-400 text-sm space-y-2 mb-8">
-          <li>▸ Shared Point-of-Presence</li>
-          <li>▸ No SLA</li>
-          <li>▸ Plugins included</li>
-          <li>▸ Exit guarantee</li>
+        <p class="text-[#336633] text-sm mb-6">SHARED POP INFRASTRUCTURE</p>
+        <ul class="text-[#33FF00] text-sm space-y-2 mb-8 opacity-80">
+          <li>> SHARED POINT-OF-PRESENCE</li>
+          <li>> NO SLA</li>
+          <li>> PLUGINS INCLUDED</li>
+          <li>> EXIT GUARANTEE</li>
         </ul>
         <a href="/signup?plan=shared" 
-           class="block text-center border border-neutral-700 py-2 text-neutral-300 hover:border-amber-600">
-          Start with Shared
+           class="block text-center border border-[#228B22] py-2 text-[#33FF00] 
+                  hover:bg-[#33FF00] hover:text-black uppercase">
+          [ START SHARED ]
         </a>
       </div>
       
-      // Tier 2 - Priority (highlighted)
-      <div class="bg-neutral-950 border-2 border-amber-600 p-8 relative">
-        <div class="absolute -top-3 left-6 bg-amber-600 text-black text-xs font-mono px-2 py-1">
+      // Tier 2 - Priority (Amber highlighted)
+      <div class="bg-black border-2 border-[#FFB000] p-8 relative
+                  shadow-[0_0_20px_rgba(255,176,0,0.3)]">
+        <div class="absolute -top-3 left-6 bg-[#FFB000] text-black text-xs px-2 py-1 uppercase font-bold">
           RECOMMENDED
         </div>
-        <h3 class="font-mono text-lg text-amber-500 mb-4">priority</h3>
-        <div class="font-mono text-4xl text-white mb-2">
-          €499<span class="text-lg text-neutral-500">/mo</span>
+        <h3 class="text-lg text-[#FFB000] mb-4 uppercase">PRIORITY</h3>
+        <div class="text-4xl text-[#FFB000] mb-2 text-shadow-[0_0_15px_#FFB000]">
+          €499<span class="text-lg text-[#CC8800]">/MO</span>
         </div>
-        <p class="text-neutral-500 text-sm mb-6">Production workloads</p>
-        <ul class="text-neutral-400 text-sm space-y-2 mb-8">
-          <li>▸ Priority POP lanes</li>
-          <li>▸ Region selection</li>
-          <li>▸ 99.9% SLA</li>
-          <li>▸ Self-serve scaling</li>
+        <p class="text-[#CC8800] text-sm mb-6">PRODUCTION WORKLOADS</p>
+        <ul class="text-[#FFB000] text-sm space-y-2 mb-8 opacity-90">
+          <li>> PRIORITY POP LANES</li>
+          <li>> REGION SELECTION</li>
+          <li>> 99.9% SLA</li>
+          <li>> SELF-SERVE SCALING</li>
         </ul>
         <a href="/signup?plan=priority" 
-           class="block text-center bg-amber-600 text-black py-2 font-semibold hover:bg-amber-500">
-          Deploy Priority →
+           class="block text-center bg-[#FFB000] text-black py-2 font-bold uppercase
+                  hover:bg-[#FFCC00] hover:shadow-[0_0_20px_#FFB000]">
+          [ DEPLOY PRIORITY ]
         </a>
       </div>
       
-      // Tier 3 - Dedicated
-      <div class="bg-neutral-950 border border-neutral-800 p-8">
-        <h3 class="font-mono text-lg text-neutral-400 mb-4">dedicated</h3>
-        <div class="font-mono text-4xl text-white mb-2">
-          €19,999<span class="text-lg text-neutral-500">/mo</span>
+      // Tier 3 - Dedicated (Green border)
+      <div class="bg-black border border-[#1A4D1A] p-8 hover:border-[#33FF00]">
+        <h3 class="text-lg text-[#228B22] mb-4 uppercase">DEDICATED</h3>
+        <div class="text-4xl text-[#33FF00] mb-2 text-shadow-[0_0_8px_#33FF00]">
+          €19,999<span class="text-lg text-[#228B22]">/MO</span>
         </div>
-        <p class="text-neutral-500 text-sm mb-6">Dedicated infrastructure</p>
-        <ul class="text-neutral-400 text-sm space-y-2 mb-8">
-          <li>▸ Region-pinned POP</li>
-          <li>▸ CPU isolation</li>
-          <li>▸ 99.99% SLA</li>
-          <li>▸ Manual onboarding</li>
+        <p class="text-[#336633] text-sm mb-6">DEDICATED INFRASTRUCTURE</p>
+        <ul class="text-[#33FF00] text-sm space-y-2 mb-8 opacity-80">
+          <li>> REGION-PINNED POP</li>
+          <li>> CPU ISOLATION</li>
+          <li>> 99.99% SLA</li>
+          <li>> MANUAL ONBOARDING</li>
         </ul>
         <a href="/contact" 
            class="block text-center border border-neutral-700 py-2 text-neutral-300 hover:border-amber-600">

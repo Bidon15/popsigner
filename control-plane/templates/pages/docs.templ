@@ -26,148 +26,148 @@ templ DocsPage(data DocsPageData) {
 			.code-block:hover .copy-btn { opacity: 1; }
 		</style>
 	</head>
-	<body class="bg-[#0c0a14] text-[#faf5ff] min-h-screen">
+	<body style="background-color: #0c0a14; color: #faf5ff; min-height: 100vh;">
 		<!-- Header -->
-		<header class="sticky top-0 z-50 bg-[#0c0a14]/90 backdrop-blur-xl border-b border-[#4a3f5c]/50">
-			<div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-				<a href="/dashboard" class="flex items-center gap-2">
-					<span class="text-2xl">🥟</span>
-					<span class="text-xl font-bold">BanhBaoRing</span>
+		<header style="position: sticky; top: 0; z-index: 50; background-color: rgba(12, 10, 20, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(74, 63, 92, 0.5);">
+			<div style="max-width: 64rem; margin: 0 auto; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+				<a href="/dashboard" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: #faf5ff;">
+					<span style="font-size: 1.5rem;">🥟</span>
+					<span style="font-size: 1.25rem; font-weight: bold;">BanhBaoRing</span>
 				</a>
-				<div class="flex items-center gap-6">
-					<a href="/keys" class="text-sm text-[#a1a1aa] hover:text-white transition-colors">Dashboard</a>
-					<a href="https://github.com/Bidon15/banhbaoring" target="_blank" class="text-sm text-[#a1a1aa] hover:text-white transition-colors">GitHub ↗</a>
+				<div style="display: flex; align-items: center; gap: 1.5rem;">
+					<a href="/keys" style="font-size: 0.875rem; color: #a1a1aa; text-decoration: none;">Dashboard</a>
+					<a href="https://github.com/Bidon15/banhbaoring" target="_blank" style="font-size: 0.875rem; color: #a1a1aa; text-decoration: none;">GitHub ↗</a>
 				</div>
 			</div>
 		</header>
 
-		<div class="max-w-5xl mx-auto px-6 py-12">
+		<div style="max-width: 64rem; margin: 0 auto; padding: 3rem 1.5rem;">
 			<!-- Hero -->
-			<div class="mb-12">
-				<h1 class="text-4xl font-bold mb-4">BanhBaoRing Documentation</h1>
-				<p class="text-xl text-[#a1a1aa] max-w-2xl">
+			<div style="margin-bottom: 3rem;">
+				<h1 style="font-size: 2.25rem; font-weight: bold; margin-bottom: 1rem; color: #faf5ff;">BanhBaoRing Documentation</h1>
+				<p style="font-size: 1.25rem; color: #a1a1aa; max-width: 42rem;">
 					Secure key management for Celestia. Your keys never leave our vault.
 				</p>
 			</div>
 
 			<!-- Quick Start Steps -->
-			<section id="quickstart" class="mb-16">
-				<h2 class="text-2xl font-bold mb-6">Quickstart</h2>
-				<div class="grid md:grid-cols-3 gap-4">
-					<div class="p-5 bg-[#1a1625] border border-[#4a3f5c]/50 rounded-xl">
-						<div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-3">1</div>
-						<p class="font-medium mb-1">Create API Key</p>
-						<p class="text-sm text-[#a1a1aa]">Settings → API Keys</p>
+			<section id="quickstart" style="margin-bottom: 4rem;">
+				<h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1.5rem; color: #faf5ff;">Quickstart</h2>
+				<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+					<div style="padding: 1.25rem; background-color: #1a1625; border: 1px solid rgba(74, 63, 92, 0.5); border-radius: 0.75rem;">
+						<div style="width: 2rem; height: 2rem; border-radius: 9999px; background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 0.75rem;">1</div>
+						<p style="font-weight: 500; margin-bottom: 0.25rem; color: #faf5ff;">Create API Key</p>
+						<p style="font-size: 0.875rem; color: #a1a1aa;">Settings → API Keys</p>
 					</div>
-					<div class="p-5 bg-[#1a1625] border border-[#4a3f5c]/50 rounded-xl">
-						<div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-3">2</div>
-						<p class="font-medium mb-1">Create Signing Key</p>
-						<p class="text-sm text-[#a1a1aa]">Keys → Create Key</p>
+					<div style="padding: 1.25rem; background-color: #1a1625; border: 1px solid rgba(74, 63, 92, 0.5); border-radius: 0.75rem;">
+						<div style="width: 2rem; height: 2rem; border-radius: 9999px; background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 0.75rem;">2</div>
+						<p style="font-weight: 500; margin-bottom: 0.25rem; color: #faf5ff;">Create Signing Key</p>
+						<p style="font-size: 0.875rem; color: #a1a1aa;">Keys → Create Key</p>
 					</div>
-					<div class="p-5 bg-[#1a1625] border border-[#4a3f5c]/50 rounded-xl">
-						<div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-3">3</div>
-						<p class="font-medium mb-1">Integrate</p>
-						<p class="text-sm text-[#a1a1aa]">Use SDK below</p>
+					<div style="padding: 1.25rem; background-color: #1a1625; border: 1px solid rgba(74, 63, 92, 0.5); border-radius: 0.75rem;">
+						<div style="width: 2rem; height: 2rem; border-radius: 9999px; background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 0.75rem;">3</div>
+						<p style="font-weight: 500; margin-bottom: 0.25rem; color: #faf5ff;">Integrate</p>
+						<p style="font-size: 0.875rem; color: #a1a1aa;">Use SDK below</p>
 					</div>
 				</div>
 			</section>
 
 			<!-- Celestia Integration with Tabs -->
-			<section id="celestia" class="mb-16" x-data="{ tab: 'go' }">
-				<div class="flex items-center gap-3 mb-6">
-					<span class="text-2xl">🌌</span>
-					<h2 class="text-2xl font-bold">Celestia Integration</h2>
+			<section id="celestia" style="margin-bottom: 4rem;" x-data="{ tab: 'go' }">
+				<div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+					<span style="font-size: 1.5rem;">🌌</span>
+					<h2 style="font-size: 1.5rem; font-weight: bold; color: #faf5ff;">Celestia Integration</h2>
 				</div>
 				
-				<p class="text-[#a1a1aa] mb-6">
-					Drop-in keyring for the <a href="https://github.com/celestiaorg/celestia-node/blob/main/api/client/readme.md" target="_blank" class="text-amber-400 hover:underline">Celestia Node client</a>.
+				<p style="color: #a1a1aa; margin-bottom: 1.5rem;">
+					Drop-in keyring for the <a href="https://github.com/celestiaorg/celestia-node/blob/main/api/client/readme.md" target="_blank" style="color: #fbbf24; text-decoration: none;">Celestia Node client</a>.
 				</p>
 
 				<!-- Language Tabs -->
-				<div class="flex gap-1 mb-4 p-1 bg-[#1a1625] rounded-lg w-fit">
+				<div style="display: inline-flex; gap: 4px; padding: 4px; background-color: #1a1625; border-radius: 8px; border: 1px solid #4a3f5c;">
 					<button @click="tab = 'go'" 
-							:class="tab === 'go' ? 'bg-[#4a3f5c] text-white' : 'text-[#a1a1aa] hover:text-white'"
-							class="px-4 py-2 text-sm font-medium rounded-md transition-colors">
+							x-bind:style="tab === 'go' ? 'background-color: #4a3f5c; color: #faf5ff;' : 'background-color: transparent; color: #a1a1aa;'"
+							style="padding: 8px 16px; font-size: 14px; font-weight: 500; border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s;">
 						Go
 					</button>
 					<button @click="tab = 'rust'" 
-							:class="tab === 'rust' ? 'bg-[#4a3f5c] text-white' : 'text-[#a1a1aa] hover:text-white'"
-							class="px-4 py-2 text-sm font-medium rounded-md transition-colors">
+							x-bind:style="tab === 'rust' ? 'background-color: #4a3f5c; color: #faf5ff;' : 'background-color: transparent; color: #a1a1aa;'"
+							style="padding: 8px 16px; font-size: 14px; font-weight: 500; border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s;">
 						Rust
 					</button>
 					<button @click="tab = 'curl'" 
-							:class="tab === 'curl' ? 'bg-[#4a3f5c] text-white' : 'text-[#a1a1aa] hover:text-white'"
-							class="px-4 py-2 text-sm font-medium rounded-md transition-colors">
+							x-bind:style="tab === 'curl' ? 'background-color: #4a3f5c; color: #faf5ff;' : 'background-color: transparent; color: #a1a1aa;'"
+							style="padding: 8px 16px; font-size: 14px; font-weight: 500; border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s;">
 						cURL
 					</button>
 				</div>
 
 				<!-- Go Tab -->
-				<div x-show="tab === 'go'" class="space-y-4">
-					<p class="text-sm text-[#a1a1aa]">Install:</p>
+				<div x-show="tab === 'go'">
+					<p style="font-size: 0.875rem; color: #a1a1aa; margin-bottom: 0.5rem;">Install:</p>
 					@copyableCode("bash", "go get github.com/Bidon15/banhbaoring/sdk-go")
 					
-					<p class="text-sm text-[#a1a1aa] mt-6">Complete example:</p>
+					<p style="font-size: 0.875rem; color: #a1a1aa; margin-top: 1.5rem; margin-bottom: 0.5rem;">Complete example:</p>
 					@copyableCode("go", goExample())
 				</div>
 
 				<!-- Rust Tab -->
-				<div x-show="tab === 'rust'" class="space-y-4">
-					<p class="text-sm text-[#a1a1aa]">Add to Cargo.toml:</p>
+				<div x-show="tab === 'rust'">
+					<p style="font-size: 0.875rem; color: #a1a1aa; margin-bottom: 0.5rem;">Add to Cargo.toml:</p>
 					@copyableCode("toml", `[dependencies]
 banhbaoring = "0.1"`)
 					
-					<p class="text-sm text-[#a1a1aa] mt-6">Complete example:</p>
+					<p style="font-size: 0.875rem; color: #a1a1aa; margin-top: 1.5rem; margin-bottom: 0.5rem;">Complete example:</p>
 					@copyableCode("rust", rustExample())
 				</div>
 
 				<!-- cURL Tab -->
-				<div x-show="tab === 'curl'" class="space-y-4">
-					<p class="text-sm text-[#a1a1aa]">Sign data:</p>
+				<div x-show="tab === 'curl'">
+					<p style="font-size: 0.875rem; color: #a1a1aa; margin-bottom: 0.5rem;">Sign data:</p>
 					@copyableCode("bash", curlSignExample())
 					
-					<p class="text-sm text-[#a1a1aa] mt-6">Get key info:</p>
+					<p style="font-size: 0.875rem; color: #a1a1aa; margin-top: 1.5rem; margin-bottom: 0.5rem;">Get key info:</p>
 					@copyableCode("bash", `curl https://api.banhbaoring.io/v1/keys/{KEY_ID} \
   -H "Authorization: Bearer YOUR_API_KEY"`)
 				</div>
 			</section>
 
 			<!-- REST API Reference -->
-			<section id="rest-api" class="mb-16">
-				<h2 class="text-2xl font-bold mb-6">REST API Reference</h2>
+			<section id="rest-api" style="margin-bottom: 4rem;">
+				<h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1.5rem; color: #faf5ff;">REST API Reference</h2>
 				
-				<div class="space-y-6">
-					<div class="p-5 bg-[#1a1625] border border-[#4a3f5c]/50 rounded-xl">
-						<div class="flex items-center gap-3 mb-3">
-							<span class="px-2 py-1 text-xs font-mono bg-green-500/20 text-green-400 rounded">POST</span>
-							<code class="text-sm">/v1/keys</code>
+				<div style="display: flex; flex-direction: column; gap: 1.5rem;">
+					<div style="padding: 1.25rem; background-color: #1a1625; border: 1px solid rgba(74, 63, 92, 0.5); border-radius: 0.75rem;">
+						<div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+							<span style="padding: 0.25rem 0.5rem; font-size: 0.75rem; font-family: monospace; background-color: rgba(34, 197, 94, 0.2); color: #4ade80; border-radius: 0.25rem;">POST</span>
+							<code style="font-size: 0.875rem; color: #faf5ff;">/v1/keys</code>
 						</div>
-						<p class="text-sm text-[#a1a1aa]">Create a new signing key</p>
+						<p style="font-size: 0.875rem; color: #a1a1aa;">Create a new signing key</p>
 					</div>
 					
-					<div class="p-5 bg-[#1a1625] border border-[#4a3f5c]/50 rounded-xl">
-						<div class="flex items-center gap-3 mb-3">
-							<span class="px-2 py-1 text-xs font-mono bg-blue-500/20 text-blue-400 rounded">GET</span>
-							<code class="text-sm">/v1/keys/:id</code>
+					<div style="padding: 1.25rem; background-color: #1a1625; border: 1px solid rgba(74, 63, 92, 0.5); border-radius: 0.75rem;">
+						<div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+							<span style="padding: 0.25rem 0.5rem; font-size: 0.75rem; font-family: monospace; background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; border-radius: 0.25rem;">GET</span>
+							<code style="font-size: 0.875rem; color: #faf5ff;">/v1/keys/:id</code>
 						</div>
-						<p class="text-sm text-[#a1a1aa]">Get key details and public key</p>
+						<p style="font-size: 0.875rem; color: #a1a1aa;">Get key details and public key</p>
 					</div>
 					
-					<div class="p-5 bg-[#1a1625] border border-[#4a3f5c]/50 rounded-xl">
-						<div class="flex items-center gap-3 mb-3">
-							<span class="px-2 py-1 text-xs font-mono bg-green-500/20 text-green-400 rounded">POST</span>
-							<code class="text-sm">/v1/keys/:id/sign</code>
+					<div style="padding: 1.25rem; background-color: #1a1625; border: 1px solid rgba(74, 63, 92, 0.5); border-radius: 0.75rem;">
+						<div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+							<span style="padding: 0.25rem 0.5rem; font-size: 0.75rem; font-family: monospace; background-color: rgba(34, 197, 94, 0.2); color: #4ade80; border-radius: 0.25rem;">POST</span>
+							<code style="font-size: 0.875rem; color: #faf5ff;">/v1/keys/:id/sign</code>
 						</div>
-						<p class="text-sm text-[#a1a1aa]">Sign data with a key</p>
+						<p style="font-size: 0.875rem; color: #a1a1aa;">Sign data with a key</p>
 					</div>
 				</div>
 			</section>
 
 			<!-- Footer -->
-			<footer class="pt-8 border-t border-[#4a3f5c]/50">
-				<div class="flex items-center justify-between text-sm text-[#a1a1aa]">
-					<p>Need help? <a href="https://github.com/Bidon15/banhbaoring/issues" target="_blank" class="text-amber-400 hover:underline">Open an issue</a></p>
-					<a href="https://github.com/Bidon15/banhbaoring" target="_blank" class="hover:text-white transition-colors">⭐ Star on GitHub</a>
+			<footer style="padding-top: 2rem; border-top: 1px solid rgba(74, 63, 92, 0.5);">
+				<div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.875rem; color: #a1a1aa;">
+					<p>Need help? <a href="https://github.com/Bidon15/banhbaoring/issues" target="_blank" style="color: #fbbf24; text-decoration: none;">Open an issue</a></p>
+					<a href="https://github.com/Bidon15/banhbaoring" target="_blank" style="color: #a1a1aa; text-decoration: none;">⭐ Star on GitHub</a>
 				</div>
 			</footer>
 		</div>
@@ -186,9 +186,9 @@ banhbaoring = "0.1"`)
 
 // copyableCode renders a code block with a copy button.
 templ copyableCode(lang string, code string) {
-	<div class="code-block">
-		<pre class="p-4 bg-[#0f0d17] border border-[#4a3f5c]/50 rounded-xl text-sm overflow-x-auto"><code class="text-[#e4e4e7]">{ code }</code></pre>
-		<button onclick="copyCode(this)" class="copy-btn px-2 py-1 text-xs bg-[#4a3f5c] text-white rounded hover:bg-[#5a4f6c] transition-colors">Copy</button>
+	<div class="code-block" style="position: relative;">
+		<pre style="padding: 1rem; background-color: #0f0d17; border: 1px solid rgba(74, 63, 92, 0.5); border-radius: 0.75rem; font-size: 0.875rem; overflow-x: auto; margin: 0;"><code style="color: #e4e4e7; font-family: monospace;">{ code }</code></pre>
+		<button onclick="copyCode(this)" class="copy-btn" style="position: absolute; top: 0.5rem; right: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.75rem; background-color: #4a3f5c; color: white; border: none; border-radius: 0.25rem; cursor: pointer;">Copy</button>
 	</div>
 }
 

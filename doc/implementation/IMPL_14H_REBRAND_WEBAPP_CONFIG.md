@@ -111,138 +111,156 @@ services:
     container_name: popsigner
 ```
 
-### tailwind.config.js - Bloomberg Terminal Aesthetic
+### tailwind.config.js - 80s CRT Terminal Aesthetic
 
 ```javascript
-// Bloomberg Terminal / HFT aesthetic
-// Orange/amber on black, dark-only, data-dense
+// 1980s Bloomberg Terminal / CRT Phosphor Aesthetic
+// Amber + Green phosphor on black. Stranger Things S5 vibes.
 module.exports = {
-  darkMode: 'class', // Always dark
+  darkMode: 'class', // Always dark (CRTs were black)
   theme: {
     extend: {
       colors: {
-        // PRIMARY: Bloomberg Orange/Amber
-        primary: {
-          50: '#fffbeb',
-          100: '#fef3c7',
-          200: '#fde68a',
-          300: '#fcd34d',
-          400: '#fbbf24',
-          500: '#f59e0b',  // Main amber
-          600: '#d97706',  // Bloomberg orange
-          700: '#b45309',
-          800: '#92400e',
-          900: '#78350f',
+        // PRIMARY: Amber Phosphor (CRT glow)
+        phosphor: {
+          amber: '#FFB000',       // Main amber
+          'amber-bright': '#FFCC00', // Highlighted
+          'amber-dim': '#CC8800',    // Dimmed
+          'amber-dark': '#333300',   // Borders
         },
-        // ACCENT: Terminal cyan for data highlights
-        accent: {
-          400: '#22d3ee',
-          500: '#06b6d4',
-          600: '#0891b2',
+        // SECONDARY: Green Phosphor
+        crt: {
+          green: '#33FF00',       // Bright green
+          'green-dim': '#228B22', // Forest green
+          'green-dark': '#1A4D1A', // Very dark green
+          'green-bg': '#0D1A0D',  // Subtle green tint
         },
-        // Terminal backgrounds
+        // ALERT: Terminal Red
         terminal: {
+          red: '#FF3333',
+          'red-dim': '#CC2222',
           black: '#000000',
-          surface: '#0a0a0a',
-          elevated: '#141414',
-          hover: '#1f1f1f',
-        },
-        // Data colors
-        data: {
-          positive: '#22c55e',  // Green
-          negative: '#ef4444',  // Red
-          neutral: '#f59e0b',   // Orange
         },
       },
       fontFamily: {
-        sans: ['IBM Plex Sans', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['IBM Plex Mono', 'JetBrains Mono', 'SF Mono', 'monospace'],
+        // Monospace ONLY for terminal feel
+        mono: ['IBM Plex Mono', 'VT323', 'Courier New', monospace],
+        terminal: ['VT323', 'IBM Plex Mono', monospace],
+      },
+      boxShadow: {
+        // Phosphor glow effects
+        'glow-amber': '0 0 10px #FFB000, 0 0 20px #FFB000',
+        'glow-green': '0 0 10px #33FF00, 0 0 20px #33FF00',
+        'glow-red': '0 0 10px #FF3333',
       },
     },
   },
 }
 ```
 
-### static/css/input.css - Terminal Black + Bloomberg Orange
+### static/css/input.css - 80s CRT Phosphor Theme
 
 ```css
-/* POPSigner Terminal Aesthetic
-   Bloomberg Terminal / HFT vibes
-   Orange/amber on true black, dark-only */
+/* POPSigner 80s CRT Terminal Aesthetic
+   Amber + Green phosphor on black
+   Stranger Things S5 / Bloomberg 1980s vibes */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* === PRIMARY: Bloomberg Orange/Amber === */
-  --primary-400: #fbbf24;
-  --primary-500: #f59e0b;
-  --primary-600: #d97706;
+  /* === PHOSPHOR AMBER (Primary) === */
+  --phosphor-amber: #FFB000;
+  --phosphor-amber-bright: #FFCC00;
+  --phosphor-amber-dim: #CC8800;
+  --phosphor-amber-dark: #333300;
   
-  /* === ACCENT: Terminal Cyan === */
-  --accent-400: #22d3ee;
-  --accent-500: #06b6d4;
+  /* === PHOSPHOR GREEN (Secondary) === */
+  --phosphor-green: #33FF00;
+  --phosphor-green-dim: #228B22;
+  --phosphor-green-dark: #1A4D1A;
+  --phosphor-green-bg: #0D1A0D;
   
-  /* === TERMINAL BACKGROUNDS === */
-  --bg-primary: #000000;      /* True black */
-  --bg-secondary: #0a0a0a;    /* Card/surface */
-  --bg-tertiary: #141414;     /* Elevated */
-  --bg-hover: #1f1f1f;        /* Hover */
+  /* === TERMINAL RED (Alerts) === */
+  --terminal-red: #FF3333;
+  --terminal-red-dim: #CC2222;
   
-  /* === TEXT === */
-  --text-primary: #e5e5e5;
-  --text-secondary: #a3a3a3;
-  --text-tertiary: #737373;
-  --text-accent: #f59e0b;     /* Orange highlight */
+  /* === CRT BACKGROUNDS === */
+  --bg-crt: #000000;
+  --bg-surface: #0A0A0A;
+  --bg-elevated: #111111;
+  --bg-glow: #0D1A0D;
   
-  /* === BORDERS === */
-  --border: #262626;
-  --border-hover: #404040;
-  
-  /* === DATA COLORS (trading terminal) === */
-  --data-positive: #22c55e;   /* Green - up */
-  --data-negative: #ef4444;   /* Red - down */
-  --data-neutral: #f59e0b;    /* Orange - highlight */
+  /* === TEXT (Phosphor colors) === */
+  --text-primary: #FFB000;    /* Amber */
+  --text-secondary: #33FF00;  /* Green */
+  --text-muted: #666600;      /* Dim amber */
+  --text-dim: #336633;        /* Dim green */
 }
 
-/* No light theme. Terminal systems are dark. */
-
+/* CRT Monitor base */
 body {
-  background-color: var(--bg-primary);
+  background-color: var(--bg-crt);
   color: var(--text-primary);
+  font-family: 'IBM Plex Mono', 'VT323', monospace;
 }
 
-/* Monospace for data-heavy elements */
-.font-data {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
-  font-feature-settings: 'tnum' 1; /* Tabular numbers */
+/* Phosphor glow utility */
+.glow-amber {
+  text-shadow: 0 0 8px var(--phosphor-amber);
+}
+.glow-green {
+  text-shadow: 0 0 8px var(--phosphor-green);
+}
+.glow-red {
+  text-shadow: 0 0 8px var(--terminal-red);
 }
 
-/* Orange accent links */
-a {
-  color: var(--text-accent);
-}
-a:hover {
-  color: var(--primary-400);
-}
-
-/* Terminal-style cards */
-.card {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border);
-}
-.card:hover {
-  border-color: var(--primary-600);
+/* CRT scanline overlay */
+.crt-scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
 }
 
-/* Primary button - Bloomberg orange */
-.btn-primary {
-  background-color: var(--primary-600);
+/* Terminal button */
+.btn-terminal {
+  background-color: var(--phosphor-amber);
   color: #000000;
+  font-weight: bold;
+  text-transform: uppercase;
 }
-.btn-primary:hover {
-  background-color: var(--primary-500);
+.btn-terminal:hover {
+  background-color: var(--phosphor-amber-bright);
+  box-shadow: 0 0 20px var(--phosphor-amber);
+}
+
+/* Terminal card */
+.card-crt {
+  background-color: var(--bg-crt);
+  border: 1px solid var(--phosphor-amber-dark);
+}
+.card-crt:hover {
+  border-color: var(--phosphor-amber);
+  box-shadow: 0 0 10px rgba(255, 176, 0, 0.3);
+}
+
+/* Green variant */
+.card-crt-green {
+  border-color: var(--phosphor-green-dark);
+}
+.card-crt-green:hover {
+  border-color: var(--phosphor-green);
+  box-shadow: 0 0 10px rgba(51, 255, 0, 0.3);
 }
 ```
 

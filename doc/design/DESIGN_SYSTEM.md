@@ -110,128 +110,201 @@ The following words must **NEVER** appear in marketing copy:
 
 ## 4. Color Palette
 
-> **Aesthetic:** Bloomberg Terminal / HFT Trading Systems
+> **Aesthetic:** 1980s Bloomberg Terminal / CRT Phosphor
 > 
-> Think: data-dense, utilitarian, professional. Orange amber accents on near-black.
-> No purple. No gradients. No crypto wallet vibes.
+> Think: Stranger Things S5 vibes. Retro CRT monitors. Amber and green phosphor glow on black.
+> This is the authentic Bloomberg terminal from the 80s—not the modern orange.
 
-### 4.1 Primary Colors (Bloomberg Orange)
-
-```css
-:root {
-  /* === PRIMARY: Bloomberg Orange/Amber === */
-  --primary-50: #fffbeb;
-  --primary-100: #fef3c7;
-  --primary-200: #fde68a;
-  --primary-300: #fcd34d;
-  --primary-400: #fbbf24;
-  --primary-500: #f59e0b;    /* Main - Amber */
-  --primary-600: #d97706;    /* Bloomberg Orange */
-  --primary-700: #b45309;
-  --primary-800: #92400e;
-  --primary-900: #78350f;
-  
-  /* === ACCENT: Terminal Cyan === */
-  --accent-400: #22d3ee;
-  --accent-500: #06b6d4;     /* Cyan for data highlights */
-  --accent-600: #0891b2;
-}
-```
-
-### 4.2 Semantic Colors
+### 4.1 Primary Colors (CRT Phosphor)
 
 ```css
 :root {
-  /* Success - Terminal Green */
-  --success-400: #4ade80;
-  --success-500: #22c55e;
-  --success-600: #16a34a;
+  /* === PRIMARY: Amber Phosphor (Yellow-Orange CRT glow) === */
+  --phosphor-amber: #FFB000;      /* Classic amber phosphor */
+  --phosphor-amber-bright: #FFCC00; /* Highlighted amber */
+  --phosphor-amber-dim: #CC8800;  /* Dimmed amber */
   
-  /* Warning - Amber (same as primary) */
-  --warning-400: #fbbf24;
-  --warning-500: #f59e0b;
-  --warning-600: #d97706;
+  /* === SECONDARY: Green Phosphor (the classic "green screen") === */
+  --phosphor-green: #33FF00;      /* Bright phosphor green */
+  --phosphor-green-dim: #228B22;  /* Forest/dark green */
+  --phosphor-green-dark: #1A4D1A; /* Very dark green for backgrounds */
   
-  /* Error - Red */
-  --error-400: #f87171;
-  --error-500: #ef4444;
-  --error-600: #dc2626;
-  
-  /* Info - Cyan */
-  --info-400: #22d3ee;
-  --info-500: #06b6d4;
+  /* === ACCENT: Terminal Red (function keys) === */
+  --terminal-red: #FF3333;        /* Alert/stop red */
+  --terminal-red-dim: #CC2222;    /* Dimmed red */
 }
 ```
 
-### 4.3 Dark Theme (Terminal Black - Default)
+### 4.2 CRT Color Scale (Tailwind-compatible)
 
 ```css
 :root {
-  /* Bloomberg Terminal Dark */
-  --bg-primary: #000000;     /* True black */
-  --bg-secondary: #0a0a0a;   /* Card backgrounds */
-  --bg-tertiary: #141414;    /* Elevated surfaces */
-  --bg-hover: #1f1f1f;       /* Hover states */
+  /* Amber scale (primary) */
+  --amber-50: #FFFDF0;
+  --amber-100: #FFF8CC;
+  --amber-200: #FFEC99;
+  --amber-300: #FFDD66;
+  --amber-400: #FFCC00;   /* Bright highlight */
+  --amber-500: #FFB000;   /* Main phosphor amber */
+  --amber-600: #CC8800;   /* Dimmed */
+  --amber-700: #996600;
+  --amber-800: #664400;
+  --amber-900: #332200;
   
-  --text-primary: #e5e5e5;   /* Main text - slightly warm */
-  --text-secondary: #a3a3a3; /* Muted text */
-  --text-tertiary: #737373;  /* Disabled text */
-  --text-accent: #f59e0b;    /* Orange accent text */
-  
-  --border: #262626;         /* Borders - subtle */
-  --border-hover: #404040;   /* Hover borders */
-  
-  /* Data colors */
-  --data-positive: #22c55e;  /* Green - up/success */
-  --data-negative: #ef4444;  /* Red - down/error */
-  --data-neutral: #f59e0b;   /* Orange - highlight */
+  /* Green scale (secondary) */
+  --green-50: #F0FFF0;
+  --green-100: #CCFFCC;
+  --green-200: #99FF99;
+  --green-300: #66FF66;
+  --green-400: #33FF00;   /* Bright phosphor green */
+  --green-500: #22CC00;   /* Main green */
+  --green-600: #228B22;   /* Forest green */
+  --green-700: #1A6B1A;
+  --green-800: #1A4D1A;   /* Dark green */
+  --green-900: #0D260D;   /* Very dark */
 }
 ```
 
-### 4.4 Light Theme (Disabled)
-
-POPSigner is dark-mode only. No light theme.
+### 4.3 Semantic Colors (80s Terminal)
 
 ```css
-/* Light theme intentionally omitted.
-   Terminal systems are dark by default. */
+:root {
+  /* Success - Phosphor Green */
+  --success: #33FF00;
+  --success-dim: #228B22;
+  
+  /* Warning - Phosphor Amber */
+  --warning: #FFB000;
+  --warning-dim: #CC8800;
+  
+  /* Error - Terminal Red */
+  --error: #FF3333;
+  --error-dim: #CC2222;
+  
+  /* Data highlights */
+  --data-up: #33FF00;      /* Green - positive */
+  --data-down: #FF3333;    /* Red - negative */
+  --data-neutral: #FFB000; /* Amber - highlight */
+}
+```
+
+### 4.4 Dark Theme (CRT Black - Default)
+
+```css
+:root {
+  /* CRT Monitor Black */
+  --bg-primary: #000000;     /* True CRT black */
+  --bg-secondary: #0A0A0A;   /* Slightly elevated */
+  --bg-tertiary: #111111;    /* Card backgrounds */
+  --bg-hover: #1A1A1A;       /* Hover states */
+  --bg-glow: #0D1A0D;        /* Subtle green tint (CRT bleed) */
+  
+  /* Text - Phosphor colors */
+  --text-primary: #FFB000;   /* Amber phosphor (main text) */
+  --text-secondary: #33FF00; /* Green phosphor (data) */
+  --text-muted: #666600;     /* Dimmed amber */
+  --text-dim: #336633;       /* Dimmed green */
+  
+  /* Borders - Subtle phosphor glow */
+  --border: #333300;         /* Dark amber border */
+  --border-green: #1A4D1A;   /* Dark green border */
+  --border-hover: #FFB000;   /* Amber glow on hover */
+}
+```
+
+### 4.5 Light Theme
+
+```css
+/* NO LIGHT THEME.
+   CRT terminals were black. Period.
+   The phosphor glows on darkness. */
+```
+
+### 4.6 CRT Effects (Optional)
+
+```css
+/* Scanline overlay */
+.crt-scanlines {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+}
+
+/* Phosphor glow effect */
+.phosphor-glow {
+  text-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
+}
+
+/* CRT screen curve (subtle) */
+.crt-curve {
+  border-radius: 10px / 20px;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+}
 ```
 
 ---
 
 ## 5. Typography
 
-> **Aesthetic:** Terminal-first. Monospace prominence. Data-dense.
+> **Aesthetic:** 80s Terminal. Monospace EVERYTHING. CRT vibes.
 
 ### 5.1 Font Stack
 
 ```css
 :root {
-  /* Display - Sharp, utilitarian */
-  --font-display: "IBM Plex Sans", "Inter", system-ui, sans-serif;
+  /* ALL TEXT should feel like a terminal */
   
-  /* Body - Clean, readable */
-  --font-body: "IBM Plex Sans", "Inter", system-ui, sans-serif;
+  /* Primary - Classic terminal monospace */
+  --font-terminal: "IBM Plex Mono", "Fira Code", "Courier New", monospace;
   
-  /* Mono - PRIMARY for data, keys, addresses */
-  --font-mono: "IBM Plex Mono", "JetBrains Mono", "SF Mono", monospace;
+  /* Display - For large headlines (still mono, but can vary) */
+  --font-display: "VT323", "IBM Plex Mono", "Press Start 2P", monospace;
+  
+  /* Body - Readable mono */
+  --font-body: "IBM Plex Mono", "JetBrains Mono", monospace;
 }
 ```
 
 ### 5.2 Typography Rules
 
-- **Headlines:** Sans-serif, but lean toward monospace for technical pages
-- **Body:** Sans-serif for readability
-- **Data/Keys/Addresses:** ALWAYS monospace
-- **Numbers:** Monospace (tabular figures)
-- **Code blocks:** Monospace with terminal background
+- **EVERYTHING is monospace** - This is a terminal
+- **Headlines:** Larger monospace, all caps optional
+- **Body:** Standard monospace
+- **Data/Keys/Addresses:** Monospace (obviously)
+- **Numbers:** Tabular, fixed-width
+- **Phosphor glow:** Add text-shadow for emphasis
 
-### 5.3 Avoid
+### 5.3 Text Effects
 
-- Outfit, Space Grotesk (crypto clichés)
-- Playful or decorative fonts
-- Rounded, friendly fonts
-- Any font with personality
+```css
+/* Phosphor glow for important text */
+.text-glow {
+  text-shadow: 0 0 8px currentColor;
+}
+
+/* Flickering effect (subtle) */
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 0.95; }
+  94% { opacity: 0.9; }
+  96% { opacity: 0.95; }
+}
+
+.text-flicker {
+  animation: flicker 3s infinite;
+}
+```
+
+### 5.4 Avoid
+
+- Sans-serif fonts (not terminal)
+- Rounded fonts
+- Modern "clean" typography
+- Variable fonts with personality
 
 ### 5.3 Font Sizes (Tailwind scale)
 
@@ -251,101 +324,120 @@ POPSigner is dark-mode only. No light theme.
 
 ## 6. Landing Page Design
 
-### 6.1 Hero Section
+### 6.1 Hero Section (Terminal)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                             │
-│  ┌─── NAV ───────────────────────────────────────────────────────────────┐  │
-│  │  ◇ POPSigner        Docs  Pricing  GitHub         [Sign In] [Deploy]  │  │
+│ bg-black                                                                    │
+│  ┌─── NAV (border-b border-neutral-900) ─────────────────────────────────┐  │
+│  │  ◇ POPSigner       Docs  Pricing  GitHub       [Login] ███Deploy███  │  │
+│  │  (amber-500)       (neutral-400)               (text)  (amber-600)   │  │
 │  └───────────────────────────────────────────────────────────────────────┘  │
 │                                                                             │
 │                                                                             │
-│         Point-of-Presence Signing Infrastructure                            │
+│         Point-of-Presence                                                   │
+│         Signing Infrastructure  <-- font-mono, text-5xl                     │
+│         ^^^^^^^^^^^^^^^^^^^^^^                                              │
+│         (text-amber-500)                                                    │
 │                                                                             │
 │      A distributed signing layer designed to live inline with               │
-│      execution—not behind an API queue.                                     │
+│      execution—not behind an API queue. <-- text-neutral-400                │
 │                                                                             │
 │      Deploy next to your systems. Keys remain remote.                       │
-│      You remain sovereign.                                                  │
+│      You remain sovereign. <-- text-neutral-500                             │
 │                                                                             │
-│          ┌─────────────────────────────────────────────┐                    │
-│          │  Deploy POPSigner →                         │                    │
-│          └─────────────────────────────────────────────┘                    │
+│          ┌──────────────────────────────────────────┐                       │
+│          │  Deploy POPSigner →                      │ bg-amber-600          │
+│          └──────────────────────────────────────────┘ text-black            │
 │                                                                             │
-│          [Read the Architecture →]                                          │
-│                                                                             │
-│      (formerly BanhBaoRing)                                                 │
+│          [Documentation] <-- border border-neutral-700                      │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 6.2 What It Is Section
+### 6.2 Capabilities Section (Terminal)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
+│ bg-black                                                                    │
 │                                                                             │
-│                         A signing layer, not a service.                     │
-│                                                                             │
-│   POPSigner is Point-of-Presence signing infrastructure. It deploys        │
-│   where your systems already run—the same region, the same rack,            │
-│   the same execution path.                                                  │
-│                                                                             │
-│   This isn't custody. This isn't MPC. This is signing at the               │
-│   point of execution.                                                       │
+│   _capabilities  <-- font-mono, text-3xl, text-white                        │
+│   ^                                                                         │
+│   (amber-500)                                                               │
 │                                                                             │
 │   ┌─────────────────────┐ ┌─────────────────────┐ ┌─────────────────────┐  │
+│   │ bg-neutral-950      │ │ border-neutral-800  │ │ hover:border-amber  │  │
 │   │                     │ │                     │ │                     │  │
-│   │   Inline Signing    │ │   Sovereignty       │ │   Neutral Anchor    │  │
+│   │ inline_signing      │ │ exit_guarantee      │ │ neutral_anchor      │  │
+│   │ (font-mono amber)   │ │ (font-mono amber)   │ │ (font-mono amber)   │  │
 │   │                     │ │                     │ │                     │  │
-│   │   On the execution  │ │   Export anytime.   │ │   Recovery data     │  │
-│   │   path, not behind  │ │   Exit anytime.     │ │   anchored to       │  │
-│   │   a queue.          │ │   No lock-in.       │ │   neutral DA.       │  │
+│   │ On the execution    │ │ Export anytime.     │ │ Recovery data       │  │
+│   │ path, not behind    │ │ Exit anytime.       │ │ anchored to         │  │
+│   │ a queue.            │ │ No lock-in.         │ │ neutral DA.         │  │
+│   │ (text-neutral-400)  │ │ (text-neutral-400)  │ │ (text-neutral-400)  │  │
 │   │                     │ │                     │ │                     │  │
+│   └─────────────────────┘ └─────────────────────┘ └─────────────────────┘  │
+│                                                                             │
+│   ┌─────────────────────┐ ┌─────────────────────┐ ┌─────────────────────┐  │
+│   │ plugin_arch         │ │ audit_trail         │ │ open_source         │  │
 │   └─────────────────────┘ └─────────────────────┘ └─────────────────────┘  │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 6.3 Pricing Section
+### 6.3 Pricing Section (Terminal)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
+│ bg-black                                                                    │
 │                                                                             │
-│      Three deployment models. Choose your isolation level.                  │
+│   _pricing  <-- font-mono, text-3xl, text-white                             │
+│   ^                                                                         │
+│   (amber-500)                                                               │
+│                                                                             │
+│   We sell placement, not transactions.  <-- text-neutral-500                │
 │                                                                             │
 │   ┌─────────────────────┐ ┌─────────────────────┐ ┌─────────────────────┐  │
+│   │ bg-neutral-950      │ │ border-2 amber-600  │ │ border-neutral-800  │  │
+│   │ border-neutral-800  │ │ ┌ RECOMMENDED ┐     │ │                     │  │
+│   │                     │ │ └─────────────┘     │ │                     │  │
+│   │ shared (mono, gray) │ │ priority (amber)    │ │ dedicated (gray)    │  │
 │   │                     │ │                     │ │                     │  │
-│   │  SHARED POPSIGNER   │ │ PRIORITY POPSIGNER  │ │ DEDICATED POPSIGNER │  │
-│   │                     │ │  ★ MOST POPULAR     │ │                     │  │
-│   │      €49/month      │ │     €499/month      │ │   €19,999/month     │  │
+│   │ €49                 │ │ €499                │ │ €19,999             │  │
+│   │ /mo (font-mono)     │ │ /mo (font-mono)     │ │ /mo (font-mono)     │  │
 │   │                     │ │                     │ │                     │  │
-│   │   • Shared POP      │ │   • Priority lanes  │ │   • Region-pinned   │  │
-│   │   • No SLA          │ │   • Region select   │ │   • CPU isolation   │  │
-│   │   • Plugins         │ │   • 99.9% SLA       │ │   • 99.99% SLA      │  │
-│   │   • Escape hatch    │ │   • Self-serve      │ │   • Manual onboard  │  │
+│   │ ▸ Shared POP        │ │ ▸ Priority lanes    │ │ ▸ Region-pinned     │  │
+│   │ ▸ No SLA            │ │ ▸ Region select     │ │ ▸ CPU isolation     │  │
+│   │ ▸ Plugins           │ │ ▸ 99.9% SLA         │ │ ▸ 99.99% SLA        │  │
+│   │ ▸ Exit guarantee    │ │ ▸ Self-serve        │ │ ▸ Manual onboard    │  │
 │   │                     │ │                     │ │                     │  │
-│   │  [Start with Shared]│ │  [Deploy Priority]  │ │  [Contact Us]       │  │
+│   │ [Start with Shared] │ │ ███Deploy Priority██│ │ [Contact Us]        │  │
+│   │ (border outline)    │ │ (bg-amber-600)      │ │ (border outline)    │  │
 │   │                     │ │                     │ │                     │  │
 │   └─────────────────────┘ └─────────────────────┘ └─────────────────────┘  │
 │                                                                             │
-│   Self-host option is always free. 100% open source.                        │
+│   Self-host forever. Apache 2.0.  <-- text-neutral-600                      │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 6.4 CTA Section
+### 6.4 CTA Section (Terminal)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
+│ bg-neutral-950, border-t border-neutral-800                                 │
 │                                                                             │
-│       Deploy signing infrastructure that lives where you do.                │
+│   $ deploy signing infrastructure  <-- font-mono, text-3xl                  │
+│   ^                                                                         │
+│   (amber-500)                                                               │
+│                                                                             │
+│   Keys remote. Signing inline. You sovereign.  <-- text-neutral-400         │
 │                                                                             │
 │                  ┌───────────────────────────────┐                          │
-│                  │     Deploy POPSigner →        │                          │
-│                  └───────────────────────────────┘                          │
+│                  │     Deploy POPSigner →        │  bg-amber-600            │
+│                  └───────────────────────────────┘  text-black              │
 │                                                                             │
-│                  [Read Documentation →]                                     │
+│                  [Documentation]  <-- border border-neutral-700             │
 │                                                                             │
 │   ┌─────────────────────┐ ┌─────────────────────┐ ┌─────────────────────┐  │
 │   │   Open Source       │ │   Built on OpenBao  │ │   Exit by Default   │  │
@@ -354,21 +446,23 @@ POPSigner is dark-mode only. No light theme.
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 6.5 Footer
+### 6.5 Footer (Terminal)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
+│ bg-black, border-t border-neutral-900                                       │
 │                                                                             │
-│  ◇ POPSigner              Product        Developers       Company          │
-│                           --------       -----------      --------         │
-│  Point-of-Presence        Pricing        Documentation    About            │
-│  Signing Infrastructure   Docs           SDK (Go)         Contact          │
-│                           GitHub         SDK (Rust)                        │
-│                           Status         API Reference                     │
+│  ◇ POPSigner  <-- font-mono, amber-500 for diamond, white for text          │
+│  Point-of-Presence signing infrastructure  <-- text-neutral-600, text-sm    │
+│                                                                             │
+│                            Docs    Pricing    GitHub    Contact             │
+│                            ----    -------    ------    -------             │
+│                            text-neutral-500, hover:text-amber-500           │
 │                                                                             │
 │  ─────────────────────────────────────────────────────────────────────────  │
+│  border-t border-neutral-900                                                │
 │                                                                             │
-│  © 2025 POPSigner. Open source under Apache 2.0.      [GitHub] [Discord]   │
+│  © 2025 POPSigner. Apache 2.0.  <-- text-neutral-700, text-xs               │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -377,71 +471,155 @@ POPSigner is dark-mode only. No light theme.
 
 ## 7. Component Library
 
+> **Aesthetic:** 1980s CRT Terminal. Phosphor glow. Amber + Green on black.
+
 ### 7.1 Buttons
 
 ```html
-<!-- Primary -->
+<!-- Primary - Amber Phosphor -->
 <button class="
-  bg-primary-600 hover:bg-primary-700
-  text-white font-medium 
-  px-6 py-3 rounded-lg
-  transition-colors duration-200
+  bg-[#FFB000] hover:bg-[#FFCC00]
+  text-black font-mono font-bold
+  px-6 py-3 uppercase
+  shadow-[0_0_10px_#FFB000]
+  hover:shadow-[0_0_20px_#FFCC00]
 ">
-  Deploy POPSigner →
+  [ DEPLOY POPSIGNER ]
 </button>
 
-<!-- Secondary - outline -->
+<!-- Secondary - Green Outline -->
 <button class="
-  border border-zinc-600 
-  text-zinc-300
-  px-5 py-2.5 rounded-lg
-  hover:bg-zinc-800 hover:border-zinc-500
-  transition-colors duration-200
+  border-2 border-[#33FF00]
+  text-[#33FF00] font-mono
+  px-5 py-2.5 uppercase
+  hover:bg-[#33FF00] hover:text-black
+  hover:shadow-[0_0_15px_#33FF00]
 ">
-  Read Documentation
+  [ DOCUMENTATION ]
 </button>
 
-<!-- Ghost -->
+<!-- Danger - Red -->
 <button class="
-  text-zinc-400 
-  px-4 py-2 rounded-lg
-  hover:text-white hover:bg-zinc-800
-  transition-colors duration-200
+  border-2 border-[#FF3333]
+  text-[#FF3333] font-mono
+  px-4 py-2 uppercase
+  hover:bg-[#FF3333] hover:text-black
 ">
-  Cancel
+  [ CANCEL ]
 </button>
 ```
 
 ### 7.2 Cards
 
 ```html
-<!-- Feature card -->
+<!-- CRT Feature Card -->
 <div class="
-  bg-zinc-900
-  border border-zinc-800 rounded-xl p-6
-  hover:border-zinc-700
-  transition-colors duration-200
+  bg-black
+  border border-[#333300] p-6
+  hover:border-[#FFB000]
+  hover:shadow-[0_0_10px_rgba(255,176,0,0.3)]
 ">
-  <h3 class="text-lg font-medium text-white mb-2">Inline Signing</h3>
-  <p class="text-zinc-400 text-sm">On the execution path, not behind a queue.</p>
+  <h3 class="font-mono text-[#FFB000] text-lg mb-2 uppercase
+             text-shadow-[0_0_8px_#FFB000]">
+    INLINE_SIGNING
+  </h3>
+  <p class="font-mono text-[#33FF00] text-sm opacity-80">
+    On the execution path, not behind a queue.
+  </p>
+</div>
+
+<!-- Data Card (CRT Display) -->
+<div class="
+  bg-black
+  border border-[#1A4D1A] p-4
+">
+  <div class="font-mono text-xs text-[#666600] mb-1">KEYS_ACTIVE</div>
+  <div class="font-mono text-3xl text-[#33FF00] text-shadow-[0_0_10px_#33FF00]">247</div>
+  <div class="font-mono text-xs text-[#33FF00] mt-1">▲ +12 TODAY</div>
 </div>
 ```
 
 ### 7.3 Code Blocks
 
 ```html
-<!-- Code block -->
-<div class="relative">
-  <div class="absolute top-3 right-3 flex items-center gap-2">
-    <span class="text-xs text-zinc-500 uppercase font-mono">Go</span>
-    <button class="text-zinc-400 hover:text-white p-1.5 rounded">📋</button>
+<!-- CRT Code Block -->
+<div class="relative bg-black border border-[#333300]">
+  <!-- Header bar -->
+  <div class="flex items-center justify-between border-b border-[#333300] px-4 py-2 bg-[#0A0A0A]">
+    <span class="font-mono text-xs text-[#666600]">main.go</span>
+    <button class="font-mono text-xs text-[#666600] hover:text-[#FFB000]">[COPY]</button>
   </div>
-  <pre class="bg-zinc-950 border border-zinc-800 rounded-lg p-6 overflow-x-auto">
-    <code class="text-sm text-zinc-300">
-client := popsigner.NewClient("psk_xxx")
-sig, _ := client.Sign.Sign(ctx, keyID, txBytes, false)
-    </code>
+  <!-- Code with phosphor colors -->
+  <pre class="p-4 overflow-x-auto font-mono text-sm">
+<span class="text-[#FFB000]">client</span> := popsigner.<span class="text-[#FFCC00]">NewClient</span>(<span class="text-[#33FF00]">"psk_xxx"</span>)
+<span class="text-[#FFB000]">sig</span>, _ := client.Sign.<span class="text-[#FFCC00]">Sign</span>(ctx, keyID, txBytes, <span class="text-[#33FF00]">false</span>)
   </pre>
+</div>
+```
+
+### 7.4 Data Tables (CRT Terminal)
+
+```html
+<!-- CRT Data Table -->
+<table class="w-full font-mono text-sm">
+  <thead class="border-b border-[#333300]">
+    <tr class="text-left text-xs text-[#FFB000] uppercase">
+      <th class="px-4 py-3">NAME</th>
+      <th class="px-4 py-3">ADDRESS</th>
+      <th class="px-4 py-3">STATUS</th>
+    </tr>
+  </thead>
+  <tbody class="text-[#33FF00]">
+    <tr class="border-b border-[#1A1A1A] hover:bg-[#0D1A0D]">
+      <td class="px-4 py-3">validator_1</td>
+      <td class="px-4 py-3 opacity-70">celestia1abc...</td>
+      <td class="px-4 py-3 text-[#33FF00] text-shadow-[0_0_5px_#33FF00]">ACTIVE</td>
+    </tr>
+    <tr class="border-b border-[#1A1A1A] hover:bg-[#0D1A0D]">
+      <td class="px-4 py-3">validator_2</td>
+      <td class="px-4 py-3 opacity-70">celestia1def...</td>
+      <td class="px-4 py-3 text-[#FF3333]">OFFLINE</td>
+    </tr>
+  </tbody>
+</table>
+```
+
+### 7.5 Status Indicators
+
+```html
+<!-- CRT Status Badges -->
+<span class="font-mono text-xs px-2 py-1 text-[#33FF00] border border-[#33FF00] 
+             shadow-[0_0_5px_#33FF00]">ACTIVE</span>
+             
+<span class="font-mono text-xs px-2 py-1 text-[#FF3333] border border-[#FF3333]
+             shadow-[0_0_5px_#FF3333]">ERROR</span>
+             
+<span class="font-mono text-xs px-2 py-1 text-[#FFB000] border border-[#FFB000]
+             shadow-[0_0_5px_#FFB000]">PENDING</span>
+
+<span class="font-mono text-xs px-2 py-1 text-[#33FF00] border border-[#228B22]">
+  EXIT_OK
+</span>
+```
+
+### 7.6 CRT Screen Container
+
+```html
+<!-- Wrap content in CRT monitor frame -->
+<div class="
+  bg-black
+  border-4 border-[#2A2A2A]
+  rounded-lg
+  p-1
+  shadow-[inset_0_0_50px_rgba(0,0,0,0.5)]
+">
+  <!-- Optional scanlines overlay -->
+  <div class="
+    relative
+    bg-[repeating-linear-gradient(0deg,rgba(0,0,0,0.1),rgba(0,0,0,0.1)_1px,transparent_1px,transparent_2px)]
+  ">
+    <!-- Content here -->
+  </div>
 </div>
 ```
 
@@ -473,23 +651,31 @@ sig, _ := client.Sign.Sign(ctx, keyID, txBytes, false)
 └───────────────────────────────────────────────────────────────┘
 ```
 
-### 8.2 Dashboard Layout
+### 8.2 Dashboard Layout (Terminal)
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│ Top Bar (logo, search, user menu)                             │
+│ ◇ POPSigner                          user@org ▾              │
 ├───────────────┬───────────────────────────────────────────────┤
 │               │                                               │
-│   Sidebar     │   Main Content                                │
+│   _dashboard  │   $ _keys                                     │
+│   _keys       │   ───────────────────────────────────────     │
+│   _audit      │                                               │
+│   _settings   │   name         address          status        │
+│               │   ────         ───────          ──────        │
+│               │   validator_1  celestia1abc...  ACTIVE        │
+│               │   validator_2  celestia1def...  EXIT_OK       │
 │               │                                               │
-│   Overview    │   ┌─────────────────────────────────────────┐ │
-│   Keys        │   │  Page Content                           │ │
-│   Usage       │   │                                         │ │
-│   Audit       │   │                                         │ │
-│   Settings    │   │                                         │ │
-│               │   └─────────────────────────────────────────┘ │
+│   _export     │   [create_key →]                              │
 │               │                                               │
 └───────────────┴───────────────────────────────────────────────┘
+
+Notes:
+- Sidebar: bg-neutral-950, border-r border-neutral-800
+- Nav items: font-mono, prefixed with underscore
+- Active state: text-amber-500, bg-neutral-900
+- Main content: bg-black
+- Data tables: monospace, trading terminal style
 ```
 
 ---

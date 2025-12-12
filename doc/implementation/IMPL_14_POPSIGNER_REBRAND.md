@@ -4,6 +4,46 @@
 
 ---
 
+## Design Aesthetic: 1980s Bloomberg Terminal / CRT Phosphor
+
+**CRITICAL for all webapp agents (Stage 2):**
+
+The web application MUST use **authentic 1980s CRT terminal vibes** (Stranger Things S5 aesthetic).
+
+| Element | Specification |
+|---------|---------------|
+| **Background** | True CRT black (`#000000`) |
+| **Primary Text** | Phosphor Amber (`#FFB000`) |
+| **Secondary Text** | Phosphor Green (`#33FF00`) |
+| **Accent/Alert** | Terminal Red (`#FF3333`) |
+| **Borders** | Dark amber (`#333300`) or dark green (`#1A4D1A`) |
+| **Typography** | Monospace ONLY (IBM Plex Mono, VT323) |
+| **Effects** | Phosphor glow (`text-shadow`), optional scanlines |
+| **Theme** | Dark mode ONLY (CRT monitors were black) |
+
+### Color Reference (from the 80s Bloomberg image)
+
+```
+Amber Phosphor:   #FFB000  (main text, highlights)
+Bright Yellow:    #FFCC00  (emphasized data)
+Green Phosphor:   #33FF00  (secondary data, success)
+Dark Green:       #1A4D1A  (backgrounds, dimmed)
+Terminal Red:     #FF3333  (errors, alerts)
+Black:            #000000  (CRT background)
+```
+
+**❌ Forbidden:**
+- Violet/purple (crypto wallet)
+- Modern sans-serif fonts
+- Gradients
+- Light themes
+- Rounded corners
+- Any color not in the phosphor palette
+
+**Reference:** See `doc/design/DESIGN_SYSTEM.md` for full specification.
+
+---
+
 ## Parallel Agent Tasks
 
 Fire up agents with these independent task documents:
