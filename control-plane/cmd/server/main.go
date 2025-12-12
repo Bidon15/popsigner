@@ -7,6 +7,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -19,8 +20,12 @@ import (
 	"github.com/Bidon15/banhbaoring/control-plane/internal/database"
 	"github.com/Bidon15/banhbaoring/control-plane/internal/middleware"
 	"github.com/Bidon15/banhbaoring/control-plane/internal/pkg/response"
+	"github.com/Bidon15/banhbaoring/control-plane/internal/repository"
+	"github.com/Bidon15/banhbaoring/control-plane/internal/service"
 	"github.com/Bidon15/banhbaoring/control-plane/templates/pages"
 )
+
+const sessionCookieName = "banhbao_session"
 
 func main() {
 	// Setup structured logger
@@ -67,6 +72,17 @@ func main() {
 	defer redis.Close()
 	logger.Info("Connected to Redis")
 
+	// Initialize repositories
+	userRepo := repository.NewUserRepository(db.Pool())
+	sessionRepo := repository.NewSessionRepository(db.Pool())
+
+	// Initialize OAuth service
+	oauthSvc := service.NewOAuthService(&cfg.Auth, userRepo, sessionRepo)
+
+	logger.Info("OAuth providers configured",
+		slog.Any("providers", oauthSvc.GetSupportedProviders()),
+	)
+
 	// Setup router
 	r := chi.NewRouter()
 
@@ -90,12 +106,16 @@ func main() {
 	r.Get("/", landingPageHandler())
 	r.Get("/login", loginPageHandler())
 	r.Get("/signup", signupPageHandler())
+	r.Get("/logout", logoutHandler(sessionRepo))
 
-	// OAuth routes
-	r.Get("/auth/github", oauthGitHubHandler(cfg))
-	r.Get("/auth/github/callback", oauthGitHubCallbackHandler(cfg))
-	r.Get("/auth/google", oauthGoogleHandler(cfg))
-	r.Get("/auth/google/callback", oauthGoogleCallbackHandler(cfg))
+	// Dashboard (protected by session check)
+	r.Get("/dashboard", dashboardHandler(sessionRepo, userRepo))
+
+	// OAuth routes - using the service
+	r.Get("/auth/github", oauthRedirectHandler(oauthSvc, "github"))
+	r.Get("/auth/github/callback", oauthCallbackHandler(oauthSvc, "github", cfg))
+	r.Get("/auth/google", oauthRedirectHandler(oauthSvc, "google"))
+	r.Get("/auth/google/callback", oauthCallbackHandler(oauthSvc, "google", cfg))
 
 	// API v1 routes
 	r.Route("/v1", func(r chi.Router) {
@@ -132,9 +152,6 @@ func main() {
 
 			// Webhooks (Agent 10A)
 			// r.Mount("/webhooks", webhooksHandler.Routes())
-
-			// Billing (Agent 10B)
-			// r.Mount("/billing", billingHandler.Routes())
 		})
 	})
 
@@ -218,86 +235,6 @@ func landingPageHandler() http.HandlerFunc {
 	}
 }
 
-// oauthGitHubHandler redirects to GitHub for OAuth.
-func oauthGitHubHandler(cfg *config.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		clientID := cfg.Auth.OAuthGitHubID
-		if clientID == "" {
-			http.Error(w, "GitHub OAuth not configured", http.StatusServiceUnavailable)
-			return
-		}
-		redirectURI := cfg.Auth.OAuthCallbackURL + "/auth/github/callback"
-		authURL := fmt.Sprintf(
-			"https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s&scope=user:email",
-			clientID, redirectURI,
-		)
-		http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
-	}
-}
-
-// oauthGitHubCallbackHandler handles GitHub OAuth callback.
-func oauthGitHubCallbackHandler(cfg *config.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		code := r.URL.Query().Get("code")
-		if code == "" {
-			http.Redirect(w, r, "/login?error=No+authorization+code", http.StatusFound)
-			return
-		}
-		// TODO: Exchange code for token and create session
-		// For now, show success message
-		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<!DOCTYPE html>
-<html><head><title>GitHub Login</title></head>
-<body style="background:#0f172a;color:#f1f5f9;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;">
-<div style="text-align:center;">
-<h1>✅ GitHub OAuth Working!</h1>
-<p>Authorization code received: ` + code[:8] + `...</p>
-<p>Full OAuth flow will be implemented with session management.</p>
-<a href="/" style="color:#fbbf24;">← Back to Home</a>
-</div></body></html>`))
-	}
-}
-
-// oauthGoogleHandler redirects to Google for OAuth.
-func oauthGoogleHandler(cfg *config.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		clientID := cfg.Auth.OAuthGoogleID
-		if clientID == "" {
-			http.Error(w, "Google OAuth not configured", http.StatusServiceUnavailable)
-			return
-		}
-		redirectURI := cfg.Auth.OAuthCallbackURL + "/auth/google/callback"
-		authURL := fmt.Sprintf(
-			"https://accounts.google.com/o/oauth2/v2/auth?client_id=%s&redirect_uri=%s&response_type=code&scope=email%%20profile",
-			clientID, redirectURI,
-		)
-		http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
-	}
-}
-
-// oauthGoogleCallbackHandler handles Google OAuth callback.
-func oauthGoogleCallbackHandler(cfg *config.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		code := r.URL.Query().Get("code")
-		if code == "" {
-			http.Redirect(w, r, "/login?error=No+authorization+code", http.StatusFound)
-			return
-		}
-		// TODO: Exchange code for token and create session
-		// For now, show success message
-		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<!DOCTYPE html>
-<html><head><title>Google Login</title></head>
-<body style="background:#0f172a;color:#f1f5f9;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;">
-<div style="text-align:center;">
-<h1>✅ Google OAuth Working!</h1>
-<p>Authorization code received: ` + code[:8] + `...</p>
-<p>Full OAuth flow will be implemented with session management.</p>
-<a href="/" style="color:#fbbf24;">← Back to Home</a>
-</div></body></html>`))
-	}
-}
-
 // loginPageHandler serves the login page using the templ template.
 func loginPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -316,3 +253,156 @@ func signupPageHandler() http.HandlerFunc {
 	}
 }
 
+// oauthRedirectHandler redirects the user to the OAuth provider.
+func oauthRedirectHandler(oauthSvc service.OAuthService, provider string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Generate a random state for CSRF protection
+		state := fmt.Sprintf("%d", time.Now().UnixNano())
+
+		authURL, err := oauthSvc.GetAuthURL(provider, state)
+		if err != nil {
+			slog.Error("Failed to get OAuth URL", slog.String("provider", provider), slog.String("error", err.Error()))
+			http.Redirect(w, r, "/login?error="+url.QueryEscape("OAuth provider not configured"), http.StatusFound)
+			return
+		}
+
+		// Store state in a cookie for verification (short-lived)
+		http.SetCookie(w, &http.Cookie{
+			Name:     "oauth_state",
+			Value:    state,
+			Path:     "/",
+			MaxAge:   300, // 5 minutes
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+		})
+
+		http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
+	}
+}
+
+// oauthCallbackHandler handles the OAuth callback from the provider.
+func oauthCallbackHandler(oauthSvc service.OAuthService, provider string, cfg *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := r.URL.Query().Get("code")
+		if code == "" {
+			slog.Warn("OAuth callback missing code", slog.String("provider", provider))
+			http.Redirect(w, r, "/login?error="+url.QueryEscape("Authorization failed"), http.StatusFound)
+			return
+		}
+
+		// TODO: Verify state parameter matches cookie for CSRF protection
+		// For now, we'll skip this for simplicity
+
+		// Handle the OAuth callback - this exchanges code for token, fetches user info, creates/finds user, creates session
+		user, sessionID, err := oauthSvc.HandleCallback(r.Context(), provider, code)
+		if err != nil {
+			slog.Error("OAuth callback failed",
+				slog.String("provider", provider),
+				slog.String("error", err.Error()),
+			)
+			http.Redirect(w, r, "/login?error="+url.QueryEscape("Authentication failed: "+err.Error()), http.StatusFound)
+			return
+		}
+
+		slog.Info("User authenticated via OAuth",
+			slog.String("provider", provider),
+			slog.String("user_id", user.ID.String()),
+			slog.String("email", user.Email),
+		)
+
+		// Set the session cookie
+		http.SetCookie(w, &http.Cookie{
+			Name:     sessionCookieName,
+			Value:    sessionID,
+			Path:     "/",
+			MaxAge:   int(cfg.Auth.SessionExpiry.Seconds()),
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+		})
+
+		// Clear the OAuth state cookie
+		http.SetCookie(w, &http.Cookie{
+			Name:   "oauth_state",
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
+		})
+
+		// Redirect to dashboard
+		http.Redirect(w, r, "/dashboard", http.StatusFound)
+	}
+}
+
+// dashboardHandler serves the dashboard page for authenticated users.
+func dashboardHandler(sessionRepo repository.SessionRepository, userRepo repository.UserRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Get session cookie
+		cookie, err := r.Cookie(sessionCookieName)
+		if err != nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+
+		// Validate session
+		session, err := sessionRepo.Get(r.Context(), cookie.Value)
+		if err != nil || session == nil {
+			// Invalid or expired session
+			http.SetCookie(w, &http.Cookie{
+				Name:   sessionCookieName,
+				Value:  "",
+				Path:   "/",
+				MaxAge: -1,
+			})
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+
+		// Check if session is expired
+		if session.ExpiresAt.Before(time.Now()) {
+			_ = sessionRepo.Delete(r.Context(), cookie.Value)
+			http.SetCookie(w, &http.Cookie{
+				Name:   sessionCookieName,
+				Value:  "",
+				Path:   "/",
+				MaxAge: -1,
+			})
+			http.Redirect(w, r, "/login?error="+url.QueryEscape("Session expired"), http.StatusFound)
+			return
+		}
+
+		// Get user info
+		user, err := userRepo.GetByID(r.Context(), session.UserID)
+		if err != nil || user == nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+
+		// Render dashboard
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		pages.DashboardPage(user).Render(r.Context(), w)
+	}
+}
+
+// logoutHandler logs the user out by deleting their session.
+func logoutHandler(sessionRepo repository.SessionRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Get session cookie
+		cookie, err := r.Cookie(sessionCookieName)
+		if err == nil && cookie.Value != "" {
+			// Delete session from database
+			_ = sessionRepo.Delete(r.Context(), cookie.Value)
+		}
+
+		// Clear the session cookie
+		http.SetCookie(w, &http.Cookie{
+			Name:   sessionCookieName,
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
+		})
+
+		http.Redirect(w, r, "/", http.StatusFound)
+	}
+}

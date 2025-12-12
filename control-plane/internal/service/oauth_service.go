@@ -68,7 +68,7 @@ func NewOAuthService(
 			ClientID:     cfg.OAuthGitHubID,
 			ClientSecret: cfg.OAuthGitHubSecret,
 			Endpoint:     github.Endpoint,
-			RedirectURL:  callbackBaseURL + "/v1/auth/oauth/github/callback",
+			RedirectURL:  callbackBaseURL + "/auth/github/callback",
 			Scopes:       []string{"user:email"},
 		}
 	}
@@ -79,7 +79,7 @@ func NewOAuthService(
 			ClientID:     cfg.OAuthGoogleID,
 			ClientSecret: cfg.OAuthGoogleSecret,
 			Endpoint:     google.Endpoint,
-			RedirectURL:  callbackBaseURL + "/v1/auth/oauth/google/callback",
+			RedirectURL:  callbackBaseURL + "/auth/google/callback",
 			Scopes:       []string{"email", "profile"},
 		}
 	}
