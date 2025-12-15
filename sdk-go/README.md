@@ -54,9 +54,102 @@ func main() {
 - **Key Management**: Create, list, get, delete, import, and export keys
 - **Signing**: Sign messages inline with your execution path
 - **Batch Operations**: Parallel signing for worker-native workloads
+- **Celestia Integration**: Drop-in keyring for Celestia Node client
 - **Organizations**: Manage organizations, members, and namespaces
 - **Audit Logs**: Query audit logs with filtering and pagination
 - **Exit Guarantee**: Export keys at any time—sovereignty by default
+
+## Celestia Node Integration
+
+POPSigner provides a drop-in `keyring.Keyring` implementation for the [Celestia Node](https://github.com/celestiaorg/celestia-node) client, allowing you to use POPSigner as a secure remote signer for blob submission.
+
+### Setup
+
+First, add the required replace directives to your `go.mod` (required by celestia-node dependencies):
+
+```go
+replace (
+    cosmossdk.io/x/upgrade => github.com/celestiaorg/cosmos-sdk/x/upgrade v0.2.0
+    github.com/cometbft/cometbft => github.com/celestiaorg/celestia-core v0.39.13
+    github.com/cosmos/cosmos-sdk => github.com/celestiaorg/cosmos-sdk v0.51.6
+    github.com/cosmos/ibc-go/v8 => github.com/celestiaorg/ibc-go/v8 v8.7.2
+    github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+    github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+    github.com/tendermint/tendermint => github.com/celestiaorg/celestia-core v1.55.0-tm-v0.34.35
+    nhooyr.io/websocket => github.com/coder/websocket v1.8.6
+    github.com/ipfs/boxo => github.com/celestiaorg/boxo v0.29.0-fork-4
+    github.com/ipfs/go-datastore => github.com/celestiaorg/go-datastore v0.0.0-20250801131506-48a63ae531e4
+)
+```
+
+### Usage
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+
+    popsigner "github.com/Bidon15/popsigner/sdk-go"
+    "github.com/celestiaorg/celestia-node/api/client"
+)
+
+func main() {
+    // Create a Celestia-compatible keyring backed by POPSigner
+    kr, err := popsigner.NewCelestiaKeyring(
+        "psk_live_xxxxx",                          // your API key
+        "344399b0-1234-5678-9abc-def012345678",    // your key ID
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Use with Celestia client
+    cfg := client.Config{
+        ReadConfig: client.ReadConfig{
+            BridgeDAAddr: "http://localhost:26658",
+            DAAuthToken:  "your_auth_token",
+        },
+        SubmitConfig: client.SubmitConfig{
+            DefaultKeyName: kr.KeyName(),
+            Network:        "mocha-4",
+        },
+    }
+
+    ctx := context.Background()
+    celestiaClient, err := client.New(ctx, cfg, kr)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Printf("Connected with Celestia address: %s\n", kr.CelestiaAddress())
+    _ = celestiaClient
+}
+```
+
+### Keyring Methods
+
+The `CelestiaKeyring` provides these helper methods:
+
+| Method              | Description                             |
+| ------------------- | --------------------------------------- |
+| `KeyName()`         | Returns the key name                    |
+| `KeyID()`           | Returns the POPSigner key UUID          |
+| `AccAddress()`      | Returns the Cosmos SDK AccAddress       |
+| `CelestiaAddress()` | Returns the bech32 celestia1... address |
+| `PublicKey()`       | Returns the secp256k1 public key        |
+
+### Custom API URL
+
+```go
+kr, err := popsigner.NewCelestiaKeyring(
+    apiKey,
+    keyID,
+    popsigner.WithCelestiaBaseURL("https://custom.api.io"),
+)
+```
 
 ## Client Options
 
@@ -220,11 +313,11 @@ for {
     if err != nil {
         log.Fatal(err)
     }
-    
+
     for _, log := range resp.Logs {
         fmt.Printf("%s: %s\n", log.CreatedAt, log.Event)
     }
-    
+
     if resp.NextCursor == "" {
         break
     }
@@ -271,56 +364,68 @@ See the [examples](./examples) directory:
 
 ### Client
 
-| Method | Description |
-|--------|-------------|
-| `NewClient(apiKey, ...opts)` | Create a new client |
-| `WithBaseURL(url)` | Set custom API URL |
-| `WithTimeout(duration)` | Set HTTP timeout |
-| `WithHTTPClient(client)` | Set custom HTTP client |
+| Method                       | Description            |
+| ---------------------------- | ---------------------- |
+| `NewClient(apiKey, ...opts)` | Create a new client    |
+| `WithBaseURL(url)`           | Set custom API URL     |
+| `WithTimeout(duration)`      | Set HTTP timeout       |
+| `WithHTTPClient(client)`     | Set custom HTTP client |
 
 ### KeysService
 
-| Method | Description |
-|--------|-------------|
-| `Create(ctx, req)` | Create a new key |
-| `CreateBatch(ctx, req)` | Create multiple keys |
-| `Get(ctx, keyID)` | Get a key by ID |
-| `List(ctx, opts)` | List all keys |
-| `Delete(ctx, keyID)` | Delete a key |
-| `Import(ctx, req)` | Import a private key |
-| `Export(ctx, keyID)` | Export a key (exit guarantee) |
+| Method                  | Description                   |
+| ----------------------- | ----------------------------- |
+| `Create(ctx, req)`      | Create a new key              |
+| `CreateBatch(ctx, req)` | Create multiple keys          |
+| `Get(ctx, keyID)`       | Get a key by ID               |
+| `List(ctx, opts)`       | List all keys                 |
+| `Delete(ctx, keyID)`    | Delete a key                  |
+| `Import(ctx, req)`      | Import a private key          |
+| `Export(ctx, keyID)`    | Export a key (exit guarantee) |
 
 ### SignService
 
-| Method | Description |
-|--------|-------------|
-| `Sign(ctx, keyID, data, prehashed)` | Sign data inline |
-| `SignBatch(ctx, req)` | Sign multiple messages in parallel |
+| Method                              | Description                        |
+| ----------------------------------- | ---------------------------------- |
+| `Sign(ctx, keyID, data, prehashed)` | Sign data inline                   |
+| `SignBatch(ctx, req)`               | Sign multiple messages in parallel |
 
 ### OrgsService
 
-| Method | Description |
-|--------|-------------|
-| `Create(ctx, req)` | Create an organization |
-| `Get(ctx, orgID)` | Get an organization |
-| `List(ctx)` | List organizations |
-| `Update(ctx, orgID, req)` | Update an organization |
-| `Delete(ctx, orgID)` | Delete an organization |
-| `GetLimits(ctx, orgID)` | Get plan limits |
-| `ListMembers(ctx, orgID)` | List members |
-| `InviteMember(ctx, orgID, req)` | Invite a member |
-| `RemoveMember(ctx, orgID, userID)` | Remove a member |
-| `ListNamespaces(ctx, orgID)` | List namespaces |
-| `CreateNamespace(ctx, orgID, req)` | Create a namespace |
-| `GetNamespace(ctx, orgID, nsID)` | Get a namespace |
-| `DeleteNamespace(ctx, orgID, nsID)` | Delete a namespace |
+| Method                              | Description            |
+| ----------------------------------- | ---------------------- |
+| `Create(ctx, req)`                  | Create an organization |
+| `Get(ctx, orgID)`                   | Get an organization    |
+| `List(ctx)`                         | List organizations     |
+| `Update(ctx, orgID, req)`           | Update an organization |
+| `Delete(ctx, orgID)`                | Delete an organization |
+| `GetLimits(ctx, orgID)`             | Get plan limits        |
+| `ListMembers(ctx, orgID)`           | List members           |
+| `InviteMember(ctx, orgID, req)`     | Invite a member        |
+| `RemoveMember(ctx, orgID, userID)`  | Remove a member        |
+| `ListNamespaces(ctx, orgID)`        | List namespaces        |
+| `CreateNamespace(ctx, orgID, req)`  | Create a namespace     |
+| `GetNamespace(ctx, orgID, nsID)`    | Get a namespace        |
+| `DeleteNamespace(ctx, orgID, nsID)` | Delete a namespace     |
 
 ### AuditService
 
-| Method | Description |
-|--------|-------------|
+| Method              | Description                           |
+| ------------------- | ------------------------------------- |
 | `List(ctx, filter)` | List audit logs with optional filters |
-| `Get(ctx, logID)` | Get a specific audit log |
+| `Get(ctx, logID)`   | Get a specific audit log              |
+
+### CelestiaKeyring
+
+| Function/Method                              | Description                          |
+| -------------------------------------------- | ------------------------------------ |
+| `NewCelestiaKeyring(apiKey, keyID, ...opts)` | Create a Celestia-compatible keyring |
+| `WithCelestiaBaseURL(url)`                   | Set custom API URL for the keyring   |
+| `KeyName()`                                  | Get the key name                     |
+| `KeyID()`                                    | Get the POPSigner key UUID           |
+| `AccAddress()`                               | Get the Cosmos SDK AccAddress        |
+| `CelestiaAddress()`                          | Get the bech32 celestia1... address  |
+| `PublicKey()`                                | Get the secp256k1 public key         |
 
 ## License
 

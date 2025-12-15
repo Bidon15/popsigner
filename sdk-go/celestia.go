@@ -29,21 +29,31 @@ package popsigner
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/google/uuid"
 )
 
-// CelestiaKeyring implements keyring functionality for the Celestia Node client.
+// Ensure CelestiaKeyring implements keyring.Keyring
+var _ keyring.Keyring = (*CelestiaKeyring)(nil)
+
+// CelestiaKeyring implements the Cosmos SDK keyring.Keyring interface for the Celestia Node client.
 // It uses POPSigner as the backend for secure remote signing.
 //
 // This keyring can be passed directly to the Celestia client.New() function.
 type CelestiaKeyring struct {
 	client   *Client
-	keyID    string
+	keyID    uuid.UUID
 	keyName  string
-	pubKey   []byte
-	address  string
+	pubKey   *secp256k1.PubKey
+	address  sdk.AccAddress
 	celestia string // bech32 celestia1... address
 }
 
@@ -100,20 +110,26 @@ func NewCelestiaKeyring(apiKey, keyID string, opts ...CelestiaKeyringOption) (*C
 	}
 
 	// Decode public key
-	pubKey, err := hex.DecodeString(key.PublicKey)
+	pubKeyBytes, err := hex.DecodeString(key.PublicKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode public key: %w", err)
 	}
+
+	// Create Cosmos SDK secp256k1 public key
+	pubKey := &secp256k1.PubKey{Key: pubKeyBytes}
+
+	// Get address from public key
+	address := sdk.AccAddress(pubKey.Address())
 
 	// Derive Celestia address from hex address
 	celestiaAddr := deriveCelestiaAddress(key.Address)
 
 	return &CelestiaKeyring{
 		client:   client,
-		keyID:    keyID,
+		keyID:    keyUUID,
 		keyName:  key.Name,
 		pubKey:   pubKey,
-		address:  key.Address,
+		address:  address,
 		celestia: celestiaAddr,
 	}, nil
 }
@@ -125,11 +141,11 @@ func (k *CelestiaKeyring) KeyName() string {
 
 // KeyID returns the POPSigner key ID.
 func (k *CelestiaKeyring) KeyID() string {
-	return k.keyID
+	return k.keyID.String()
 }
 
-// Address returns the hex-encoded address.
-func (k *CelestiaKeyring) Address() string {
+// AccAddress returns the SDK AccAddress.
+func (k *CelestiaKeyring) AccAddress() sdk.AccAddress {
 	return k.address
 }
 
@@ -138,20 +154,106 @@ func (k *CelestiaKeyring) CelestiaAddress() string {
 	return k.celestia
 }
 
-// PublicKey returns the compressed secp256k1 public key.
-func (k *CelestiaKeyring) PublicKey() []byte {
+// PublicKey returns the secp256k1 public key.
+func (k *CelestiaKeyring) PublicKey() cryptotypes.PubKey {
 	return k.pubKey
 }
 
-// Sign signs a message using POPSigner.
-// This implements the signing interface expected by the Celestia client.
-func (k *CelestiaKeyring) Sign(name string, msg []byte) ([]byte, []byte, error) {
-	keyUUID, err := uuid.Parse(k.keyID)
+// ========================================
+// keyring.Keyring interface implementation
+// ========================================
+
+// Backend returns the backend type used in the keyring config.
+func (k *CelestiaKeyring) Backend() string {
+	return "popsigner"
+}
+
+// List returns all keys in the keyring.
+// For POPSigner, this returns only the configured key.
+func (k *CelestiaKeyring) List() ([]*keyring.Record, error) {
+	record, err := k.Key(k.keyName)
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid key ID: %w", err)
+		return nil, err
+	}
+	return []*keyring.Record{record}, nil
+}
+
+// SupportedAlgorithms returns the supported signing algorithms.
+func (k *CelestiaKeyring) SupportedAlgorithms() (keyring.SigningAlgoList, keyring.SigningAlgoList) {
+	return keyring.SigningAlgoList{hd.Secp256k1}, keyring.SigningAlgoList{}
+}
+
+// Key returns the key by name.
+func (k *CelestiaKeyring) Key(uid string) (*keyring.Record, error) {
+	if uid != k.keyName {
+		return nil, fmt.Errorf("key %s not found (only %s available)", uid, k.keyName)
+	}
+	return keyring.NewOfflineRecord(k.keyName, k.pubKey)
+}
+
+// KeyByAddress returns a key by its address.
+func (k *CelestiaKeyring) KeyByAddress(address sdk.Address) (*keyring.Record, error) {
+	if !address.Equals(k.address) {
+		return nil, fmt.Errorf("key with address %s not found", address.String())
+	}
+	return keyring.NewOfflineRecord(k.keyName, k.pubKey)
+}
+
+// Delete removes a key from the keyring.
+// POPSigner keyring is read-only for key management.
+func (k *CelestiaKeyring) Delete(uid string) error {
+	return errors.New("popsigner keyring is read-only: use POPSigner API to delete keys")
+}
+
+// DeleteByAddress removes a key by its address.
+// POPSigner keyring is read-only for key management.
+func (k *CelestiaKeyring) DeleteByAddress(address sdk.Address) error {
+	return errors.New("popsigner keyring is read-only: use POPSigner API to delete keys")
+}
+
+// Rename renames an existing key.
+// POPSigner keyring is read-only for key management.
+func (k *CelestiaKeyring) Rename(from, to string) error {
+	return errors.New("popsigner keyring is read-only: use POPSigner API to rename keys")
+}
+
+// NewMnemonic generates a new mnemonic and key.
+// Not supported by POPSigner keyring.
+func (k *CelestiaKeyring) NewMnemonic(uid string, language keyring.Language, hdPath, bip39Passphrase string, algo keyring.SignatureAlgo) (*keyring.Record, string, error) {
+	return nil, "", errors.New("popsigner keyring does not support mnemonic generation: use POPSigner API to create keys")
+}
+
+// NewAccount creates a new account from a mnemonic.
+// Not supported by POPSigner keyring.
+func (k *CelestiaKeyring) NewAccount(uid, mnemonic, bip39Passphrase, hdPath string, algo keyring.SignatureAlgo) (*keyring.Record, error) {
+	return nil, errors.New("popsigner keyring does not support account creation: use POPSigner API to create keys")
+}
+
+// SaveLedgerKey saves a key from a Ledger device.
+// Not supported by POPSigner keyring.
+func (k *CelestiaKeyring) SaveLedgerKey(uid string, algo keyring.SignatureAlgo, hrp string, coinType, account, index uint32) (*keyring.Record, error) {
+	return nil, errors.New("popsigner keyring does not support Ledger keys")
+}
+
+// SaveOfflineKey stores a public key reference.
+// Not supported by POPSigner keyring.
+func (k *CelestiaKeyring) SaveOfflineKey(uid string, pubkey cryptotypes.PubKey) (*keyring.Record, error) {
+	return nil, errors.New("popsigner keyring does not support offline key storage: use POPSigner API")
+}
+
+// SaveMultisig stores a multisig key reference.
+// Not supported by POPSigner keyring.
+func (k *CelestiaKeyring) SaveMultisig(uid string, pubkey cryptotypes.PubKey) (*keyring.Record, error) {
+	return nil, errors.New("popsigner keyring does not support multisig keys")
+}
+
+// Sign signs a message using POPSigner.
+func (k *CelestiaKeyring) Sign(uid string, msg []byte, signMode signing.SignMode) ([]byte, cryptotypes.PubKey, error) {
+	if uid != k.keyName {
+		return nil, nil, fmt.Errorf("key %s not found", uid)
 	}
 
-	resp, err := k.client.Sign.Sign(context.Background(), keyUUID, msg, false)
+	resp, err := k.client.Sign.Sign(context.Background(), k.keyID, msg, false)
 	if err != nil {
 		return nil, nil, fmt.Errorf("signing failed: %w", err)
 	}
@@ -159,10 +261,65 @@ func (k *CelestiaKeyring) Sign(name string, msg []byte) ([]byte, []byte, error) 
 	return resp.Signature, k.pubKey, nil
 }
 
-// SignByAddress signs with the key matching the given address.
-func (k *CelestiaKeyring) SignByAddress(address []byte, msg []byte) ([]byte, []byte, error) {
-	// For simplicity, we only support the single key configured
-	return k.Sign(k.keyName, msg)
+// SignByAddress signs a message using the key associated with the given address.
+func (k *CelestiaKeyring) SignByAddress(address sdk.Address, msg []byte, signMode signing.SignMode) ([]byte, cryptotypes.PubKey, error) {
+	if !address.Equals(k.address) {
+		return nil, nil, fmt.Errorf("key with address %s not found", address.String())
+	}
+	return k.Sign(k.keyName, msg, signMode)
+}
+
+// ImportPrivKey imports an ASCII armored private key.
+// Not supported by POPSigner keyring.
+func (k *CelestiaKeyring) ImportPrivKey(uid, armor, passphrase string) error {
+	return errors.New("popsigner keyring does not support key import: use POPSigner API")
+}
+
+// ImportPrivKeyHex imports a hex encoded private key.
+// Not supported by POPSigner keyring.
+func (k *CelestiaKeyring) ImportPrivKeyHex(uid, privKey, algoStr string) error {
+	return errors.New("popsigner keyring does not support key import: use POPSigner API")
+}
+
+// ImportPubKey imports an ASCII armored public key.
+// Not supported by POPSigner keyring.
+func (k *CelestiaKeyring) ImportPubKey(uid, armor string) error {
+	return errors.New("popsigner keyring does not support key import: use POPSigner API")
+}
+
+// ExportPubKeyArmor exports the public key as ASCII armor.
+func (k *CelestiaKeyring) ExportPubKeyArmor(uid string) (string, error) {
+	if uid != k.keyName {
+		return "", fmt.Errorf("key %s not found", uid)
+	}
+	// Return hex-encoded public key for simplicity
+	return hex.EncodeToString(k.pubKey.Bytes()), nil
+}
+
+// ExportPubKeyArmorByAddress exports the public key by address.
+func (k *CelestiaKeyring) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
+	if !address.Equals(k.address) {
+		return "", fmt.Errorf("key with address %s not found", address.String())
+	}
+	return k.ExportPubKeyArmor(k.keyName)
+}
+
+// ExportPrivKeyArmor exports the private key.
+// Not directly supported - use POPSigner API's export functionality.
+func (k *CelestiaKeyring) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
+	return "", errors.New("use POPSigner API to export private keys (client.Keys.Export)")
+}
+
+// ExportPrivKeyArmorByAddress exports the private key by address.
+// Not directly supported - use POPSigner API's export functionality.
+func (k *CelestiaKeyring) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error) {
+	return "", errors.New("use POPSigner API to export private keys (client.Keys.Export)")
+}
+
+// MigrateAll migrates all keys from amino to proto.
+// Not applicable to POPSigner keyring.
+func (k *CelestiaKeyring) MigrateAll() ([]*keyring.Record, error) {
+	return k.List()
 }
 
 // deriveCelestiaAddress converts a hex address to bech32 celestia format.
