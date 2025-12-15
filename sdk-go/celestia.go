@@ -232,10 +232,12 @@ func (k *CelestiaKeyring) SupportedAlgorithms() (keyring.SigningAlgoList, keyrin
 	return keyring.SigningAlgoList{hd.Secp256k1}, keyring.SigningAlgoList{}
 }
 
-// Key returns the key by name.
+// Key returns the key by name or ID.
+// Accepts either the key name (e.g., "blobcell-example") or the KEY_ID (UUID).
 func (k *CelestiaKeyring) Key(uid string) (*keyring.Record, error) {
-	if uid != k.keyName {
-		return nil, fmt.Errorf("key %s not found (only %s available)", uid, k.keyName)
+	// Accept either key name or key ID (UUID)
+	if uid != k.keyName && uid != k.keyID.String() {
+		return nil, fmt.Errorf("key %s not found (available: name=%q, id=%q)", uid, k.keyName, k.keyID.String())
 	}
 	return keyring.NewOfflineRecord(k.keyName, k.pubKey)
 }
