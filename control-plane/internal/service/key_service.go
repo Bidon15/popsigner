@@ -335,7 +335,7 @@ func (s *keyService) Sign(ctx context.Context, orgID, keyID uuid.UUID, data []by
 	// Get key
 	key, err := s.keyRepo.GetByID(ctx, keyID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get key: %w", err)
+		return nil, apierrors.NewInternalError(fmt.Sprintf("failed to get key: %v", err))
 	}
 	if key == nil || key.OrgID != orgID || key.DeletedAt != nil {
 		return nil, apierrors.NewNotFoundError("Key")
@@ -507,7 +507,7 @@ func (s *keyService) checkKeyQuota(ctx context.Context, orgID uuid.UUID) error {
 func (s *keyService) checkSignatureQuota(ctx context.Context, orgID uuid.UUID) error {
 	org, err := s.orgRepo.GetByID(ctx, orgID)
 	if err != nil {
-		return fmt.Errorf("failed to get organization: %w", err)
+		return apierrors.NewInternalError(fmt.Sprintf("failed to get organization: %v", err))
 	}
 	if org == nil {
 		return apierrors.NewNotFoundError("Organization")
@@ -520,7 +520,7 @@ func (s *keyService) checkSignatureQuota(ctx context.Context, orgID uuid.UUID) e
 
 	usage, err := s.usageRepo.GetCurrentPeriod(ctx, orgID, "signatures")
 	if err != nil {
-		return fmt.Errorf("failed to get usage: %w", err)
+		return apierrors.NewInternalError(fmt.Sprintf("failed to get usage: %v", err))
 	}
 
 	if usage >= limits.SignaturesPerMonth {

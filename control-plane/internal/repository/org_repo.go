@@ -76,9 +76,9 @@ func (r *orgRepo) Create(ctx context.Context, org *models.Organization, ownerID 
 	}
 	defer tx.Rollback(ctx)
 
-	// Generate ID and slug
+	// Generate ID and unique slug
 	org.ID = uuid.New()
-	org.Slug = generateSlug(org.Name)
+	org.Slug = generateUniqueSlug(org.Name)
 	org.Plan = models.PlanFree
 	now := time.Now()
 	org.CreatedAt = now
@@ -171,7 +171,7 @@ func (r *orgRepo) Update(ctx context.Context, org *models.Organization) error {
 		SET name = $2, slug = $3, updated_at = NOW()
 		WHERE id = $1`
 
-	org.Slug = generateSlug(org.Name)
+	org.Slug = generateUniqueSlug(org.Name)
 	_, err := r.pool.Exec(ctx, query, org.ID, org.Name, org.Slug)
 	return err
 }
@@ -558,6 +558,15 @@ func generateSlug(name string) string {
 		}
 	}
 	return result.String()
+}
+
+// generateUniqueSlug creates a unique slug by appending a random suffix.
+func generateUniqueSlug(name string) string {
+	base := generateSlug(name)
+	// Add a 6-character random suffix to ensure uniqueness
+	suffix := make([]byte, 3)
+	rand.Read(suffix)
+	return base + "-" + hex.EncodeToString(suffix)
 }
 
 // generateInvitationToken creates a secure random token.
