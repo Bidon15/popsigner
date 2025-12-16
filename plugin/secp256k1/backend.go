@@ -22,6 +22,7 @@ func Factory(ctx context.Context, conf *logical.BackendConfig) (logical.Backend,
 		Paths: framework.PathAppend(
 			pathKeys(b),
 			pathSign(b),
+			pathSignEVM(b),
 			pathVerify(b),
 			pathImport(b),
 			pathExport(b),

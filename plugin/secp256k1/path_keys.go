@@ -82,12 +82,17 @@ func (b *backend) pathKeyCreate(ctx context.Context, req *logical.Request, data 
 		return nil, err
 	}
 
+	// Store both compressed and uncompressed public keys
+	pubKeyCompressed := privKey.PubKey().SerializeCompressed()
+	pubKeyUncompressed := privKey.PubKey().SerializeUncompressed()
+
 	entry := &keyEntry{
-		PrivateKey: privKey.Serialize(),
-		PublicKey:  privKey.PubKey().SerializeCompressed(),
-		Exportable: exportable,
-		CreatedAt:  time.Now().UTC(),
-		Imported:   false,
+		PrivateKey:            privKey.Serialize(),
+		PublicKey:             pubKeyCompressed,
+		PublicKeyUncompressed: pubKeyUncompressed,
+		Exportable:            exportable,
+		CreatedAt:             time.Now().UTC(),
+		Imported:              false,
 	}
 
 	// Store the key
@@ -104,13 +109,18 @@ func (b *backend) pathKeyCreate(ctx context.Context, req *logical.Request, data 
 	b.keyCache[name] = entry
 	b.cacheMu.Unlock()
 
+	// Derive both addresses
+	cosmosAddr := deriveCosmosAddress(entry.PublicKey)
+	ethAddr := deriveEthereumAddress(privKey.PubKey())
+
 	return &logical.Response{
 		Data: map[string]interface{}{
-			"name":       name,
-			"public_key": hex.EncodeToString(entry.PublicKey),
-			"address":    hex.EncodeToString(deriveCosmosAddress(entry.PublicKey)),
-			"exportable": exportable,
-			"created_at": entry.CreatedAt.Format(time.RFC3339),
+			"name":        name,
+			"public_key":  hex.EncodeToString(entry.PublicKey),
+			"address":     hex.EncodeToString(cosmosAddr),
+			"eth_address": formatEthereumAddress(ethAddr),
+			"exportable":  exportable,
+			"created_at":  entry.CreatedAt.Format(time.RFC3339),
 		},
 	}, nil
 }
@@ -130,14 +140,25 @@ func (b *backend) pathKeyRead(ctx context.Context, req *logical.Request, data *f
 		return logical.ErrorResponse("key not found"), nil
 	}
 
+	// Derive addresses
+	cosmosAddr := deriveCosmosAddress(entry.PublicKey)
+
+	// Parse public key to derive Ethereum address
+	pubKey, err := ParsePublicKey(entry.PublicKey)
+	if err != nil {
+		return nil, err
+	}
+	ethAddr := deriveEthereumAddress(pubKey)
+
 	return &logical.Response{
 		Data: map[string]interface{}{
-			"name":       name,
-			"public_key": hex.EncodeToString(entry.PublicKey),
-			"address":    hex.EncodeToString(deriveCosmosAddress(entry.PublicKey)),
-			"exportable": entry.Exportable,
-			"created_at": entry.CreatedAt.Format(time.RFC3339),
-			"imported":   entry.Imported,
+			"name":        name,
+			"public_key":  hex.EncodeToString(entry.PublicKey),
+			"address":     hex.EncodeToString(cosmosAddr),
+			"eth_address": formatEthereumAddress(ethAddr),
+			"exportable":  entry.Exportable,
+			"created_at":  entry.CreatedAt.Format(time.RFC3339),
+			"imported":    entry.Imported,
 		},
 	}, nil
 }
@@ -171,7 +192,33 @@ func (b *backend) pathKeysList(ctx context.Context, req *logical.Request, _ *fra
 	if keys == nil {
 		keys = []string{}
 	}
-	return logical.ListResponse(keys), nil
+
+	keyInfo := make(map[string]interface{}, len(keys))
+	for _, name := range keys {
+		entry, err := b.getKey(ctx, req.Storage, name)
+		if err != nil {
+			continue
+		}
+		if entry == nil {
+			continue
+		}
+
+		// Derive addresses
+		cosmosAddr := deriveCosmosAddress(entry.PublicKey)
+		pubKey, _ := ParsePublicKey(entry.PublicKey)
+		ethAddr := deriveEthereumAddress(pubKey)
+
+		keyInfo[name] = map[string]interface{}{
+			"name":        name,
+			"public_key":  hex.EncodeToString(entry.PublicKey),
+			"address":     hex.EncodeToString(cosmosAddr),
+			"eth_address": formatEthereumAddress(ethAddr),
+			"exportable":  entry.Exportable,
+			"created_at":  entry.CreatedAt.Format(time.RFC3339),
+		}
+	}
+
+	return logical.ListResponseWithInfo(keys, keyInfo), nil
 }
 
 const pathKeysHelpSyn = `Manage secp256k1 keys`

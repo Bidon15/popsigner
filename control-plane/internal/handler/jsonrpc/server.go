@@ -1,0 +1,83 @@
+package jsonrpc
+
+import (
+	"log/slog"
+	"net/http"
+
+	"github.com/Bidon15/popsigner/control-plane/internal/openbao"
+	"github.com/Bidon15/popsigner/control-plane/internal/repository"
+)
+
+// ServerConfig holds the configuration for the JSON-RPC server.
+type ServerConfig struct {
+	KeyRepo   repository.KeyRepository
+	AuditRepo repository.AuditRepository
+	UsageRepo repository.UsageRepository
+	BaoClient *openbao.Client
+	Logger    *slog.Logger
+}
+
+// Server is the JSON-RPC server with all methods registered.
+type Server struct {
+	handler *Handler
+	config  ServerConfig
+}
+
+// NewServer creates a new JSON-RPC server with all Ethereum methods registered.
+func NewServer(cfg ServerConfig) *Server {
+	handler := NewHandler(cfg.Logger)
+
+	// Register eth_accounts
+	ethAccountsHandler := NewEthAccountsHandler(cfg.KeyRepo)
+	handler.RegisterMethod("eth_accounts", ethAccountsHandler.Handle)
+
+	// Register eth_signTransaction
+	ethSignTxHandler := NewEthSignTransactionHandler(cfg.KeyRepo, cfg.BaoClient, cfg.AuditRepo, cfg.UsageRepo)
+	handler.RegisterMethod("eth_signTransaction", ethSignTxHandler.Handle)
+
+	// Register eth_sign
+	ethSignHandler := NewEthSignHandler(cfg.KeyRepo, cfg.BaoClient, cfg.AuditRepo, cfg.UsageRepo)
+	handler.RegisterMethod("eth_sign", ethSignHandler.HandleEthSign)
+
+	// Register personal_sign
+	handler.RegisterMethod("personal_sign", ethSignHandler.HandlePersonalSign)
+
+	// Log registered methods
+	if cfg.Logger != nil {
+		cfg.Logger.Info("Registered JSON-RPC methods",
+			slog.Any("methods", []string{
+				"eth_accounts",
+				"eth_signTransaction",
+				"eth_sign",
+				"personal_sign",
+			}),
+		)
+	}
+
+	return &Server{
+		handler: handler,
+		config:  cfg,
+	}
+}
+
+// ServeHTTP implements http.Handler.
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.handler.ServeHTTP(w, r)
+}
+
+// Handler returns the underlying JSON-RPC handler.
+// This is useful for testing or adding additional methods.
+func (s *Server) Handler() *Handler {
+	return s.handler
+}
+
+// RegisterMethod registers an additional method handler.
+func (s *Server) RegisterMethod(name string, handler MethodHandler) {
+	s.handler.RegisterMethod(name, handler)
+}
+
+// RegisteredMethods returns a list of registered method names.
+func (s *Server) RegisteredMethods() []string {
+	return s.handler.RegisteredMethods()
+}
+

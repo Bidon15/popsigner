@@ -1,0 +1,51 @@
+# Build stage
+FROM golang:1.25-alpine AS builder
+
+WORKDIR /app
+
+# Install dependencies
+RUN apk add --no-cache git ca-certificates
+
+# Copy go mod files
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source
+COPY . .
+
+# Build the RPC gateway binary
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o rpc-gateway ./cmd/rpc-gateway
+
+# Runtime stage
+FROM alpine:3.19
+
+RUN apk --no-cache add ca-certificates tzdata
+
+WORKDIR /app
+
+# Create non-root user
+RUN adduser -D -g '' appuser
+
+# Copy binary from builder
+COPY --from=builder /app/rpc-gateway .
+
+# Copy config file (optional, can be overridden by environment variables)
+COPY --from=builder /app/config.yaml ./config.yaml
+
+# Create directory for CA certificates (mounted at runtime)
+RUN mkdir -p /etc/popsigner/ca && chown appuser:appuser /etc/popsigner/ca
+
+# Use non-root user
+USER appuser
+
+# Expose JSON-RPC ports
+# 8545 - API Key authentication (OP Stack)
+# 8546 - mTLS authentication (Arbitrum Nitro)
+EXPOSE 8545 8546
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8545/health || exit 1
+
+ENTRYPOINT ["./rpc-gateway"]
+
