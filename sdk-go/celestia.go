@@ -31,6 +31,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -48,13 +49,29 @@ var _ keyring.Keyring = (*CelestiaKeyring)(nil)
 // It uses POPSigner as the backend for secure remote signing.
 //
 // This keyring can be passed directly to the Celestia client.New() function.
+// It supports parallel workers by implementing NewMnemonic() to dynamically create
+// worker keys when requested by clientTX.
 type CelestiaKeyring struct {
-	client   *Client
-	keyID    uuid.UUID
-	keyName  string
+	client      *Client
+	keyID       uuid.UUID
+	keyName     string
+	pubKey      *secp256k1.PubKey
+	address     sdk.AccAddress
+	celestia    string // bech32 celestia1... address
+	namespaceID uuid.UUID // namespace for creating new keys
+
+	// mu protects the keys map for concurrent access
+	mu   sync.RWMutex
+	keys map[string]*celestiaKeyRecord // name -> key record (for dynamically created keys)
+}
+
+// celestiaKeyRecord stores info about a key in the keyring.
+type celestiaKeyRecord struct {
+	id       uuid.UUID
+	name     string
 	pubKey   *secp256k1.PubKey
 	address  sdk.AccAddress
-	celestia string // bech32 celestia1... address
+	celestia string
 }
 
 // CelestiaKeyringOption configures the CelestiaKeyring.
@@ -173,13 +190,28 @@ func NewCelestiaKeyring(apiKey, keyNameOrID string, opts ...CelestiaKeyringOptio
 	// Derive Celestia bech32 address from the same address bytes
 	celestiaAddr := deriveCelestiaAddressFromBytes(address)
 
-	return &CelestiaKeyring{
-		client:   client,
-		keyID:    keyUUID,
-		keyName:  key.Name,
+	// Create the master key record
+	masterRecord := &celestiaKeyRecord{
+		id:       keyUUID,
+		name:     key.Name,
 		pubKey:   pubKey,
 		address:  address,
 		celestia: celestiaAddr,
+	}
+
+	// Initialize keys map with the master key
+	keys := make(map[string]*celestiaKeyRecord)
+	keys[key.Name] = masterRecord
+
+	return &CelestiaKeyring{
+		client:      client,
+		keyID:       keyUUID,
+		keyName:     key.Name,
+		pubKey:      pubKey,
+		address:     address,
+		celestia:    celestiaAddr,
+		namespaceID: key.NamespaceID, // Store namespace for creating workers
+		keys:        keys,
 	}, nil
 }
 
@@ -218,13 +250,20 @@ func (k *CelestiaKeyring) Backend() string {
 }
 
 // List returns all keys in the keyring.
-// For POPSigner, this returns only the configured key.
+// This includes the master key and any dynamically created worker keys.
 func (k *CelestiaKeyring) List() ([]*keyring.Record, error) {
-	record, err := k.Key(k.keyName)
-	if err != nil {
-		return nil, err
+	k.mu.RLock()
+	defer k.mu.RUnlock()
+
+	records := make([]*keyring.Record, 0, len(k.keys))
+	for _, keyRec := range k.keys {
+		record, err := keyring.NewOfflineRecord(keyRec.name, keyRec.pubKey)
+		if err != nil {
+			return nil, err
+		}
+		records = append(records, record)
 	}
-	return []*keyring.Record{record}, nil
+	return records, nil
 }
 
 // SupportedAlgorithms returns the supported signing algorithms.
@@ -235,19 +274,40 @@ func (k *CelestiaKeyring) SupportedAlgorithms() (keyring.SigningAlgoList, keyrin
 // Key returns the key by name or ID.
 // Accepts either the key name (e.g., "blobcell-example") or the KEY_ID (UUID).
 func (k *CelestiaKeyring) Key(uid string) (*keyring.Record, error) {
-	// Accept either key name or key ID (UUID)
-	if uid != k.keyName && uid != k.keyID.String() {
-		return nil, fmt.Errorf("key %s not found (available: name=%q, id=%q)", uid, k.keyName, k.keyID.String())
+	k.mu.RLock()
+	defer k.mu.RUnlock()
+
+	// First check by name
+	if keyRec, ok := k.keys[uid]; ok {
+		return keyring.NewOfflineRecord(keyRec.name, keyRec.pubKey)
 	}
-	return keyring.NewOfflineRecord(k.keyName, k.pubKey)
+
+	// Then check by ID (UUID)
+	for _, keyRec := range k.keys {
+		if keyRec.id.String() == uid {
+			return keyring.NewOfflineRecord(keyRec.name, keyRec.pubKey)
+		}
+	}
+
+	// Build list of available keys for helpful error message
+	available := make([]string, 0, len(k.keys))
+	for name := range k.keys {
+		available = append(available, name)
+	}
+	return nil, fmt.Errorf("key %q not found (available: %v)", uid, available)
 }
 
 // KeyByAddress returns a key by its address.
 func (k *CelestiaKeyring) KeyByAddress(address sdk.Address) (*keyring.Record, error) {
-	if !address.Equals(k.address) {
-		return nil, fmt.Errorf("key with address %s not found", address.String())
+	k.mu.RLock()
+	defer k.mu.RUnlock()
+
+	for _, keyRec := range k.keys {
+		if address.Equals(keyRec.address) {
+			return keyring.NewOfflineRecord(keyRec.name, keyRec.pubKey)
+		}
 	}
-	return keyring.NewOfflineRecord(k.keyName, k.pubKey)
+	return nil, fmt.Errorf("key with address %s not found", address.String())
 }
 
 // Delete removes a key from the keyring.
@@ -268,10 +328,73 @@ func (k *CelestiaKeyring) Rename(from, to string) error {
 	return errors.New("popsigner keyring is read-only: use POPSigner API to rename keys")
 }
 
-// NewMnemonic generates a new mnemonic and key.
-// Not supported by POPSigner keyring.
+// NewMnemonic creates a new key in POPSigner when called by clientTX for parallel workers.
+// The mnemonic is NOT returned as the key is stored securely in POPSigner's backend.
+//
+// This method is called by Celestia's clientTX when creating parallel worker accounts
+// (e.g., "parallel-worker-1", "parallel-worker-2", etc.). POPSigner creates the key
+// remotely and returns the public key info.
 func (k *CelestiaKeyring) NewMnemonic(uid string, language keyring.Language, hdPath, bip39Passphrase string, algo keyring.SignatureAlgo) (*keyring.Record, string, error) {
-	return nil, "", errors.New("popsigner keyring does not support mnemonic generation: use POPSigner API to create keys")
+	// Check if key already exists
+	k.mu.RLock()
+	if existing, ok := k.keys[uid]; ok {
+		k.mu.RUnlock()
+		record, err := keyring.NewOfflineRecord(uid, existing.pubKey)
+		if err != nil {
+			return nil, "", err
+		}
+		return record, "", nil // Already exists
+	}
+	k.mu.RUnlock()
+
+	// Create new key in POPSigner
+	newKey, err := k.client.Keys.Create(context.Background(), CreateKeyRequest{
+		Name:        uid,
+		NamespaceID: k.namespaceID,
+		Algorithm:   "secp256k1",
+		Exportable:  false, // Workers should not be exportable
+		Metadata: map[string]string{
+			"created_by":  "celestia_keyring",
+			"worker_type": "parallel",
+			"master_key":  k.keyName,
+		},
+	})
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to create key %q in POPSigner: %w", uid, err)
+	}
+
+	// Decode public key
+	pubKeyBytes, err := hex.DecodeString(newKey.PublicKey)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to decode public key for new key %q: %w", uid, err)
+	}
+
+	if len(pubKeyBytes) != 33 {
+		return nil, "", fmt.Errorf("invalid public key length for new key %q: expected 33, got %d", uid, len(pubKeyBytes))
+	}
+
+	pubKey := &secp256k1.PubKey{Key: pubKeyBytes}
+	address := sdk.AccAddress(pubKey.Address())
+	celestiaAddr := deriveCelestiaAddressFromBytes(address)
+
+	// Store the new key
+	k.mu.Lock()
+	k.keys[uid] = &celestiaKeyRecord{
+		id:       newKey.ID,
+		name:     uid,
+		pubKey:   pubKey,
+		address:  address,
+		celestia: celestiaAddr,
+	}
+	k.mu.Unlock()
+
+	// Return the record (mnemonic is empty - key is stored remotely in POPSigner)
+	record, err := keyring.NewOfflineRecord(uid, pubKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return record, "", nil
 }
 
 // NewAccount creates a new account from a mnemonic.
@@ -300,24 +423,38 @@ func (k *CelestiaKeyring) SaveMultisig(uid string, pubkey cryptotypes.PubKey) (*
 
 // Sign signs a message using POPSigner.
 func (k *CelestiaKeyring) Sign(uid string, msg []byte, signMode signing.SignMode) ([]byte, cryptotypes.PubKey, error) {
-	if uid != k.keyName {
-		return nil, nil, fmt.Errorf("key %s not found", uid)
+	k.mu.RLock()
+	keyRec, ok := k.keys[uid]
+	k.mu.RUnlock()
+
+	if !ok {
+		return nil, nil, fmt.Errorf("key %q not found", uid)
 	}
 
-	resp, err := k.client.Sign.Sign(context.Background(), k.keyID, msg, false)
+	resp, err := k.client.Sign.Sign(context.Background(), keyRec.id, msg, false)
 	if err != nil {
-		return nil, nil, fmt.Errorf("signing failed: %w", err)
+		return nil, nil, fmt.Errorf("signing failed for key %q: %w", uid, err)
 	}
 
-	return resp.Signature, k.pubKey, nil
+	return resp.Signature, keyRec.pubKey, nil
 }
 
 // SignByAddress signs a message using the key associated with the given address.
 func (k *CelestiaKeyring) SignByAddress(address sdk.Address, msg []byte, signMode signing.SignMode) ([]byte, cryptotypes.PubKey, error) {
-	if !address.Equals(k.address) {
+	k.mu.RLock()
+	var keyRec *celestiaKeyRecord
+	for _, rec := range k.keys {
+		if address.Equals(rec.address) {
+			keyRec = rec
+			break
+		}
+	}
+	k.mu.RUnlock()
+
+	if keyRec == nil {
 		return nil, nil, fmt.Errorf("key with address %s not found", address.String())
 	}
-	return k.Sign(k.keyName, msg, signMode)
+	return k.Sign(keyRec.name, msg, signMode)
 }
 
 // ImportPrivKey imports an ASCII armored private key.
@@ -340,19 +477,33 @@ func (k *CelestiaKeyring) ImportPubKey(uid, armor string) error {
 
 // ExportPubKeyArmor exports the public key as ASCII armor.
 func (k *CelestiaKeyring) ExportPubKeyArmor(uid string) (string, error) {
-	if uid != k.keyName {
-		return "", fmt.Errorf("key %s not found", uid)
+	k.mu.RLock()
+	keyRec, ok := k.keys[uid]
+	k.mu.RUnlock()
+
+	if !ok {
+		return "", fmt.Errorf("key %q not found", uid)
 	}
 	// Return hex-encoded public key for simplicity
-	return hex.EncodeToString(k.pubKey.Bytes()), nil
+	return hex.EncodeToString(keyRec.pubKey.Bytes()), nil
 }
 
 // ExportPubKeyArmorByAddress exports the public key by address.
 func (k *CelestiaKeyring) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
-	if !address.Equals(k.address) {
+	k.mu.RLock()
+	var keyRec *celestiaKeyRecord
+	for _, rec := range k.keys {
+		if address.Equals(rec.address) {
+			keyRec = rec
+			break
+		}
+	}
+	k.mu.RUnlock()
+
+	if keyRec == nil {
 		return "", fmt.Errorf("key with address %s not found", address.String())
 	}
-	return k.ExportPubKeyArmor(k.keyName)
+	return k.ExportPubKeyArmor(keyRec.name)
 }
 
 // ExportPrivKeyArmor exports the private key.
