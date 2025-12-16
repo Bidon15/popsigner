@@ -22,6 +22,9 @@ type AuditService interface {
 	// Query retrieves audit logs with filtering and pagination.
 	Query(ctx context.Context, orgID uuid.UUID, filter AuditFilter) ([]*models.AuditLog, string, error)
 
+	// CountForPeriod counts audit logs for an organization within a time period.
+	CountForPeriod(ctx context.Context, orgID uuid.UUID, start, end time.Time) (int64, error)
+
 	// CleanupOldLogs removes audit logs older than the retention period for each org.
 	CleanupOldLogs(ctx context.Context) (int64, error)
 
@@ -142,6 +145,11 @@ func (s *auditService) Query(ctx context.Context, orgID uuid.UUID, filter AuditF
 	}
 
 	return logs, nextCursor, nil
+}
+
+// CountForPeriod counts audit logs for an organization within a time period.
+func (s *auditService) CountForPeriod(ctx context.Context, orgID uuid.UUID, start, end time.Time) (int64, error) {
+	return s.auditRepo.CountByOrgAndPeriod(ctx, orgID, start, end)
 }
 
 // CleanupOldLogs removes audit logs older than the retention period for each org.

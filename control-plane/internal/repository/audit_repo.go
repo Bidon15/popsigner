@@ -18,6 +18,7 @@ type AuditRepository interface {
 	Create(ctx context.Context, log *models.AuditLog) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.AuditLog, error)
 	List(ctx context.Context, query models.AuditLogQuery) ([]*models.AuditLog, error)
+	CountByOrgAndPeriod(ctx context.Context, orgID uuid.UUID, start, end time.Time) (int64, error)
 	DeleteBefore(ctx context.Context, orgID uuid.UUID, before time.Time) (int64, error)
 }
 
@@ -167,6 +168,17 @@ func (r *auditRepo) List(ctx context.Context, q models.AuditLogQuery) ([]*models
 		logs = append(logs, &log)
 	}
 	return logs, rows.Err()
+}
+
+// CountByOrgAndPeriod counts audit logs for an organization within a time period.
+func (r *auditRepo) CountByOrgAndPeriod(ctx context.Context, orgID uuid.UUID, start, end time.Time) (int64, error) {
+	query := `SELECT COUNT(*) FROM audit_logs WHERE org_id = $1 AND created_at >= $2 AND created_at <= $3`
+	var count int64
+	err := r.pool.QueryRow(ctx, query, orgID, start, end).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 // DeleteBefore deletes audit logs older than the given time for an organization.

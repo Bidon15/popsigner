@@ -100,7 +100,7 @@ templ DashboardPage(data DashboardData) {
 						</div>
 						<div class="text-2xl font-bold text-[#33FF00] drop-shadow-[0_0_8px_#33FF00]">{ fmt.Sprintf("%d", data.APICallCount) }</div>
 						<a href="/settings/api-keys" class="text-sm text-[#FFB000] hover:drop-shadow-[0_0_8px_#FFB000] transition-all uppercase">
-							CREATE API KEY →
+							MANAGE API KEYS →
 						</a>
 					</div>
 				</div>
@@ -133,6 +133,18 @@ templ DashboardPage(data DashboardData) {
 							</div>
 						</a>
 						
+						<a href="/settings/certificates" class="bg-black border border-[#333300] p-4 hover:border-[#12AAFF] group cursor-pointer transition-all">
+							<div class="flex items-center gap-3">
+								<div class="w-10 h-10 border border-[#12AAFF] flex items-center justify-center group-hover:bg-[#12AAFF]/10 transition-colors">
+									<span class="text-xl">📜</span>
+								</div>
+								<div>
+									<div class="font-medium text-[#12AAFF] uppercase">CERTS</div>
+									<div class="text-sm text-[#666600]">MTLS FOR ARBITRUM</div>
+								</div>
+							</div>
+						</a>
+						
 						<a href="/docs" class="bg-black border border-[#333300] p-4 hover:border-[#33FF00] group cursor-pointer transition-all">
 							<div class="flex items-center gap-3">
 								<div class="w-10 h-10 border border-[#33FF00] flex items-center justify-center group-hover:bg-[#33FF00]/10 transition-colors">
@@ -141,18 +153,6 @@ templ DashboardPage(data DashboardData) {
 								<div>
 									<div class="font-medium text-[#33FF00] uppercase">DOCS</div>
 									<div class="text-sm text-[#666600]">LEARN THE API</div>
-								</div>
-							</div>
-						</a>
-						
-						<a href="/settings/profile" class="bg-black border border-[#333300] p-4 hover:border-[#33FF00] group cursor-pointer transition-all">
-							<div class="flex items-center gap-3">
-								<div class="w-10 h-10 border border-[#33FF00] flex items-center justify-center group-hover:bg-[#33FF00]/10 transition-colors">
-									<span class="text-xl">⚙️</span>
-								</div>
-								<div>
-									<div class="font-medium text-[#33FF00] uppercase">SETTINGS</div>
-									<div class="text-sm text-[#666600]">PREFERENCES</div>
 								</div>
 							</div>
 						</a>
