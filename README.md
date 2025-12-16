@@ -46,7 +46,7 @@ Deploy without infrastructure. Connect and sign.
 
 ```bash
 # Get your API key at https://popsigner.com
-go get github.com/Bidon15/popsigner
+go get github.com/Bidon15/popsigner/sdk-go
 ```
 
 ```go
@@ -54,24 +54,38 @@ package main
 
 import (
     "context"
+    "fmt"
+    "log"
     "os"
-    
-    popsigner "github.com/Bidon15/popsigner"
+
+    popsigner "github.com/Bidon15/popsigner/sdk-go"
+    "github.com/google/uuid"
 )
 
 func main() {
     ctx := context.Background()
-    
+
     // Connect to POPSigner
     client := popsigner.NewClient(os.Getenv("POPSIGNER_API_KEY"))
-    
+
     // Create a key
-    key, _ := client.Keys.Create(ctx, popsigner.CreateKeyRequest{
-        Name: "sequencer-key",
+    namespaceID := uuid.MustParse(os.Getenv("POPSIGNER_NAMESPACE_ID"))
+    key, err := client.Keys.Create(ctx, popsigner.CreateKeyRequest{
+        Name:        "sequencer-key",
+        NamespaceID: namespaceID,
+        Algorithm:   "secp256k1",
     })
-    
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("Created key: %s (%s)\n", key.Name, key.Address)
+
     // Sign inline with your execution
-    sig, _ := client.Sign.Sign(ctx, key.ID, txBytes, false)
+    result, err := client.Sign.Sign(ctx, key.ID, []byte("transaction data"), false)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("Signature: %x\n", result.Signature)
 }
 ```
 
@@ -80,11 +94,32 @@ func main() {
 Run POPSigner on your own infrastructure. Full control. No dependencies.
 
 ```go
-kr, _ := popsigner.New(ctx, popsigner.Config{
-    BaoAddr:   "https://your-openbao.internal:8200",
-    BaoToken:  os.Getenv("BAO_TOKEN"),
-    StorePath: "./keyring-metadata.json",
-})
+package main
+
+import (
+    "context"
+    "os"
+
+    popsigner "github.com/Bidon15/popsigner"
+)
+
+func main() {
+    ctx := context.Background()
+
+    kr, _ := popsigner.New(ctx, popsigner.Config{
+        BaoAddr:   "https://your-openbao.internal:8200",
+        BaoToken:  os.Getenv("BAO_TOKEN"),
+        StorePath: "./keyring-metadata.json",
+    })
+
+    // Create a key
+    record, _ := kr.NewAccountWithOptions("sequencer", popsigner.KeyOptions{
+        Exportable: true,
+    })
+
+    // Sign with OpenBao backend
+    sig, pubKey, _ := kr.Sign("sequencer", []byte("transaction data"), nil)
+}
 ```
 
 See [Deployment Guide](doc/product/DEPLOYMENT.md) for Kubernetes setup.
@@ -131,30 +166,96 @@ sig, pubKey, _ := kr.Sign("my-key", signBytes, signMode)
 
 ---
 
+## SDKs
+
+### Go SDK
+
+```bash
+go get github.com/Bidon15/popsigner/sdk-go
+```
+
+```go
+import popsigner "github.com/Bidon15/popsigner/sdk-go"
+
+client := popsigner.NewClient("psk_live_xxxxx")
+```
+
+See [Go SDK README](sdk-go/README.md) for full documentation.
+
+### Rust SDK
+
+```toml
+[dependencies]
+popsigner = "0.1"
+tokio = { version = "1", features = ["full"] }
+```
+
+```rust
+use popsigner::Client;
+
+let client = Client::new("psk_live_xxxxx");
+```
+
+See [Rust SDK README](sdk-rust/README.md) for full documentation.
+
+---
+
 ## Integration
 
-### Celestia / Cosmos SDK
+### Celestia / Cosmos SDK (Go)
 
-POPSigner implements the standard `keyring.Keyring` interface:
+POPSigner provides a Celestia-compatible keyring:
 
 ```go
 import (
+    popsigner "github.com/Bidon15/popsigner/sdk-go"
     "github.com/celestiaorg/celestia-node/api/client"
-    popsigner "github.com/Bidon15/popsigner"
 )
 
 func main() {
     ctx := context.Background()
-    
-    // POPSigner as keyring
-    kr, _ := popsigner.NewClient(os.Getenv("POPSIGNER_API_KEY"))
-    
-    // Plug into Celestia
-    celestiaClient, _ := client.NewWithKeyring(ctx, clientConfig, kr)
-    
-    // Submit blobs—signing happens inline
-    height, _ := celestiaClient.Blob.Submit(ctx, blobs, nil)
+
+    // Create a Celestia-compatible keyring backed by POPSigner
+    kr, _ := popsigner.NewCelestiaKeyring(
+        os.Getenv("POPSIGNER_API_KEY"),
+        "your-key-id",
+    )
+
+    // Use with Celestia client
+    cfg := client.Config{
+        ReadConfig: client.ReadConfig{
+            BridgeDAAddr: "http://localhost:26658",
+            DAAuthToken:  os.Getenv("CELESTIA_AUTH_TOKEN"),
+        },
+        SubmitConfig: client.SubmitConfig{
+            DefaultKeyName: kr.KeyName(),
+            Network:        "mocha-4",
+        },
+    }
+
+    celestiaClient, _ := client.New(ctx, cfg, kr)
+
+    // Submit blobs—signing happens inline via POPSigner
+    fmt.Printf("Connected with address: %s\n", kr.CelestiaAddress())
 }
+```
+
+### Celestia (Rust)
+
+Drop-in replacement for Lumina's client:
+
+```rust
+use popsigner::celestia::Client;
+
+let client = Client::builder()
+    .rpc_url("ws://localhost:26658")
+    .grpc_url("http://localhost:9090")
+    .popsigner("psk_live_xxx", "my-key")
+    .build()
+    .await?;
+
+// Same API as Lumina—keys never exposed
+client.blob().submit(&[blob], TxConfig::default()).await?;
 ```
 
 ### Parallel Workers
@@ -164,8 +265,9 @@ POPSigner supports worker-native architecture for burst workloads:
 ```go
 // Create signing workers
 keys, _ := client.Keys.CreateBatch(ctx, popsigner.CreateBatchRequest{
-    Prefix: "blob-worker",
-    Count:  4,
+    Prefix:      "blob-worker",
+    Count:       4,
+    NamespaceID: namespaceID,
 })
 
 // Sign in parallel—no blocking
@@ -183,30 +285,71 @@ results, _ := client.Sign.SignBatch(ctx, popsigner.BatchSignRequest{
 
 ## CLI
 
+POPSigner provides two CLIs for different use cases:
+
+### Cloud CLI (`popctl`)
+
+For managing keys via the POPSigner Control Plane API:
+
+```bash
+# Install
+go install github.com/Bidon15/popsigner/popctl@latest
+
+# Configure
+popctl config init
+# or set environment variables:
+export POPSIGNER_API_KEY="psk_xxx"
+export POPSIGNER_NAMESPACE_ID="your-namespace-uuid"
+
+# Key management
+popctl keys list
+popctl keys create my-sequencer --exportable
+popctl keys create-batch blob-worker --count 4
+popctl keys get <key-id>
+popctl keys export <key-id>
+popctl keys delete <key-id>
+
+# Sign data
+popctl sign <key-id> --data "message"
+popctl sign <key-id> --file message.txt
+```
+
+### Self-Hosted CLI (`popsigner`)
+
+For managing keys directly with your own OpenBao instance:
+
 ```bash
 # Install
 go install github.com/Bidon15/popsigner/cmd/popsigner@latest
 
 # Configure
-export POPSIGNER_API_KEY="psk_xxx"
+export BAO_ADDR="http://127.0.0.1:8200"
+export BAO_TOKEN="your-bao-token"
 
 # Key management
-popsigner keys create my-sequencer
 popsigner keys list
-popsigner keys show my-sequencer
+popsigner keys add my-validator --exportable
+popsigner keys show my-validator
+popsigner keys rename old-name new-name
+popsigner keys export-pub my-validator
+popsigner keys delete my-validator
 
-# Sign
-popsigner sign --key my-sequencer message.txt
-
-# Health check
-popsigner health
+# Migration
+popsigner migrate import --from ~/.celestia-app/keyring-file --key-name my-key
+popsigner migrate export --key my-validator --to ./backup
 ```
 
 ---
 
 ## Migration
 
-### Import existing keys
+### Import existing keys (Cloud)
+
+```bash
+popctl keys import my-validator --private-key <base64-encoded-key>
+```
+
+### Import existing keys (Self-Hosted)
 
 ```bash
 popsigner migrate import \
@@ -217,9 +360,11 @@ popsigner migrate import \
 ### Export keys (exit guarantee)
 
 ```bash
-popsigner migrate export \
-  --to ./exported-keys \
-  --key my-validator
+# Cloud
+popctl keys export <key-id>
+
+# Self-hosted
+popsigner migrate export --key my-validator --to ./backup
 ```
 
 See [Migration Guide](doc/product/MIGRATION.md) for all options.
@@ -241,11 +386,32 @@ See [Migration Guide](doc/product/MIGRATION.md) for all options.
 
 ## Installation
 
-```bash
-# Go SDK
-go get github.com/Bidon15/popsigner
+### Go SDK (Cloud)
 
-# CLI
+```bash
+go get github.com/Bidon15/popsigner/sdk-go
+```
+
+### Go Library (Self-Hosted)
+
+```bash
+go get github.com/Bidon15/popsigner
+```
+
+### Rust SDK
+
+```toml
+[dependencies]
+popsigner = "0.1"
+```
+
+### CLI Tools
+
+```bash
+# Cloud CLI
+go install github.com/Bidon15/popsigner/popctl@latest
+
+# Self-Hosted CLI
 go install github.com/Bidon15/popsigner/cmd/popsigner@latest
 ```
 
@@ -282,12 +448,10 @@ The rename signals a shift from playful internal naming to category-defining inf
 
 ```bash
 git clone https://github.com/Bidon15/popsigner.git
-cd banhbaoring
+cd popsigner
 go mod download
 go test ./...
 ```
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
