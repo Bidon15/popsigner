@@ -1,0 +1,9 @@
+# Binaries
+popctl
+popctl.exe
+dist/
+
+# Test output
+*.test
+coverage.out
+
