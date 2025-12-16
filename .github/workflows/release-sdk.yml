@@ -1,0 +1,38 @@
+name: Release SDK
+
+on:
+  push:
+    tags:
+      - "sdk-go/v*"
+      - "sdk-rust/v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract release info
+        id: info
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          COMPONENT="${TAG%/v*}"
+          VERSION="${TAG#*/}"
+
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "component=$COMPONENT" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "${{ steps.info.outputs.component }} ${{ steps.info.outputs.version }}"
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ startsWith(steps.info.outputs.version, 'v0.') }}

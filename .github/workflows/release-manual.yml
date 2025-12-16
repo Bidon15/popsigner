@@ -1,0 +1,88 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      component:
+        description: "Component to release"
+        required: true
+        type: choice
+        options:
+          - operator
+          - control-plane
+          - plugin
+          - sdk-go
+          - sdk-rust
+          - root
+      version:
+        description: "Version (e.g., v1.0.15 or v0.2.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate version format
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-.*)?$ ]]; then
+            echo "❌ Invalid version format: $VERSION"
+            echo "Expected format: v1.0.0 or v1.0.0-rc.1"
+            exit 1
+          fi
+
+      - name: Determine tag
+        id: tag
+        run: |
+          COMPONENT="${{ inputs.component }}"
+          VERSION="${{ inputs.version }}"
+
+          if [[ "$COMPONENT" == "root" ]]; then
+            TAG="$VERSION"
+            NAME="POPSigner $VERSION"
+          else
+            TAG="$COMPONENT/$VERSION"
+            NAME="$COMPONENT $VERSION"
+          fi
+
+          # Mark SDK releases as prerelease if v0.x
+          if [[ "$COMPONENT" == "sdk-go" || "$COMPONENT" == "sdk-rust" ]] && [[ "$VERSION" == v0.* ]]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "name=$TAG" >> $GITHUB_OUTPUT
+          echo "release_name=$NAME" >> $GITHUB_OUTPUT
+
+      - name: Check tag doesn't exist
+        run: |
+          if git rev-parse "${{ steps.tag.outputs.name }}" >/dev/null 2>&1; then
+            echo "❌ Tag ${{ steps.tag.outputs.name }} already exists!"
+            exit 1
+          fi
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.tag.outputs.name }}" -m "Release ${{ steps.tag.outputs.name }}"
+          git push origin "${{ steps.tag.outputs.name }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: ${{ steps.tag.outputs.release_name }}
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ steps.tag.outputs.prerelease == 'true' }}

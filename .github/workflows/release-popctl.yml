@@ -1,0 +1,143 @@
+name: Release popctl
+
+on:
+  push:
+    tags:
+      - 'popctl-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            suffix: linux-amd64
+          - goos: linux
+            goarch: arm64
+            suffix: linux-arm64
+          - goos: darwin
+            goarch: amd64
+            suffix: darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            suffix: darwin-arm64
+          - goos: windows
+            goarch: amd64
+            suffix: windows-amd64
+            extension: .exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Get version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/popctl-}" >> $GITHUB_OUTPUT
+
+      - name: Build
+        working-directory: ./popctl
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          go build -trimpath -ldflags "-s -w -X github.com/Bidon15/popsigner/popctl/cmd.Version=${{ steps.version.outputs.VERSION }}" \
+            -o ../dist/popctl-${{ matrix.suffix }}${{ matrix.extension }} .
+
+      - name: Create archive (Unix)
+        if: matrix.goos != 'windows'
+        run: |
+          cd dist
+          tar -czf popctl-${{ matrix.suffix }}.tar.gz popctl-${{ matrix.suffix }}
+
+      - name: Create archive (Windows)
+        if: matrix.goos == 'windows'
+        run: |
+          cd dist
+          zip popctl-${{ matrix.suffix }}.zip popctl-${{ matrix.suffix }}.exe
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: popctl-${{ matrix.suffix }}
+          path: dist/popctl-${{ matrix.suffix }}.*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Get version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/popctl-}" >> $GITHUB_OUTPUT
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum popctl-*.tar.gz popctl-*.zip > checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: popctl ${{ steps.version.outputs.VERSION }}
+          body: |
+            ## popctl ${{ steps.version.outputs.VERSION }}
+
+            POPSigner CLI - manage keys via the control plane API.
+
+            ### Installation
+
+            **macOS (Apple Silicon):**
+            ```bash
+            curl -LO https://github.com/Bidon15/popsigner/releases/download/popctl-${{ steps.version.outputs.VERSION }}/popctl-darwin-arm64.tar.gz
+            tar -xzf popctl-darwin-arm64.tar.gz
+            sudo mv popctl-darwin-arm64 /usr/local/bin/popctl
+            ```
+
+            **macOS (Intel):**
+            ```bash
+            curl -LO https://github.com/Bidon15/popsigner/releases/download/popctl-${{ steps.version.outputs.VERSION }}/popctl-darwin-amd64.tar.gz
+            tar -xzf popctl-darwin-amd64.tar.gz
+            sudo mv popctl-darwin-amd64 /usr/local/bin/popctl
+            ```
+
+            **Linux (amd64):**
+            ```bash
+            curl -LO https://github.com/Bidon15/popsigner/releases/download/popctl-${{ steps.version.outputs.VERSION }}/popctl-linux-amd64.tar.gz
+            tar -xzf popctl-linux-amd64.tar.gz
+            sudo mv popctl-linux-amd64 /usr/local/bin/popctl
+            ```
+
+            **Linux (arm64):**
+            ```bash
+            curl -LO https://github.com/Bidon15/popsigner/releases/download/popctl-${{ steps.version.outputs.VERSION }}/popctl-linux-arm64.tar.gz
+            tar -xzf popctl-linux-arm64.tar.gz
+            sudo mv popctl-linux-arm64 /usr/local/bin/popctl
+            ```
+
+            ### Verify Installation
+            ```bash
+            popctl version
+            popctl --help
+            ```
+          files: |
+            dist/popctl-*.tar.gz
+            dist/popctl-*.zip
+            dist/checksums.txt
+          draft: false
+          prerelease: false
+

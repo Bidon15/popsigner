@@ -1,0 +1,33 @@
+name: Release Root Module
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "!*/v*" # Exclude sub-module tags
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version
+        id: info
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "POPSigner ${{ steps.info.outputs.version }}"
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(steps.info.outputs.version, '-') }}
