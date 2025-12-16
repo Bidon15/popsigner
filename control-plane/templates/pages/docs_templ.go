@@ -8,7 +8,7 @@ package pages
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/Bidon15/banhbaoring/control-plane/templates/layouts"
+import "github.com/Bidon15/popsigner/control-plane/templates/layouts"
 
 // DocsPageData contains the data for the docs page.
 type DocsPageData struct {
@@ -54,7 +54,7 @@ func DocsPage(data DocsPageData) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"min-h-screen bg-[#0a0a0a] font-mono relative\"><!-- Scanlines --><div class=\"fixed inset-0 pointer-events-none opacity-20\n\t\t\t            bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.3)_2px,rgba(0,0,0,0.3)_4px)]\"></div><!-- Phosphor glow --><div class=\"fixed inset-0 overflow-hidden pointer-events-none\"><div class=\"absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] \n\t\t\t\t            bg-[radial-gradient(ellipse_at_center,rgba(255,176,0,0.08)_0%,transparent_60%)] \n\t\t\t\t            blur-2xl\"></div></div><!-- Vignette --><div class=\"fixed inset-0 pointer-events-none \n\t\t\t            bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.5)_100%)]\"></div><!-- Header --><header class=\"sticky top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-[#333300]\"><div class=\"max-w-5xl mx-auto px-6 py-4 flex items-center justify-between\"><a href=\"/\" class=\"flex items-center gap-2 group\"><span class=\"text-[#FFB000] text-xl\">◇</span> <span class=\"text-[#FFB000] font-bold uppercase tracking-wider\n\t\t\t\t\t\t            group-hover:drop-shadow-[0_0_10px_#FFB000] transition-all\">POPSigner</span></a><div class=\"flex items-center gap-6\"><a href=\"/keys\" class=\"text-sm text-[#33FF00] uppercase hover:drop-shadow-[0_0_5px_#33FF00] transition-all\">Dashboard</a> <a href=\"https://github.com/Bidon15/banhbaoring\" target=\"_blank\" rel=\"noopener\" class=\"text-sm text-[#33FF00] uppercase hover:drop-shadow-[0_0_5px_#33FF00] transition-all\">GitHub ↗</a></div></div></header><!-- Content --><div class=\"relative z-10 max-w-5xl mx-auto px-6 py-12\"><!-- Hero --><div class=\"mb-12\"><div class=\"text-[#33FF00] text-sm mb-4 opacity-70\"><span class=\"text-[#228B22]\">&gt;</span> cat README.md</div><h1 class=\"text-3xl sm:text-4xl text-[#FFB000] font-bold uppercase tracking-wider mb-4\n\t\t\t\t\t           drop-shadow-[0_0_15px_#FFB000]\">POPSIGNER DOCUMENTATION</h1><p class=\"text-lg text-[#33FF00] opacity-90 max-w-2xl uppercase\">POINT-OF-PRESENCE SIGNING INFRASTRUCTURE. KEYS REMAIN REMOTE. YOU REMAIN SOVEREIGN.</p></div><!-- Quickstart --><section class=\"mb-16\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; QUICKSTART_</h2><div class=\"grid md:grid-cols-3 gap-4\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"min-h-screen bg-[#0a0a0a] font-mono relative\"><!-- Scanlines --><div class=\"fixed inset-0 pointer-events-none opacity-20\n\t\t\t            bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.3)_2px,rgba(0,0,0,0.3)_4px)]\"></div><!-- Phosphor glow --><div class=\"fixed inset-0 overflow-hidden pointer-events-none\"><div class=\"absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] \n\t\t\t\t            bg-[radial-gradient(ellipse_at_center,rgba(255,176,0,0.08)_0%,transparent_60%)] \n\t\t\t\t            blur-2xl\"></div></div><!-- Vignette --><div class=\"fixed inset-0 pointer-events-none \n\t\t\t            bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.5)_100%)]\"></div><!-- Header --><header class=\"sticky top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-[#333300]\"><div class=\"max-w-5xl mx-auto px-6 py-4 flex items-center justify-between\"><a href=\"/\" class=\"flex items-center gap-2 group\"><span class=\"text-[#FFB000] text-xl\">◇</span> <span class=\"text-[#FFB000] font-bold uppercase tracking-wider\n\t\t\t\t\t\t            group-hover:drop-shadow-[0_0_10px_#FFB000] transition-all\">POPSigner</span></a><div class=\"flex items-center gap-6\"><a href=\"/keys\" class=\"text-sm text-[#33FF00] uppercase hover:drop-shadow-[0_0_5px_#33FF00] transition-all\">Dashboard</a> <a href=\"https://github.com/Bidon15/popsigner\" target=\"_blank\" rel=\"noopener\" class=\"text-sm text-[#33FF00] uppercase hover:drop-shadow-[0_0_5px_#33FF00] transition-all\">GitHub ↗</a></div></div></header><!-- Content --><div class=\"relative z-10 max-w-5xl mx-auto px-6 py-12\"><!-- Hero --><div class=\"mb-12\"><div class=\"text-[#33FF00] text-sm mb-4 opacity-70\"><span class=\"text-[#228B22]\">&gt;</span> cat README.md</div><h1 class=\"text-3xl sm:text-4xl text-[#FFB000] font-bold uppercase tracking-wider mb-4\n\t\t\t\t\t           drop-shadow-[0_0_15px_#FFB000]\">POPSIGNER DOCUMENTATION</h1><p class=\"text-lg text-[#33FF00] opacity-90 max-w-2xl uppercase\">POINT-OF-PRESENCE SIGNING INFRASTRUCTURE. KEYS REMAIN REMOTE. YOU REMAIN SOVEREIGN.</p></div><!-- Quickstart --><section class=\"mb-16\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; QUICKSTART_</h2><div class=\"grid md:grid-cols-3 gap-4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -74,7 +74,7 @@ func DocsPage(data DocsPageData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = docsCodeBlock("go get github.com/Bidon15/banhbaoring/sdk-go").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = docsCodeBlock("go get github.com/Bidon15/popsigner/sdk-go").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -145,7 +145,7 @@ tokio = { version = "1", features = ["full"] }`).Render(ctx, templ_7745c5c3_Buff
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></section><!-- Footer --><footer class=\"pt-8 border-t border-[#333300]\"><div class=\"flex items-center justify-between text-sm\"><p class=\"text-[#666600] uppercase\">Need help?  <a href=\"https://github.com/Bidon15/banhbaoring/issues\" target=\"_blank\" class=\"text-[#FFB000] hover:drop-shadow-[0_0_5px_#FFB000] transition-all\">Open an issue</a></p><a href=\"https://github.com/Bidon15/banhbaoring\" target=\"_blank\" class=\"text-[#33FF00] hover:drop-shadow-[0_0_5px_#33FF00] transition-all uppercase\">⭐ Star on GitHub</a></div></footer></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></section><!-- Footer --><footer class=\"pt-8 border-t border-[#333300]\"><div class=\"flex items-center justify-between text-sm\"><p class=\"text-[#666600] uppercase\">Need help?  <a href=\"https://github.com/Bidon15/popsigner/issues\" target=\"_blank\" class=\"text-[#FFB000] hover:drop-shadow-[0_0_5px_#FFB000] transition-all\">Open an issue</a></p><a href=\"https://github.com/Bidon15/popsigner\" target=\"_blank\" class=\"text-[#33FF00] hover:drop-shadow-[0_0_5px_#33FF00] transition-all uppercase\">⭐ Star on GitHub</a></div></footer></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -414,7 +414,7 @@ import (
     "context"
     "log"
     
-    "github.com/Bidon15/banhbaoring/sdk-go"
+    "github.com/Bidon15/popsigner/sdk-go"
     "github.com/celestiaorg/celestia-node/api/client"
     "github.com/celestiaorg/celestia-node/blob"
     "github.com/celestiaorg/celestia-app/v3/pkg/namespace"

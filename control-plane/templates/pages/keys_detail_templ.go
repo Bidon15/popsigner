@@ -12,8 +12,8 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/Bidon15/banhbaoring/control-plane/internal/models"
-	"github.com/Bidon15/banhbaoring/control-plane/templates/layouts"
+	"github.com/Bidon15/popsigner/control-plane/internal/models"
+	"github.com/Bidon15/popsigner/control-plane/templates/layouts"
 )
 
 // SigningStats contains signing activity statistics for a key.
@@ -443,7 +443,7 @@ func KeyDetailPage(data KeyDetailData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</div><div class=\"flex gap-3 pt-4 border-t border-[#333300]\"><a href=\"/docs\" class=\"px-4 py-2 border border-[#FFB000] text-[#FFB000] hover:bg-[#FFB000]/10 transition-colors uppercase\">📚 FULL DOCS</a> <a href=\"/docs#celestia-client\" class=\"px-4 py-2 border border-[#33FF00] text-[#33FF00] hover:bg-[#33FF00]/10 transition-colors uppercase\">🌌 CELESTIA</a> <a href=\"https://github.com/Bidon15/banhbaoring/tree/main/examples\" target=\"_blank\" class=\"px-4 py-2 border border-[#666600] text-[#666600] hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase\">💡 EXAMPLES ↗</a></div></div></div><!-- Danger Zone --><div class=\"bg-black border border-[#FF3333] p-6\"><h2 class=\"text-lg text-[#FF3333] mb-4 uppercase\">&gt; DANGER_ZONE</h2><div class=\"flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-[#FF3333]/5 border border-[#FF3333]/20\"><div><p class=\"text-[#FF3333] font-medium uppercase\">DELETE THIS KEY PERMANENTLY</p><p class=\"text-sm text-[#666600] mt-1 uppercase\">THIS ACTION CANNOT BE UNDONE. KEY MATERIAL WILL BE DESTROYED.</p></div><button hx-delete=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</div><div class=\"flex gap-3 pt-4 border-t border-[#333300]\"><a href=\"/docs\" class=\"px-4 py-2 border border-[#FFB000] text-[#FFB000] hover:bg-[#FFB000]/10 transition-colors uppercase\">📚 FULL DOCS</a> <a href=\"/docs#celestia-client\" class=\"px-4 py-2 border border-[#33FF00] text-[#33FF00] hover:bg-[#33FF00]/10 transition-colors uppercase\">🌌 CELESTIA</a> <a href=\"https://github.com/Bidon15/popsigner/tree/main/examples\" target=\"_blank\" class=\"px-4 py-2 border border-[#666600] text-[#666600] hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase\">💡 EXAMPLES ↗</a></div></div></div><!-- Danger Zone --><div class=\"bg-black border border-[#FF3333] p-6\"><h2 class=\"text-lg text-[#FF3333] mb-4 uppercase\">&gt; DANGER_ZONE</h2><div class=\"flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-[#FF3333]/5 border border-[#FF3333]/20\"><div><p class=\"text-[#FF3333] font-medium uppercase\">DELETE THIS KEY PERMANENTLY</p><p class=\"text-sm text-[#666600] mt-1 uppercase\">THIS ACTION CANNOT BE UNDONE. KEY MATERIAL WILL BE DESTROYED.</p></div><button hx-delete=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -556,7 +556,7 @@ func mustMarshalJSON(v interface{}) string {
 }
 
 func goSDKExample(keyID string) string {
-	return `import "github.com/Bidon15/banhbaoring/sdk-go"
+	return `import "github.com/Bidon15/popsigner/sdk-go"
 
 client := popsigner.NewClient("your-api-key")
 signer := client.Key("` + keyID + `")

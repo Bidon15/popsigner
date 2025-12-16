@@ -1,7 +1,7 @@
 package pages
 
 import (
-	"github.com/Bidon15/banhbaoring/control-plane/templates/layouts"
+	"github.com/Bidon15/popsigner/control-plane/templates/layouts"
 )
 
 // OnboardingData holds all the data for the onboarding wizard.
@@ -165,7 +165,7 @@ templ OnboardingStep3(data OnboardingData) {
 		<div class="bg-black border border-[#333300] p-4 mb-6">
 			<p class="text-sm text-[#FFB000] mb-4 uppercase">&gt; QUICK_START</p>
 			<div class="space-y-4">
-				@IntegrationStep("1", "INSTALL SDK", "go get github.com/Bidon15/banhbaoring/sdk-go")
+				@IntegrationStep("1", "INSTALL SDK", "go get github.com/Bidon15/popsigner/sdk-go")
 				@IntegrationStep("2", "SET API KEY", "export POPSIGNER_API_KEY=\"your-api-key\"")
 				@IntegrationStep("3", "START SIGNING", `client := popsigner.New(os.Getenv("POPSIGNER_API_KEY"))
 sig, err := client.Sign(ctx, keyName, message)`)
@@ -193,7 +193,7 @@ sig, err := client.Sign(ctx, keyName, message)`)
 				<a href="/docs/api" class="text-[#FFB000] hover:drop-shadow-[0_0_8px_#FFB000] transition-all uppercase flex items-center gap-1">
 					<span>🔗</span> API
 				</a>
-				<a href="https://github.com/Bidon15/banhbaoring" class="text-[#FFB000] hover:drop-shadow-[0_0_8px_#FFB000] transition-all uppercase flex items-center gap-1">
+				<a href="https://github.com/Bidon15/popsigner" class="text-[#FFB000] hover:drop-shadow-[0_0_8px_#FFB000] transition-all uppercase flex items-center gap-1">
 					<span>📦</span> GITHUB
 				</a>
 			</div>

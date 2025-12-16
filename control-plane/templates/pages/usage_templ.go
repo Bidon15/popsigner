@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Bidon15/banhbaoring/control-plane/templates/components"
-	"github.com/Bidon15/banhbaoring/control-plane/templates/layouts"
+	"github.com/Bidon15/popsigner/control-plane/templates/components"
+	"github.com/Bidon15/popsigner/control-plane/templates/layouts"
 )
 
 // formatNumber formats a number with thousand separators

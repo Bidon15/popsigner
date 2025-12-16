@@ -1,6 +1,6 @@
 package pages
 
-import "github.com/Bidon15/banhbaoring/control-plane/templates/layouts"
+import "github.com/Bidon15/popsigner/control-plane/templates/layouts"
 
 // DocsPageData contains the data for the docs page.
 type DocsPageData struct {
@@ -43,7 +43,7 @@ templ DocsPage(data DocsPageData) {
 					</a>
 					<div class="flex items-center gap-6">
 						<a href="/keys" class="text-sm text-[#33FF00] uppercase hover:drop-shadow-[0_0_5px_#33FF00] transition-all">Dashboard</a>
-						<a href="https://github.com/Bidon15/banhbaoring" target="_blank" rel="noopener" 
+						<a href="https://github.com/Bidon15/popsigner" target="_blank" rel="noopener" 
 						   class="text-sm text-[#33FF00] uppercase hover:drop-shadow-[0_0_5px_#33FF00] transition-all">
 							GitHub ↗
 						</a>
@@ -120,7 +120,7 @@ templ DocsPage(data DocsPageData) {
 					<!-- Go Tab -->
 					<div x-show="tab === 'go'" x-cloak>
 						<p class="text-xs text-[#666600] uppercase mb-2">&gt; INSTALL:</p>
-						@docsCodeBlock("go get github.com/Bidon15/banhbaoring/sdk-go")
+						@docsCodeBlock("go get github.com/Bidon15/popsigner/sdk-go")
 						
 						<p class="text-xs text-[#666600] uppercase mt-6 mb-2">&gt; COMPLETE EXAMPLE:</p>
 						@docsCodeBlockMulti(goExample())
@@ -169,12 +169,12 @@ tokio = { version = "1", features = ["full"] }`)
 					<div class="flex items-center justify-between text-sm">
 						<p class="text-[#666600] uppercase">
 							Need help? 
-							<a href="https://github.com/Bidon15/banhbaoring/issues" target="_blank" 
+							<a href="https://github.com/Bidon15/popsigner/issues" target="_blank" 
 							   class="text-[#FFB000] hover:drop-shadow-[0_0_5px_#FFB000] transition-all">
 								Open an issue
 							</a>
 						</p>
-						<a href="https://github.com/Bidon15/banhbaoring" target="_blank" 
+						<a href="https://github.com/Bidon15/popsigner" target="_blank" 
 						   class="text-[#33FF00] hover:drop-shadow-[0_0_5px_#33FF00] transition-all uppercase">
 							⭐ Star on GitHub
 						</a>
@@ -249,7 +249,7 @@ import (
     "context"
     "log"
     
-    "github.com/Bidon15/banhbaoring/sdk-go"
+    "github.com/Bidon15/popsigner/sdk-go"
     "github.com/celestiaorg/celestia-node/api/client"
     "github.com/celestiaorg/celestia-node/blob"
     "github.com/celestiaorg/celestia-app/v3/pkg/namespace"

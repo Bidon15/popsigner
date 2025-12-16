@@ -9,7 +9,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/Bidon15/banhbaoring/control-plane/templates/layouts"
+	"github.com/Bidon15/popsigner/control-plane/templates/layouts"
 )
 
 // OnboardingData holds all the data for the onboarding wizard.
@@ -289,7 +289,7 @@ func OnboardingStep3(data OnboardingData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IntegrationStep("1", "INSTALL SDK", "go get github.com/Bidon15/banhbaoring/sdk-go").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = IntegrationStep("1", "INSTALL SDK", "go get github.com/Bidon15/popsigner/sdk-go").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -302,7 +302,7 @@ sig, err := client.Sign(ctx, keyName, message)`).Render(ctx, templ_7745c5c3_Buff
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</div></div><!-- Action Buttons --> <div class=\"space-y-3\"><a href=\"/dashboard\" class=\"block w-full bg-[#FFB000] text-black font-bold py-3 text-center uppercase hover:bg-[#FFCC00] hover:shadow-[0_0_20px_#FFB000] transition-all\">[ GO TO DASHBOARD ]</a> <a href=\"/settings/api-keys\" class=\"block w-full py-3 border border-[#33FF00] text-[#33FF00] text-center uppercase hover:bg-[#0D1A0D] transition-colors\">[ CREATE API KEY ]</a></div><!-- Resources --> <div class=\"mt-8 pt-6 border-t border-[#333300]\"><p class=\"text-sm text-[#666600] mb-4 text-center uppercase\">RESOURCES</p><div class=\"flex justify-center gap-4 text-sm\"><a href=\"/docs\" class=\"text-[#FFB000] hover:drop-shadow-[0_0_8px_#FFB000] transition-all uppercase flex items-center gap-1\"><span>📚</span> DOCS</a> <a href=\"/docs/api\" class=\"text-[#FFB000] hover:drop-shadow-[0_0_8px_#FFB000] transition-all uppercase flex items-center gap-1\"><span>🔗</span> API</a> <a href=\"https://github.com/Bidon15/banhbaoring\" class=\"text-[#FFB000] hover:drop-shadow-[0_0_8px_#FFB000] transition-all uppercase flex items-center gap-1\"><span>📦</span> GITHUB</a></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</div></div><!-- Action Buttons --> <div class=\"space-y-3\"><a href=\"/dashboard\" class=\"block w-full bg-[#FFB000] text-black font-bold py-3 text-center uppercase hover:bg-[#FFCC00] hover:shadow-[0_0_20px_#FFB000] transition-all\">[ GO TO DASHBOARD ]</a> <a href=\"/settings/api-keys\" class=\"block w-full py-3 border border-[#33FF00] text-[#33FF00] text-center uppercase hover:bg-[#0D1A0D] transition-colors\">[ CREATE API KEY ]</a></div><!-- Resources --> <div class=\"mt-8 pt-6 border-t border-[#333300]\"><p class=\"text-sm text-[#666600] mb-4 text-center uppercase\">RESOURCES</p><div class=\"flex justify-center gap-4 text-sm\"><a href=\"/docs\" class=\"text-[#FFB000] hover:drop-shadow-[0_0_8px_#FFB000] transition-all uppercase flex items-center gap-1\"><span>📚</span> DOCS</a> <a href=\"/docs/api\" class=\"text-[#FFB000] hover:drop-shadow-[0_0_8px_#FFB000] transition-all uppercase flex items-center gap-1\"><span>🔗</span> API</a> <a href=\"https://github.com/Bidon15/popsigner\" class=\"text-[#FFB000] hover:drop-shadow-[0_0_8px_#FFB000] transition-all uppercase flex items-center gap-1\"><span>📦</span> GITHUB</a></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

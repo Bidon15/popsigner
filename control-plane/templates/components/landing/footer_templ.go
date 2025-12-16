@@ -70,7 +70,7 @@ func Footer() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = FooterLink("GITHUB", "https://github.com/Bidon15/banhbaoring").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = FooterLink("GITHUB", "https://github.com/Bidon15/popsigner").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -106,7 +106,7 @@ func Footer() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = SocialLink("GitHub", "https://github.com/Bidon15/banhbaoring").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = SocialLink("GitHub", "https://github.com/Bidon15/popsigner").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

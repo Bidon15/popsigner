@@ -73,7 +73,7 @@ func Pricing() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><!-- Self-host callout --><div class=\"mt-12 text-center\"><p class=\"text-[#228B22] uppercase text-sm tracking-wide\">SELF-HOST FOREVER. APACHE 2.0.  <a href=\"https://github.com/Bidon15/banhbaoring\" target=\"_blank\" rel=\"noopener\" class=\"text-[#33FF00] hover:drop-shadow-[0_0_5px_#33FF00] transition-all\">VIEW ON GITHUB →</a></p></div></div></section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><!-- Self-host callout --><div class=\"mt-12 text-center\"><p class=\"text-[#228B22] uppercase text-sm tracking-wide\">SELF-HOST FOREVER. APACHE 2.0.  <a href=\"https://github.com/Bidon15/popsigner\" target=\"_blank\" rel=\"noopener\" class=\"text-[#33FF00] hover:drop-shadow-[0_0_5px_#33FF00] transition-all\">VIEW ON GITHUB →</a></p></div></div></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
