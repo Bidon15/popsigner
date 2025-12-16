@@ -8,7 +8,7 @@ package pages
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/Bidon15/popsigner/control-plane/templates/layouts"
+import "github.com/Bidon15/banhbaoring/control-plane/templates/layouts"
 
 // DocsPageData contains the data for the docs page.
 type DocsPageData struct {
@@ -54,7 +54,7 @@ func DocsPage(data DocsPageData) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"min-h-screen bg-[#0a0a0a] font-mono relative\"><!-- Scanlines --><div class=\"fixed inset-0 pointer-events-none opacity-20\n\t\t\t            bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.3)_2px,rgba(0,0,0,0.3)_4px)]\"></div><!-- Phosphor glow --><div class=\"fixed inset-0 overflow-hidden pointer-events-none\"><div class=\"absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] \n\t\t\t\t            bg-[radial-gradient(ellipse_at_center,rgba(255,176,0,0.08)_0%,transparent_60%)] \n\t\t\t\t            blur-2xl\"></div></div><!-- Vignette --><div class=\"fixed inset-0 pointer-events-none \n\t\t\t            bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.5)_100%)]\"></div><!-- Header --><header class=\"sticky top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-[#333300]\"><div class=\"max-w-5xl mx-auto px-6 py-4 flex items-center justify-between\"><a href=\"/\" class=\"flex items-center gap-2 group\"><span class=\"text-[#FFB000] text-xl\">◇</span> <span class=\"text-[#FFB000] font-bold uppercase tracking-wider\n\t\t\t\t\t\t            group-hover:drop-shadow-[0_0_10px_#FFB000] transition-all\">POPSigner</span></a><div class=\"flex items-center gap-6\"><a href=\"/keys\" class=\"text-sm text-[#33FF00] uppercase hover:drop-shadow-[0_0_5px_#33FF00] transition-all\">Dashboard</a> <a href=\"https://github.com/Bidon15/popsigner\" target=\"_blank\" rel=\"noopener\" class=\"text-sm text-[#33FF00] uppercase hover:drop-shadow-[0_0_5px_#33FF00] transition-all\">GitHub ↗</a></div></div></header><!-- Content --><div class=\"relative z-10 max-w-5xl mx-auto px-6 py-12\"><!-- Hero --><div class=\"mb-12\"><div class=\"text-[#33FF00] text-sm mb-4 opacity-70\"><span class=\"text-[#228B22]\">&gt;</span> cat README.md</div><h1 class=\"text-3xl sm:text-4xl text-[#FFB000] font-bold uppercase tracking-wider mb-4\n\t\t\t\t\t           drop-shadow-[0_0_15px_#FFB000]\">POPSIGNER DOCUMENTATION</h1><p class=\"text-lg text-[#33FF00] opacity-90 max-w-2xl uppercase\">POINT-OF-PRESENCE SIGNING INFRASTRUCTURE. KEYS REMAIN REMOTE. YOU REMAIN SOVEREIGN.</p></div><!-- Quickstart --><section class=\"mb-16\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; QUICKSTART_</h2><div class=\"grid md:grid-cols-3 gap-4\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"min-h-screen bg-[#0a0a0a] font-mono relative\"><!-- Scanlines --><div class=\"fixed inset-0 pointer-events-none opacity-20\n\t\t\t            bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.3)_2px,rgba(0,0,0,0.3)_4px)]\"></div><!-- Phosphor glow --><div class=\"fixed inset-0 overflow-hidden pointer-events-none\"><div class=\"absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] \n\t\t\t\t            bg-[radial-gradient(ellipse_at_center,rgba(255,176,0,0.08)_0%,transparent_60%)] \n\t\t\t\t            blur-2xl\"></div></div><!-- Vignette --><div class=\"fixed inset-0 pointer-events-none \n\t\t\t            bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.5)_100%)]\"></div><!-- Header --><header class=\"sticky top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-[#333300]\"><div class=\"max-w-5xl mx-auto px-6 py-4 flex items-center justify-between\"><a href=\"/\" class=\"flex items-center gap-2 group\"><span class=\"text-[#FFB000] text-xl\">◇</span> <span class=\"text-[#FFB000] font-bold uppercase tracking-wider\n\t\t\t\t\t\t            group-hover:drop-shadow-[0_0_10px_#FFB000] transition-all\">POPSigner</span></a><div class=\"flex items-center gap-6\"><a href=\"/keys\" class=\"text-sm text-[#33FF00] uppercase hover:drop-shadow-[0_0_5px_#33FF00] transition-all\">Dashboard</a> <a href=\"https://github.com/Bidon15/banhbaoring\" target=\"_blank\" rel=\"noopener\" class=\"text-sm text-[#33FF00] uppercase hover:drop-shadow-[0_0_5px_#33FF00] transition-all\">GitHub ↗</a></div></div></header><!-- Content --><div class=\"relative z-10 max-w-5xl mx-auto px-6 py-12\"><!-- Hero --><div class=\"mb-12\"><div class=\"text-[#33FF00] text-sm mb-4 opacity-70\"><span class=\"text-[#228B22]\">&gt;</span> cat README.md</div><h1 class=\"text-3xl sm:text-4xl text-[#FFB000] font-bold uppercase tracking-wider mb-4\n\t\t\t\t\t           drop-shadow-[0_0_15px_#FFB000]\">POPSIGNER DOCUMENTATION</h1><p class=\"text-lg text-[#33FF00] opacity-90 max-w-2xl uppercase\">POINT-OF-PRESENCE SIGNING INFRASTRUCTURE. KEYS REMAIN REMOTE. YOU REMAIN SOVEREIGN.</p></div><!-- Quickstart --><section class=\"mb-16\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; QUICKSTART_</h2><div class=\"grid md:grid-cols-3 gap-4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -74,7 +74,7 @@ func DocsPage(data DocsPageData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = docsCodeBlock("go get github.com/Bidon15/popsigner/sdk-go").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = docsCodeBlock("go get github.com/Bidon15/banhbaoring/sdk-go").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -91,7 +91,8 @@ func DocsPage(data DocsPageData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			templ_7745c5c3_Err = docsCodeBlock(`[dependencies]
-popsigner = "0.1"`).Render(ctx, templ_7745c5c3_Buffer)
+popsigner = { version = "0.1", features = ["celestia"] }
+tokio = { version = "1", features = ["full"] }`).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -144,7 +145,7 @@ popsigner = "0.1"`).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></section><!-- Footer --><footer class=\"pt-8 border-t border-[#333300]\"><div class=\"flex items-center justify-between text-sm\"><p class=\"text-[#666600] uppercase\">Need help?  <a href=\"https://github.com/Bidon15/popsigner/issues\" target=\"_blank\" class=\"text-[#FFB000] hover:drop-shadow-[0_0_5px_#FFB000] transition-all\">Open an issue</a></p><a href=\"https://github.com/Bidon15/popsigner\" target=\"_blank\" class=\"text-[#33FF00] hover:drop-shadow-[0_0_5px_#33FF00] transition-all uppercase\">⭐ Star on GitHub</a></div></footer></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></section><!-- Footer --><footer class=\"pt-8 border-t border-[#333300]\"><div class=\"flex items-center justify-between text-sm\"><p class=\"text-[#666600] uppercase\">Need help?  <a href=\"https://github.com/Bidon15/banhbaoring/issues\" target=\"_blank\" class=\"text-[#FFB000] hover:drop-shadow-[0_0_5px_#FFB000] transition-all\">Open an issue</a></p><a href=\"https://github.com/Bidon15/banhbaoring\" target=\"_blank\" class=\"text-[#33FF00] hover:drop-shadow-[0_0_5px_#33FF00] transition-all uppercase\">⭐ Star on GitHub</a></div></footer></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -186,7 +187,7 @@ func docsStepCard(number, title, description string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(number)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 191, Col: 95}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 192, Col: 95}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -199,7 +200,7 @@ func docsStepCard(number, title, description string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 195, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 196, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -212,7 +213,7 @@ func docsStepCard(number, title, description string) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(description)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 197, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 198, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -254,7 +255,7 @@ func docsCodeBlock(code string) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(code)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 204, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 205, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -296,7 +297,7 @@ func docsCodeBlockMulti(code string) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(code)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 224, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 225, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -343,7 +344,7 @@ func docsAPIEndpoint(method, path, description string) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(method)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 234, Col: 95}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 235, Col: 95}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -361,7 +362,7 @@ func docsAPIEndpoint(method, path, description string) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(method)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 236, Col: 95}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 237, Col: 95}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -379,7 +380,7 @@ func docsAPIEndpoint(method, path, description string) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(path)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 238, Col: 103}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 239, Col: 103}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -392,7 +393,7 @@ func docsAPIEndpoint(method, path, description string) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(description)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 240, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 241, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -413,7 +414,7 @@ import (
     "context"
     "log"
     
-    "github.com/Bidon15/popsigner/sdk-go"
+    "github.com/Bidon15/banhbaoring/sdk-go"
     "github.com/celestiaorg/celestia-node/api/client"
     "github.com/celestiaorg/celestia-node/blob"
     "github.com/celestiaorg/celestia-app/v3/pkg/namespace"
@@ -458,21 +459,33 @@ func main() {
 }
 
 func rustExample() string {
-	return `use popsigner::Client;
+	return `use popsigner::celestia::{Client, Namespace, Blob, AppVersion, TxConfig};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Create client
-    let client = Client::new("your-api-key");
-    
-    // Get your key
-    let key = client.keys().get("your-key-id").await?;
-    println!("Celestia address: {}", key.celestia_address);
-    
-    // Sign data
-    let signature = client.keys().sign(&key.id, b"tx data").await?;
-    println!("Signature: {:?}", signature);
-    
+    // Create client with POPSigner backend
+    let client = Client::builder()
+        .rpc_url("ws://localhost:26658")
+        .grpc_url("http://localhost:9090")
+        .popsigner("your-api-key", "your-key-name")
+        .build()
+        .await?;
+
+    println!("Address: {}", client.address()?);
+
+    // Create namespace and blob
+    let ns = Namespace::new_v0(b"my_namespace")?;
+    let blob = Blob::new(
+        ns,
+        b"Hello from POPSigner!".to_vec(),
+        Some(client.address()?),
+        AppVersion::V5,
+    )?;
+
+    // Submit - signing handled securely by POPSigner
+    let tx = client.blob().submit(&[blob], TxConfig::default()).await?;
+    println!("Submitted at height: {}", tx.height);
+
     Ok(())
 }`
 }

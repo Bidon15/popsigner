@@ -9,8 +9,8 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/Bidon15/popsigner/control-plane/templates/components"
-	"github.com/Bidon15/popsigner/control-plane/templates/layouts"
+	"github.com/Bidon15/banhbaoring/control-plane/templates/components"
+	"github.com/Bidon15/banhbaoring/control-plane/templates/layouts"
 )
 
 // ProfilePageData contains all data for the profile settings page.

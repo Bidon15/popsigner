@@ -130,7 +130,8 @@ templ DocsPage(data DocsPageData) {
 					<div x-show="tab === 'rust'" x-cloak>
 						<p class="text-xs text-[#666600] uppercase mb-2">&gt; ADD TO CARGO.TOML:</p>
 						@docsCodeBlock(`[dependencies]
-popsigner = "0.1"`)
+popsigner = { version = "0.1", features = ["celestia"] }
+tokio = { version = "1", features = ["full"] }`)
 						
 						<p class="text-xs text-[#666600] uppercase mt-6 mb-2">&gt; COMPLETE EXAMPLE:</p>
 						@docsCodeBlockMulti(rustExample())
@@ -293,21 +294,33 @@ func main() {
 }
 
 func rustExample() string {
-	return `use popsigner::Client;
+	return `use popsigner::celestia::{Client, Namespace, Blob, AppVersion, TxConfig};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Create client
-    let client = Client::new("your-api-key");
-    
-    // Get your key
-    let key = client.keys().get("your-key-id").await?;
-    println!("Celestia address: {}", key.celestia_address);
-    
-    // Sign data
-    let signature = client.keys().sign(&key.id, b"tx data").await?;
-    println!("Signature: {:?}", signature);
-    
+    // Create client with POPSigner backend
+    let client = Client::builder()
+        .rpc_url("ws://localhost:26658")
+        .grpc_url("http://localhost:9090")
+        .popsigner("your-api-key", "your-key-name")
+        .build()
+        .await?;
+
+    println!("Address: {}", client.address()?);
+
+    // Create namespace and blob
+    let ns = Namespace::new_v0(b"my_namespace")?;
+    let blob = Blob::new(
+        ns,
+        b"Hello from POPSigner!".to_vec(),
+        Some(client.address()?),
+        AppVersion::V5,
+    )?;
+
+    // Submit - signing handled securely by POPSigner
+    let tx = client.blob().submit(&[blob], TxConfig::default()).await?;
+    println!("Submitted at height: {}", tx.height);
+
     Ok(())
 }`
 }

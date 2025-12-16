@@ -10,8 +10,8 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"fmt"
-	"github.com/Bidon15/popsigner/control-plane/internal/models"
-	"github.com/Bidon15/popsigner/control-plane/templates/layouts"
+	"github.com/Bidon15/banhbaoring/control-plane/internal/models"
+	"github.com/Bidon15/banhbaoring/control-plane/templates/layouts"
 )
 
 // DashboardData holds all data needed for the dashboard page

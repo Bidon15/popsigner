@@ -9,8 +9,8 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/Bidon15/popsigner/control-plane/templates/components/landing"
-	"github.com/Bidon15/popsigner/control-plane/templates/layouts"
+	"github.com/Bidon15/banhbaoring/control-plane/templates/components/landing"
+	"github.com/Bidon15/banhbaoring/control-plane/templates/layouts"
 )
 
 // LandingPage renders the main marketing landing page
