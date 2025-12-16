@@ -4,6 +4,7 @@ package web
 import (
 	"context"
 	"encoding/hex"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -32,6 +33,7 @@ func (h *WebHandler) KeysList(w http.ResponseWriter, r *http.Request) {
 	// Parse query parameters
 	searchQuery := r.URL.Query().Get("q")
 	namespaceFilter := r.URL.Query().Get("namespace")
+	networkFilter := r.URL.Query().Get("network")
 
 	var nsID *uuid.UUID
 	if namespaceFilter != "" {
@@ -41,8 +43,17 @@ func (h *WebHandler) KeysList(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Fetch keys and namespaces
-	keys, err := h.keyService.List(ctx, org.ID, nsID)
+	// Parse network filter
+	var networkType *models.NetworkType
+	if networkFilter != "" && networkFilter != "all" {
+		nt := models.NetworkType(networkFilter)
+		if nt.Valid() {
+			networkType = &nt
+		}
+	}
+
+	// Fetch keys and namespaces with optional network filter
+	keys, err := h.keyService.List(ctx, org.ID, nsID, networkType)
 	if err != nil {
 		h.handleError(w, r, err)
 		return
@@ -59,23 +70,40 @@ func (h *WebHandler) KeysList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// If HTMX request, return partial
+	// If HTMX request targeting #main-content, return full page content
 	if r.Header.Get("HX-Request") == "true" {
+		if r.Header.Get("HX-Target") == "#main-content" {
+			data := pages.KeysPageData{
+				UserName:      getUserName(user),
+				UserEmail:     user.Email,
+				AvatarURL:     getAvatarURL(user),
+				OrgName:       org.Name,
+				OrgPlan:       string(org.Plan),
+				Keys:          keys,
+				Namespaces:    namespaces,
+				SearchQuery:   searchQuery,
+				NamespaceID:   namespaceFilter,
+				NetworkFilter: networkFilter,
+			}
+			templ.Handler(pages.KeysPageContent(data)).ServeHTTP(w, r)
+			return
+		}
 		templ.Handler(pages.KeysList(keys, namespaces)).ServeHTTP(w, r)
 		return
 	}
 
 	// Full page render
 	data := pages.KeysPageData{
-		UserName:    getUserName(user),
-		UserEmail:   user.Email,
-		AvatarURL:   getAvatarURL(user),
-		OrgName:     org.Name,
-		OrgPlan:     string(org.Plan),
-		Keys:        keys,
-		Namespaces:  namespaces,
-		SearchQuery: searchQuery,
-		NamespaceID: namespaceFilter,
+		UserName:      getUserName(user),
+		UserEmail:     user.Email,
+		AvatarURL:     getAvatarURL(user),
+		OrgName:       org.Name,
+		OrgPlan:       string(org.Plan),
+		Keys:          keys,
+		Namespaces:    namespaces,
+		SearchQuery:   searchQuery,
+		NamespaceID:   namespaceFilter,
+		NetworkFilter: networkFilter,
 	}
 
 	templ.Handler(pages.KeysListPage(data)).ServeHTTP(w, r)
@@ -110,15 +138,34 @@ func (h *WebHandler) KeysDetail(w http.ResponseWriter, r *http.Request) {
 	// Get signing stats (mock data for now - would come from usage/audit service)
 	sigStats := h.getSigningStats(ctx, keyID)
 
+	// Get addresses based on network type
+	ethAddr := ""
+	if key.EthAddress != nil {
+		ethAddr = *key.EthAddress
+	}
+	celestiaAddr := key.Address // Cosmos/Celestia address
+
+	// Debug logging
+	slog.Info("KeyDetail rendering",
+		slog.String("key_id", key.ID.String()),
+		slog.String("key_name", key.Name),
+		slog.String("network_type", string(key.NetworkType)),
+		slog.String("eth_address", ethAddr),
+		slog.String("celestia_address", celestiaAddr),
+	)
+
 	data := pages.KeyDetailData{
-		UserName:     getUserName(user),
-		UserEmail:    user.Email,
-		AvatarURL:    getAvatarURL(user),
-		OrgName:      org.Name,
-		OrgPlan:      string(org.Plan),
-		Key:          key,
-		Namespace:    namespaceName,
-		SigningStats: sigStats,
+		UserName:        getUserName(user),
+		UserEmail:       user.Email,
+		AvatarURL:       getAvatarURL(user),
+		OrgName:         org.Name,
+		OrgPlan:         string(org.Plan),
+		Key:             key,
+		Namespace:       namespaceName,
+		CelestiaAddress: celestiaAddr,
+		EthAddress:      ethAddr,
+		NetworkType:     string(key.NetworkType),
+		SigningStats:    sigStats,
 	}
 
 	templ.Handler(pages.KeyDetailPage(data)).ServeHTTP(w, r)
@@ -164,6 +211,20 @@ func (h *WebHandler) KeysCreate(w http.ResponseWriter, r *http.Request) {
 
 	exportable := r.FormValue("exportable") == "true"
 	name := strings.TrimSpace(r.FormValue("name"))
+	networkType := r.FormValue("network_type")
+
+	// Debug: Log all form values
+	slog.Info("Key creation form values",
+		slog.String("name", name),
+		slog.String("network_type_raw", networkType),
+		slog.String("namespace_id", r.FormValue("namespace_id")),
+		slog.String("exportable", r.FormValue("exportable")),
+	)
+
+	if networkType == "" {
+		networkType = "all" // Default
+		slog.Info("Network type was empty, defaulting to 'all'")
+	}
 
 	if name == "" {
 		h.renderToast(w, r, "Key name is required", components.ToastError)
@@ -175,6 +236,7 @@ func (h *WebHandler) KeysCreate(w http.ResponseWriter, r *http.Request) {
 		NamespaceID: nsID,
 		Name:        name,
 		Exportable:  exportable,
+		NetworkType: networkType,
 	})
 
 	if err != nil {
@@ -183,7 +245,7 @@ func (h *WebHandler) KeysCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Return updated keys list
-	keys, _ := h.keyService.List(ctx, org.ID, nil)
+	keys, _ := h.keyService.List(ctx, org.ID, nil, nil)
 	namespaces, _ := h.orgService.ListNamespaces(ctx, org.ID, user.ID)
 
 	w.Header().Set("HX-Trigger", "modal-close")
@@ -211,7 +273,7 @@ func (h *WebHandler) WorkerKeysNew(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Count current keys
-	keys, _ := h.keyService.List(ctx, org.ID, nil)
+	keys, _ := h.keyService.List(ctx, org.ID, nil, nil)
 	currentCount := len(keys)
 
 	templ.Handler(partials.WorkerKeysModal(namespaces, limits, currentCount)).ServeHTTP(w, r)
@@ -268,7 +330,7 @@ func (h *WebHandler) WorkerKeysCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Return updated keys list with success message
-	keys, _ := h.keyService.List(ctx, org.ID, nil)
+	keys, _ := h.keyService.List(ctx, org.ID, nil, nil)
 	namespaces, _ := h.orgService.ListNamespaces(ctx, org.ID, user.ID)
 
 	w.Header().Set("HX-Trigger", "modal-close")
@@ -363,7 +425,7 @@ func (h *WebHandler) KeysDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Return updated keys list
-	keys, _ := h.keyService.List(ctx, org.ID, nil)
+	keys, _ := h.keyService.List(ctx, org.ID, nil, nil)
 	namespaces, _ := h.orgService.ListNamespaces(ctx, org.ID, user.ID)
 
 	// Check if targeting #main-content (from detail page) - need full page content
@@ -494,7 +556,8 @@ func filterKeys(keys []*models.Key, query string) []*models.Key {
 	var filtered []*models.Key
 	for _, key := range keys {
 		if strings.Contains(strings.ToLower(key.Name), query) ||
-			strings.Contains(strings.ToLower(key.Address), query) {
+			strings.Contains(strings.ToLower(key.Address), query) ||
+			(key.EthAddress != nil && strings.Contains(strings.ToLower(*key.EthAddress), query)) {
 			filtered = append(filtered, key)
 		}
 	}

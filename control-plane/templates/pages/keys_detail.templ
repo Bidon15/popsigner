@@ -26,6 +26,8 @@ type KeyDetailData struct {
 	Key             *models.Key
 	Namespace       string
 	CelestiaAddress string // Bech32 celestia1... address
+	EthAddress      string // 0x... address
+	NetworkType     string // "celestia", "evm", or "all"
 	SigningStats    *SigningStats
 }
 
@@ -78,27 +80,117 @@ templ KeyDetailPage(data KeyDetailData) {
 				</a>
 			</div>
 			
-			<!-- Celestia Address Card -->
-			<div class="p-6 bg-black border border-[#33FF00]/50">
-				<div class="flex items-center gap-3 mb-3">
-					<span class="text-2xl">🌌</span>
-					<div>
-						<p class="text-sm text-[#666600] uppercase">CELESTIA ADDRESS</p>
-						<p class="font-mono text-lg text-[#33FF00] break-all drop-shadow-[0_0_8px_#33FF00]">{ data.CelestiaAddress }</p>
+			<!-- Address Cards - Show based on network type -->
+			if data.NetworkType == "evm" {
+				<!-- EVM-only: Show Ethereum Address -->
+				<div class="p-6 bg-black border border-[#FFB000]/50">
+					<div class="flex items-center gap-3 mb-3">
+						<span class="text-2xl">⟠</span>
+						<div>
+							<p class="text-sm text-[#666600] uppercase">ETHEREUM / EVM ADDRESS</p>
+							<p class="font-mono text-lg text-[#FFB000] break-all drop-shadow-[0_0_8px_#FFB000]">{ data.EthAddress }</p>
+						</div>
+					</div>
+					<div class="flex flex-wrap gap-2 mt-4">
+						<button onclick={ copyToClipboard(data.EthAddress) }
+								class="px-3 py-1.5 text-sm bg-[#FFB000]/10 border border-[#FFB000]/50 text-[#FFB000] hover:bg-[#FFB000]/20 transition-colors uppercase">
+							📋 COPY ADDRESS
+						</button>
+						<a href={ templ.SafeURL("https://etherscan.io/address/" + data.EthAddress) } 
+						   target="_blank"
+						   class="px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#33FF00] hover:border-[#33FF00] transition-colors uppercase">
+							🔍 ETHERSCAN
+						</a>
+						<a href={ templ.SafeURL("https://optimistic.etherscan.io/address/" + data.EthAddress) }
+						   target="_blank"
+						   class="px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#FF0420] hover:border-[#FF0420] transition-colors uppercase">
+							🔴 OP MAINNET
+						</a>
+						<a href={ templ.SafeURL("https://basescan.org/address/" + data.EthAddress) }
+						   target="_blank"
+						   class="px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#0052FF] hover:border-[#0052FF] transition-colors uppercase">
+							🔵 BASE
+						</a>
 					</div>
 				</div>
-				<div class="flex gap-2 mt-4">
-					<button onclick={ copyToClipboard(data.CelestiaAddress) }
-							class="px-3 py-1.5 text-sm bg-[#33FF00]/10 border border-[#33FF00]/50 text-[#33FF00] hover:bg-[#33FF00]/20 transition-colors uppercase">
-						📋 COPY ADDRESS
-					</button>
-					<a href={ templ.SafeURL("https://celenium.io/address/" + data.CelestiaAddress) } 
-					   target="_blank"
-					   class="px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase">
-						🔍 VIEW ON CELENIUM
-					</a>
+			} else if data.NetworkType == "celestia" {
+				<!-- Celestia-only: Show Celestia Address -->
+				<div class="p-6 bg-black border border-[#33FF00]/50">
+					<div class="flex items-center gap-3 mb-3">
+						<span class="text-2xl">🌌</span>
+						<div>
+							<p class="text-sm text-[#666600] uppercase">CELESTIA ADDRESS</p>
+							<p class="font-mono text-lg text-[#33FF00] break-all drop-shadow-[0_0_8px_#33FF00]">{ data.CelestiaAddress }</p>
+						</div>
+					</div>
+					<div class="flex gap-2 mt-4">
+						<button onclick={ copyToClipboard(data.CelestiaAddress) }
+								class="px-3 py-1.5 text-sm bg-[#33FF00]/10 border border-[#33FF00]/50 text-[#33FF00] hover:bg-[#33FF00]/20 transition-colors uppercase">
+							📋 COPY ADDRESS
+						</button>
+						<a href={ templ.SafeURL("https://celenium.io/address/" + data.CelestiaAddress) } 
+						   target="_blank"
+						   class="px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase">
+							🔍 VIEW ON CELENIUM
+						</a>
+					</div>
 				</div>
-			</div>
+			} else {
+				<!-- Universal (all): Show both addresses -->
+				<div class="p-6 bg-black border border-[#33FF00]/50">
+					<div class="flex items-center gap-3 mb-3">
+						<span class="text-2xl">🌌</span>
+						<div>
+							<p class="text-sm text-[#666600] uppercase">CELESTIA ADDRESS</p>
+							<p class="font-mono text-lg text-[#33FF00] break-all drop-shadow-[0_0_8px_#33FF00]">{ data.CelestiaAddress }</p>
+						</div>
+					</div>
+					<div class="flex gap-2 mt-4">
+						<button onclick={ copyToClipboard(data.CelestiaAddress) }
+								class="px-3 py-1.5 text-sm bg-[#33FF00]/10 border border-[#33FF00]/50 text-[#33FF00] hover:bg-[#33FF00]/20 transition-colors uppercase">
+							📋 COPY ADDRESS
+						</button>
+						<a href={ templ.SafeURL("https://celenium.io/address/" + data.CelestiaAddress) } 
+						   target="_blank"
+						   class="px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase">
+							🔍 VIEW ON CELENIUM
+						</a>
+					</div>
+				</div>
+
+				if data.EthAddress != "" {
+					<div class="p-6 bg-black border border-[#FFB000]/50">
+						<div class="flex items-center gap-3 mb-3">
+							<span class="text-2xl">⟠</span>
+							<div>
+								<p class="text-sm text-[#666600] uppercase">ETHEREUM / EVM ADDRESS</p>
+								<p class="font-mono text-lg text-[#FFB000] break-all drop-shadow-[0_0_8px_#FFB000]">{ data.EthAddress }</p>
+							</div>
+						</div>
+						<div class="flex flex-wrap gap-2 mt-4">
+							<button onclick={ copyToClipboard(data.EthAddress) }
+									class="px-3 py-1.5 text-sm bg-[#FFB000]/10 border border-[#FFB000]/50 text-[#FFB000] hover:bg-[#FFB000]/20 transition-colors uppercase">
+								📋 COPY ADDRESS
+							</button>
+							<a href={ templ.SafeURL("https://etherscan.io/address/" + data.EthAddress) } 
+							   target="_blank"
+							   class="px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#33FF00] hover:border-[#33FF00] transition-colors uppercase">
+								🔍 ETHERSCAN
+							</a>
+							<a href={ templ.SafeURL("https://optimistic.etherscan.io/address/" + data.EthAddress) }
+							   target="_blank"
+							   class="px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#FF0420] hover:border-[#FF0420] transition-colors uppercase">
+								🔴 OP MAINNET
+							</a>
+							<a href={ templ.SafeURL("https://basescan.org/address/" + data.EthAddress) }
+							   target="_blank"
+							   class="px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#0052FF] hover:border-[#0052FF] transition-colors uppercase">
+								🔵 BASE
+							</a>
+						</div>
+					</div>
+				}
+			}
 
 			<!-- Key Details Card -->
 			<div class="bg-black border border-[#333300] p-6">
@@ -248,6 +340,25 @@ templ KeyDetailPage(data KeyDetailData) {
 						</div>
 						@codeBlock("bash", curlExample(data.Key.ID.String()))
 					</div>
+					
+					<!-- OP Stack Integration -->
+					if data.EthAddress != "" {
+						<div class="mt-6 pt-6 border-t border-[#333300]">
+							<div class="flex items-center gap-2 mb-4">
+								<span class="text-lg">🔴</span>
+								<span class="font-medium text-[#FF0420] uppercase">OP STACK INTEGRATION</span>
+							</div>
+							<p class="text-[#666600] text-sm mb-4 uppercase">
+								USE THIS KEY WITH OP-BATCHER OR OP-PROPOSER:
+							</p>
+							@codeBlock("bash", opStackExample(data.Key.ID.String(), data.EthAddress))
+							<div class="mt-4 p-4 bg-[#FF0420]/5 border border-[#FF0420]/20">
+								<p class="text-sm text-[#FF0420]">
+									⚠️ CONFIGURE YOUR RPC GATEWAY ENDPOINT IN THE OP STACK COMPONENT'S --signer.endpoint FLAG
+								</p>
+							</div>
+						</div>
+					}
 					
 					<div class="flex gap-3 pt-4 border-t border-[#333300]">
 						<a href="/docs" 
@@ -432,6 +543,22 @@ func curlExample(keyID string) string {
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"data": "base64_encoded_message"}'`
+}
+
+func opStackExample(keyID, ethAddr string) string {
+	return `# Configure op-batcher with POPSigner remote signer
+op-batcher \
+  --signer.endpoint="https://your-popsigner-rpc.example.com/rpc" \
+  --signer.address="` + ethAddr + `"
+
+# Environment variables alternative
+export OP_BATCHER_SIGNER_ENDPOINT="https://your-popsigner-rpc.example.com/rpc"
+export OP_BATCHER_SIGNER_ADDRESS="` + ethAddr + `"
+
+# For op-proposer, use same pattern
+op-proposer \
+  --signer.endpoint="https://your-popsigner-rpc.example.com/rpc" \
+  --signer.address="` + ethAddr + `"`
 }
 
 templ codeBlock(lang string, code string) {

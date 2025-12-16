@@ -34,6 +34,8 @@ type KeyDetailData struct {
 	Key             *models.Key
 	Namespace       string
 	CelestiaAddress string // Bech32 celestia1... address
+	EthAddress      string // 0x... address
+	NetworkType     string // "celestia", "evm", or "all"
 	SigningStats    *SigningStats
 }
 
@@ -78,7 +80,7 @@ func KeyDetailPage(data KeyDetailData) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(data.Key.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 53, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 55, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -91,7 +93,7 @@ func KeyDetailPage(data KeyDetailData) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(data.Key.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 64, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 66, Col: 22}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -104,7 +106,7 @@ func KeyDetailPage(data KeyDetailData) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(data.Namespace)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 68, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 70, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -117,82 +119,289 @@ func KeyDetailPage(data KeyDetailData) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(string(data.Key.Algorithm))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 68, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 70, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</p></div></div><a href=\"/keys\" hx-get=\"/keys\" hx-target=\"#main-content\" hx-push-url=\"true\" class=\"px-4 py-2 text-[#666600] hover:text-[#FFB000] border border-[#333300] hover:border-[#FFB000] transition-colors uppercase self-start\">← BACK TO KEYS</a></div><!-- Celestia Address Card --><div class=\"p-6 bg-black border border-[#33FF00]/50\"><div class=\"flex items-center gap-3 mb-3\"><span class=\"text-2xl\">🌌</span><div><p class=\"text-sm text-[#666600] uppercase\">CELESTIA ADDRESS</p><p class=\"font-mono text-lg text-[#33FF00] break-all drop-shadow-[0_0_8px_#33FF00]\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</p></div></div><a href=\"/keys\" hx-get=\"/keys\" hx-target=\"#main-content\" hx-push-url=\"true\" class=\"px-4 py-2 text-[#666600] hover:text-[#FFB000] border border-[#333300] hover:border-[#FFB000] transition-colors uppercase self-start\">← BACK TO KEYS</a></div><!-- Address Cards - Show based on network type -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var7 string
-			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(data.CelestiaAddress)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 87, Col: 112}
+			if data.NetworkType == "evm" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<!-- EVM-only: Show Ethereum Address --> <div class=\"p-6 bg-black border border-[#FFB000]/50\"><div class=\"flex items-center gap-3 mb-3\"><span class=\"text-2xl\">⟠</span><div><p class=\"text-sm text-[#666600] uppercase\">ETHEREUM / EVM ADDRESS</p><p class=\"font-mono text-lg text-[#FFB000] break-all drop-shadow-[0_0_8px_#FFB000]\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var7 string
+				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(data.EthAddress)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 91, Col: 108}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</p></div></div><div class=\"flex flex-wrap gap-2 mt-4\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templ.RenderScriptItems(ctx, templ_7745c5c3_Buffer, copyToClipboard(data.EthAddress))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<button onclick=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var8 templ.ComponentScript = copyToClipboard(data.EthAddress)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8.Call)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" class=\"px-3 py-1.5 text-sm bg-[#FFB000]/10 border border-[#FFB000]/50 text-[#FFB000] hover:bg-[#FFB000]/20 transition-colors uppercase\">📋 COPY ADDRESS</button> <a href=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var9 templ.SafeURL
+				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("https://etherscan.io/address/" + data.EthAddress))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 99, Col: 80}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\" target=\"_blank\" class=\"px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#33FF00] hover:border-[#33FF00] transition-colors uppercase\">🔍 ETHERSCAN</a> <a href=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var10 templ.SafeURL
+				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("https://optimistic.etherscan.io/address/" + data.EthAddress))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 104, Col: 91}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\" target=\"_blank\" class=\"px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#FF0420] hover:border-[#FF0420] transition-colors uppercase\">🔴 OP MAINNET</a> <a href=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var11 templ.SafeURL
+				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("https://basescan.org/address/" + data.EthAddress))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 109, Col: 80}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\" target=\"_blank\" class=\"px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#0052FF] hover:border-[#0052FF] transition-colors uppercase\">🔵 BASE</a></div></div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else if data.NetworkType == "celestia" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<!-- Celestia-only: Show Celestia Address --> <div class=\"p-6 bg-black border border-[#33FF00]/50\"><div class=\"flex items-center gap-3 mb-3\"><span class=\"text-2xl\">🌌</span><div><p class=\"text-sm text-[#666600] uppercase\">CELESTIA ADDRESS</p><p class=\"font-mono text-lg text-[#33FF00] break-all drop-shadow-[0_0_8px_#33FF00]\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var12 string
+				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(data.CelestiaAddress)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 123, Col: 113}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</p></div></div><div class=\"flex gap-2 mt-4\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templ.RenderScriptItems(ctx, templ_7745c5c3_Buffer, copyToClipboard(data.CelestiaAddress))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<button onclick=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var13 templ.ComponentScript = copyToClipboard(data.CelestiaAddress)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13.Call)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" class=\"px-3 py-1.5 text-sm bg-[#33FF00]/10 border border-[#33FF00]/50 text-[#33FF00] hover:bg-[#33FF00]/20 transition-colors uppercase\">📋 COPY ADDRESS</button> <a href=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var14 templ.SafeURL
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("https://celenium.io/address/" + data.CelestiaAddress))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 131, Col: 84}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" target=\"_blank\" class=\"px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase\">🔍 VIEW ON CELENIUM</a></div></div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<!-- Universal (all): Show both addresses --> <div class=\"p-6 bg-black border border-[#33FF00]/50\"><div class=\"flex items-center gap-3 mb-3\"><span class=\"text-2xl\">🌌</span><div><p class=\"text-sm text-[#666600] uppercase\">CELESTIA ADDRESS</p><p class=\"font-mono text-lg text-[#33FF00] break-all drop-shadow-[0_0_8px_#33FF00]\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var15 string
+				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(data.CelestiaAddress)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 145, Col: 113}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</p></div></div><div class=\"flex gap-2 mt-4\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templ.RenderScriptItems(ctx, templ_7745c5c3_Buffer, copyToClipboard(data.CelestiaAddress))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<button onclick=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var16 templ.ComponentScript = copyToClipboard(data.CelestiaAddress)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16.Call)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\" class=\"px-3 py-1.5 text-sm bg-[#33FF00]/10 border border-[#33FF00]/50 text-[#33FF00] hover:bg-[#33FF00]/20 transition-colors uppercase\">📋 COPY ADDRESS</button> <a href=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var17 templ.SafeURL
+				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("https://celenium.io/address/" + data.CelestiaAddress))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 153, Col: 84}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\" target=\"_blank\" class=\"px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase\">🔍 VIEW ON CELENIUM</a></div></div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				if data.EthAddress != "" {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<div class=\"p-6 bg-black border border-[#FFB000]/50\"><div class=\"flex items-center gap-3 mb-3\"><span class=\"text-2xl\">⟠</span><div><p class=\"text-sm text-[#666600] uppercase\">ETHEREUM / EVM ADDRESS</p><p class=\"font-mono text-lg text-[#FFB000] break-all drop-shadow-[0_0_8px_#FFB000]\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var18 string
+					templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(data.EthAddress)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 167, Col: 109}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</p></div></div><div class=\"flex flex-wrap gap-2 mt-4\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templ.RenderScriptItems(ctx, templ_7745c5c3_Buffer, copyToClipboard(data.EthAddress))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<button onclick=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var19 templ.ComponentScript = copyToClipboard(data.EthAddress)
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19.Call)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "\" class=\"px-3 py-1.5 text-sm bg-[#FFB000]/10 border border-[#FFB000]/50 text-[#FFB000] hover:bg-[#FFB000]/20 transition-colors uppercase\">📋 COPY ADDRESS</button> <a href=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var20 templ.SafeURL
+					templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("https://etherscan.io/address/" + data.EthAddress))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 175, Col: 81}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "\" target=\"_blank\" class=\"px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#33FF00] hover:border-[#33FF00] transition-colors uppercase\">🔍 ETHERSCAN</a> <a href=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var21 templ.SafeURL
+					templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("https://optimistic.etherscan.io/address/" + data.EthAddress))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 180, Col: 92}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\" target=\"_blank\" class=\"px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#FF0420] hover:border-[#FF0420] transition-colors uppercase\">🔴 OP MAINNET</a> <a href=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var22 templ.SafeURL
+					templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("https://basescan.org/address/" + data.EthAddress))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 185, Col: 81}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "\" target=\"_blank\" class=\"px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#0052FF] hover:border-[#0052FF] transition-colors uppercase\">🔵 BASE</a></div></div>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<!-- Key Details Card --><div class=\"bg-black border border-[#333300] p-6\"><h2 class=\"text-lg text-[#FFB000] mb-4 uppercase\">&gt; KEY_DETAILS</h2><dl class=\"grid grid-cols-1 md:grid-cols-2 gap-6\"><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">KEY_ID</dt><dd class=\"font-mono text-sm text-[#33FF00] flex items-center gap-2 group\"><span class=\"truncate\" title=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</p></div></div><div class=\"flex gap-2 mt-4\">")
+			var templ_7745c5c3_Var23 string
+			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(data.Key.ID.String())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 202, Col: 58}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.RenderScriptItems(ctx, templ_7745c5c3_Buffer, copyToClipboard(data.CelestiaAddress))
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<button onclick=\"")
+			var templ_7745c5c3_Var24 string
+			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(truncateID(data.Key.ID.String()))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 203, Col: 42}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var8 templ.ComponentScript = copyToClipboard(data.CelestiaAddress)
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8.Call)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" class=\"px-3 py-1.5 text-sm bg-[#33FF00]/10 border border-[#33FF00]/50 text-[#33FF00] hover:bg-[#33FF00]/20 transition-colors uppercase\">📋 COPY ADDRESS</button> <a href=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var9 templ.SafeURL
-			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("https://celenium.io/address/" + data.CelestiaAddress))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 95, Col: 83}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" target=\"_blank\" class=\"px-3 py-1.5 text-sm bg-black border border-[#666600] text-[#666600] hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase\">🔍 VIEW ON CELENIUM</a></div></div><!-- Key Details Card --><div class=\"bg-black border border-[#333300] p-6\"><h2 class=\"text-lg text-[#FFB000] mb-4 uppercase\">&gt; KEY_DETAILS</h2><dl class=\"grid grid-cols-1 md:grid-cols-2 gap-6\"><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">KEY_ID</dt><dd class=\"font-mono text-sm text-[#33FF00] flex items-center gap-2 group\"><span class=\"truncate\" title=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var10 string
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(data.Key.ID.String())
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 110, Col: 58}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var11 string
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(truncateID(data.Key.ID.String()))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 111, Col: 42}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</span> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</span> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -200,42 +409,42 @@ func KeyDetailPage(data KeyDetailData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<button onclick=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<button onclick=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var12 templ.ComponentScript = copyToClipboard(data.Key.ID.String())
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12.Call)
+			var templ_7745c5c3_Var25 templ.ComponentScript = copyToClipboard(data.Key.ID.String())
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25.Call)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" class=\"p-1 text-[#666600] hover:text-[#33FF00] opacity-0 group-hover:opacity-100 transition-opacity\" title=\"Copy full ID\">📋</button></dd></div><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">INTERNAL_ADDRESS</dt><dd class=\"font-mono text-sm text-[#33FF00] flex items-center gap-2 group\"><span class=\"truncate\" title=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "\" class=\"p-1 text-[#666600] hover:text-[#33FF00] opacity-0 group-hover:opacity-100 transition-opacity\" title=\"Copy full ID\">📋</button></dd></div><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">INTERNAL_ADDRESS</dt><dd class=\"font-mono text-sm text-[#33FF00] flex items-center gap-2 group\"><span class=\"truncate\" title=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var13 string
-			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(data.Key.Address)
+			var templ_7745c5c3_Var26 string
+			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(data.Key.Address)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 123, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 215, Col: 54}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var14 string
-			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(truncateAddress(data.Key.Address))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 124, Col: 43}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</span> ")
+			var templ_7745c5c3_Var27 string
+			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(truncateAddress(data.Key.Address))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 216, Col: 43}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</span> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -243,42 +452,42 @@ func KeyDetailPage(data KeyDetailData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<button onclick=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<button onclick=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var15 templ.ComponentScript = copyToClipboard(data.Key.Address)
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15.Call)
+			var templ_7745c5c3_Var28 templ.ComponentScript = copyToClipboard(data.Key.Address)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28.Call)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" class=\"p-1 text-[#666600] hover:text-[#33FF00] opacity-0 group-hover:opacity-100 transition-opacity\" title=\"Copy address\">📋</button></dd></div><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">PUBLIC_KEY</dt><dd class=\"font-mono text-sm text-[#33FF00] flex items-center gap-2 group\"><span class=\"truncate\" title=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\" class=\"p-1 text-[#666600] hover:text-[#33FF00] opacity-0 group-hover:opacity-100 transition-opacity\" title=\"Copy address\">📋</button></dd></div><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">PUBLIC_KEY</dt><dd class=\"font-mono text-sm text-[#33FF00] flex items-center gap-2 group\"><span class=\"truncate\" title=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var16 string
-			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(formatHex(data.Key.PublicKey))
+			var templ_7745c5c3_Var29 string
+			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(formatHex(data.Key.PublicKey))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 136, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 228, Col: 67}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var17 string
-			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(truncatePubKey(formatHex(data.Key.PublicKey)))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 137, Col: 55}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</span> ")
+			var templ_7745c5c3_Var30 string
+			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(truncatePubKey(formatHex(data.Key.PublicKey)))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 229, Col: 55}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "</span> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -286,106 +495,106 @@ func KeyDetailPage(data KeyDetailData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<button onclick=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "<button onclick=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var18 templ.ComponentScript = copyToClipboard(formatHex(data.Key.PublicKey))
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18.Call)
+			var templ_7745c5c3_Var31 templ.ComponentScript = copyToClipboard(formatHex(data.Key.PublicKey))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31.Call)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\" class=\"p-1 text-[#666600] hover:text-[#33FF00] opacity-0 group-hover:opacity-100 transition-opacity\" title=\"Copy public key\">📋</button></dd></div><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">ALGORITHM</dt><dd class=\"text-sm text-[#33FF00] uppercase\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "\" class=\"p-1 text-[#666600] hover:text-[#33FF00] opacity-0 group-hover:opacity-100 transition-opacity\" title=\"Copy public key\">📋</button></dd></div><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">ALGORITHM</dt><dd class=\"text-sm text-[#33FF00] uppercase\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var19 string
-			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(string(data.Key.Algorithm))
+			var templ_7745c5c3_Var32 string
+			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(string(data.Key.Algorithm))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 149, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 241, Col: 35}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</dd></div><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">NAMESPACE</dt><dd class=\"text-sm text-[#FFB000] uppercase\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var20 string
-			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(data.Namespace)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 155, Col: 23}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "</dd></div><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">NAMESPACE</dt><dd class=\"text-sm text-[#FFB000] uppercase\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</dd></div><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">CREATED</dt><dd class=\"text-sm text-[#33FF00]\">")
+			var templ_7745c5c3_Var33 string
+			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(data.Namespace)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 247, Col: 23}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var21 string
-			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(data.Key.CreatedAt.Format("2006-01-02 15:04:05"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 161, Col: 57}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "</dd></div><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">CREATED</dt><dd class=\"text-sm text-[#33FF00]\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</dd></div><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">EXIT_STATUS</dt><dd class=\"text-sm\">")
+			var templ_7745c5c3_Var34 string
+			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(data.Key.CreatedAt.Format("2006-01-02 15:04:05"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 253, Col: 57}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "</dd></div><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">EXIT_STATUS</dt><dd class=\"text-sm\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if data.Key.Exportable {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<span class=\"text-[#33FF00] drop-shadow-[0_0_8px_#33FF00] uppercase\">EXIT_GUARANTEED</span>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<span class=\"text-[#33FF00] drop-shadow-[0_0_8px_#33FF00] uppercase\">EXIT_GUARANTEED</span>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<span class=\"text-[#FF3333] uppercase\">LOCKED</span>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "<span class=\"text-[#FF3333] uppercase\">LOCKED</span>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</dd></div><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">VERSION</dt><dd class=\"text-sm text-[#33FF00]\">v")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "</dd></div><div><dt class=\"text-sm text-[#666600] mb-1 uppercase\">VERSION</dt><dd class=\"text-sm text-[#33FF00]\">v")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var22 string
-			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(formatVersion(data.Key.Version))
+			var templ_7745c5c3_Var35 string
+			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(formatVersion(data.Key.Version))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 177, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 269, Col: 41}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "</dd></div></dl></div><!-- Exit Guarantee Section (only if exportable) -->")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "</dd></div></dl></div><!-- Exit Guarantee Section (only if exportable) -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if data.Key.Exportable {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<div class=\"bg-black border border-[#FFB000] p-6\"><h3 class=\"text-lg text-[#FFB000] mb-2 uppercase\">&gt; EXIT_GUARANTEE</h3><p class=\"text-[#666600] text-sm mb-4 uppercase\">EXPORT THIS KEY FOR USE IN LOCAL KEYRINGS. YOUR SOVEREIGNTY IS NON-NEGOTIABLE.</p><button hx-post=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<div class=\"bg-black border border-[#FFB000] p-6\"><h3 class=\"text-lg text-[#FFB000] mb-2 uppercase\">&gt; EXIT_GUARANTEE</h3><p class=\"text-[#666600] text-sm mb-4 uppercase\">EXPORT THIS KEY FOR USE IN LOCAL KEYRINGS. YOUR SOVEREIGNTY IS NON-NEGOTIABLE.</p><button hx-post=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var23 string
-				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs("/keys/" + data.Key.ID.String() + "/export")
+				var templ_7745c5c3_Var36 string
+				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs("/keys/" + data.Key.ID.String() + "/export")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 190, Col: 66}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 282, Col: 66}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "\" hx-target=\"#toast-container\" class=\"bg-[#FFB000] text-black font-bold px-4 py-2 uppercase hover:bg-[#FFCC00] hover:shadow-[0_0_20px_#FFB000] transition-all\">[ EXPORT_KEY → ]</button></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "\" hx-target=\"#toast-container\" class=\"bg-[#FFB000] text-black font-bold px-4 py-2 uppercase hover:bg-[#FFCC00] hover:shadow-[0_0_20px_#FFB000] transition-all\">[ EXPORT_KEY → ]</button></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<!-- Signing Activity Chart --><div class=\"bg-black border border-[#333300] p-6\"><h2 class=\"text-lg text-[#FFB000] mb-4 uppercase\">&gt; SIGNING_ACTIVITY (30D)</h2><div class=\"relative\"><canvas id=\"signing-chart\" height=\"200\"></canvas></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<!-- Signing Activity Chart --><div class=\"bg-black border border-[#333300] p-6\"><h2 class=\"text-lg text-[#FFB000] mb-4 uppercase\">&gt; SIGNING_ACTIVITY (30D)</h2><div class=\"relative\"><canvas id=\"signing-chart\" height=\"200\"></canvas></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -393,33 +602,33 @@ func KeyDetailPage(data KeyDetailData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<div class=\"mt-6 flex flex-wrap gap-6 text-sm pt-4 border-t border-[#333300]\"><div class=\"flex items-center gap-2\"><div class=\"w-3 h-3 bg-[#FFB000]\"></div><span class=\"text-[#666600] uppercase\">TOTAL:</span> <span class=\"text-[#33FF00] font-semibold drop-shadow-[0_0_8px_#33FF00]\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "<div class=\"mt-6 flex flex-wrap gap-6 text-sm pt-4 border-t border-[#333300]\"><div class=\"flex items-center gap-2\"><div class=\"w-3 h-3 bg-[#FFB000]\"></div><span class=\"text-[#666600] uppercase\">TOTAL:</span> <span class=\"text-[#33FF00] font-semibold drop-shadow-[0_0_8px_#33FF00]\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var24 string
-			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(keysFormatNumber(data.SigningStats.Total))
+			var templ_7745c5c3_Var37 string
+			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(keysFormatNumber(data.SigningStats.Total))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 209, Col: 122}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 301, Col: 122}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</span></div><div class=\"flex items-center gap-2\"><div class=\"w-3 h-3 bg-[#33FF00]/60\"></div><span class=\"text-[#666600] uppercase\">AVG/DAY:</span> <span class=\"text-[#33FF00] font-semibold\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var25 string
-			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(formatFloat(data.SigningStats.AvgPerDay))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 214, Col: 91}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "</span></div><div class=\"flex items-center gap-2\"><div class=\"w-3 h-3 bg-[#33FF00]/60\"></div><span class=\"text-[#666600] uppercase\">AVG/DAY:</span> <span class=\"text-[#33FF00] font-semibold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</span></div></div></div><!-- Integration Guide --><div class=\"bg-black border border-[#333300] p-6\"><h2 class=\"text-lg text-[#FFB000] mb-4 uppercase\">&gt; INTEGRATION</h2><div class=\"space-y-6\"><p class=\"text-[#666600] uppercase\">USE THIS KEY WITH YOUR CELESTIA NODE OR APPLICATION:</p><!-- Go SDK --><div><div class=\"flex items-center gap-2 mb-2\"><span class=\"text-lg\">🔷</span> <span class=\"font-medium text-[#33FF00] uppercase\">GO SDK</span></div>")
+			var templ_7745c5c3_Var38 string
+			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(formatFloat(data.SigningStats.AvgPerDay))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 306, Col: 91}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "</span></div></div></div><!-- Integration Guide --><div class=\"bg-black border border-[#333300] p-6\"><h2 class=\"text-lg text-[#FFB000] mb-4 uppercase\">&gt; INTEGRATION</h2><div class=\"space-y-6\"><p class=\"text-[#666600] uppercase\">USE THIS KEY WITH YOUR CELESTIA NODE OR APPLICATION:</p><!-- Go SDK --><div><div class=\"flex items-center gap-2 mb-2\"><span class=\"text-lg\">🔷</span> <span class=\"font-medium text-[#33FF00] uppercase\">GO SDK</span></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -427,7 +636,7 @@ func KeyDetailPage(data KeyDetailData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</div><!-- Rust SDK --><div><div class=\"flex items-center gap-2 mb-2\"><span class=\"text-lg\">🦀</span> <span class=\"font-medium text-[#33FF00] uppercase\">RUST SDK</span></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</div><!-- Rust SDK --><div><div class=\"flex items-center gap-2 mb-2\"><span class=\"text-lg\">🦀</span> <span class=\"font-medium text-[#33FF00] uppercase\">RUST SDK</span></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -435,7 +644,7 @@ func KeyDetailPage(data KeyDetailData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</div><!-- REST API --><div><div class=\"flex items-center gap-2 mb-2\"><span class=\"text-lg\">🌐</span> <span class=\"font-medium text-[#33FF00] uppercase\">REST API</span></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "</div><!-- REST API --><div><div class=\"flex items-center gap-2 mb-2\"><span class=\"text-lg\">🌐</span> <span class=\"font-medium text-[#33FF00] uppercase\">REST API</span></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -443,20 +652,38 @@ func KeyDetailPage(data KeyDetailData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</div><div class=\"flex gap-3 pt-4 border-t border-[#333300]\"><a href=\"/docs\" class=\"px-4 py-2 border border-[#FFB000] text-[#FFB000] hover:bg-[#FFB000]/10 transition-colors uppercase\">📚 FULL DOCS</a> <a href=\"/docs#celestia-client\" class=\"px-4 py-2 border border-[#33FF00] text-[#33FF00] hover:bg-[#33FF00]/10 transition-colors uppercase\">🌌 CELESTIA</a> <a href=\"https://github.com/Bidon15/popsigner/tree/main/examples\" target=\"_blank\" class=\"px-4 py-2 border border-[#666600] text-[#666600] hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase\">💡 EXAMPLES ↗</a></div></div></div><!-- Danger Zone --><div class=\"bg-black border border-[#FF3333] p-6\"><h2 class=\"text-lg text-[#FF3333] mb-4 uppercase\">&gt; DANGER_ZONE</h2><div class=\"flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-[#FF3333]/5 border border-[#FF3333]/20\"><div><p class=\"text-[#FF3333] font-medium uppercase\">DELETE THIS KEY PERMANENTLY</p><p class=\"text-sm text-[#666600] mt-1 uppercase\">THIS ACTION CANNOT BE UNDONE. KEY MATERIAL WILL BE DESTROYED.</p></div><button hx-delete=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "</div><!-- OP Stack Integration -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var26 string
-			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs("/keys/" + data.Key.ID.String())
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 278, Col: 56}
+			if data.EthAddress != "" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "<div class=\"mt-6 pt-6 border-t border-[#333300]\"><div class=\"flex items-center gap-2 mb-4\"><span class=\"text-lg\">🔴</span> <span class=\"font-medium text-[#FF0420] uppercase\">OP STACK INTEGRATION</span></div><p class=\"text-[#666600] text-sm mb-4 uppercase\">USE THIS KEY WITH OP-BATCHER OR OP-PROPOSER:</p>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = codeBlock("bash", opStackExample(data.Key.ID.String(), data.EthAddress)).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<div class=\"mt-4 p-4 bg-[#FF0420]/5 border border-[#FF0420]/20\"><p class=\"text-sm text-[#FF0420]\">⚠️ CONFIGURE YOUR RPC GATEWAY ENDPOINT IN THE OP STACK COMPONENT'S --signer.endpoint FLAG</p></div></div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "<div class=\"flex gap-3 pt-4 border-t border-[#333300]\"><a href=\"/docs\" class=\"px-4 py-2 border border-[#FFB000] text-[#FFB000] hover:bg-[#FFB000]/10 transition-colors uppercase\">📚 FULL DOCS</a> <a href=\"/docs#celestia-client\" class=\"px-4 py-2 border border-[#33FF00] text-[#33FF00] hover:bg-[#33FF00]/10 transition-colors uppercase\">🌌 CELESTIA</a> <a href=\"https://github.com/Bidon15/popsigner/tree/main/examples\" target=\"_blank\" class=\"px-4 py-2 border border-[#666600] text-[#666600] hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase\">💡 EXAMPLES ↗</a></div></div></div><!-- Danger Zone --><div class=\"bg-black border border-[#FF3333] p-6\"><h2 class=\"text-lg text-[#FF3333] mb-4 uppercase\">&gt; DANGER_ZONE</h2><div class=\"flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-[#FF3333]/5 border border-[#FF3333]/20\"><div><p class=\"text-[#FF3333] font-medium uppercase\">DELETE THIS KEY PERMANENTLY</p><p class=\"text-sm text-[#666600] mt-1 uppercase\">THIS ACTION CANNOT BE UNDONE. KEY MATERIAL WILL BE DESTROYED.</p></div><button hx-delete=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\" hx-confirm=\"Are you absolutely sure you want to delete this key? This action cannot be undone and the key material will be permanently destroyed.\" hx-target=\"#main-content\" hx-push-url=\"/keys\" class=\"px-4 py-2.5 bg-[#FF3333]/10 border border-[#FF3333] text-[#FF3333] hover:bg-[#FF3333]/20 transition-colors font-medium shrink-0 uppercase\">🗑️ DELETE_KEY</button></div></div></div>")
+			var templ_7745c5c3_Var39 string
+			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs("/keys/" + data.Key.ID.String())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 389, Col: 56}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "\" hx-confirm=\"Are you absolutely sure you want to delete this key? This action cannot be undone and the key material will be permanently destroyed.\" hx-target=\"#main-content\" hx-push-url=\"/keys\" class=\"px-4 py-2.5 bg-[#FF3333]/10 border border-[#FF3333] text-[#FF3333] hover:bg-[#FF3333]/20 transition-colors font-medium shrink-0 uppercase\">🗑️ DELETE_KEY</button></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -494,12 +721,12 @@ func signingChartScript(stats *SigningStats) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var27 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var27 == nil {
-			templ_7745c5c3_Var27 = templ.NopComponent
+		templ_7745c5c3_Var40 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var40 == nil {
+			templ_7745c5c3_Var40 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<script>\n\t\t(function() {\n\t\t\tconst ctx = document.getElementById('signing-chart');\n\t\t\tif (!ctx) return;\n\t\t\t\n\t\t\tconst labels = JSON.parse('{ templ.EscapeString(mustMarshalJSON(stats.Labels)) }');\n\t\t\tconst values = JSON.parse('{ templ.EscapeString(mustMarshalJSON(stats.Values)) }');\n\t\t\t\n\t\t\tnew Chart(ctx, {\n\t\t\t\ttype: 'line',\n\t\t\t\tdata: {\n\t\t\t\t\tlabels: labels,\n\t\t\t\t\tdatasets: [{\n\t\t\t\t\t\tdata: values,\n\t\t\t\t\t\tborderColor: '#FFB000',\n\t\t\t\t\t\tbackgroundColor: 'rgba(255, 176, 0, 0.1)',\n\t\t\t\t\t\tborderWidth: 2,\n\t\t\t\t\t\tfill: true,\n\t\t\t\t\t\ttension: 0.4,\n\t\t\t\t\t\tpointBackgroundColor: '#FFB000',\n\t\t\t\t\t\tpointBorderColor: '#000000',\n\t\t\t\t\t\tpointBorderWidth: 2,\n\t\t\t\t\t\tpointRadius: 0,\n\t\t\t\t\t\tpointHoverRadius: 6\n\t\t\t\t\t}]\n\t\t\t\t},\n\t\t\t\toptions: {\n\t\t\t\t\tresponsive: true,\n\t\t\t\t\tmaintainAspectRatio: false,\n\t\t\t\t\tinteraction: {\n\t\t\t\t\t\tintersect: false,\n\t\t\t\t\t\tmode: 'index'\n\t\t\t\t\t},\n\t\t\t\t\tplugins: {\n\t\t\t\t\t\tlegend: { display: false },\n\t\t\t\t\t\ttooltip: {\n\t\t\t\t\t\t\tbackgroundColor: '#000000',\n\t\t\t\t\t\t\tborderColor: '#333300',\n\t\t\t\t\t\t\tborderWidth: 1,\n\t\t\t\t\t\t\ttitleColor: '#FFB000',\n\t\t\t\t\t\t\tbodyColor: '#33FF00',\n\t\t\t\t\t\t\tpadding: 12,\n\t\t\t\t\t\t\tdisplayColors: false,\n\t\t\t\t\t\t\ttitleFont: { family: 'monospace' },\n\t\t\t\t\t\t\tbodyFont: { family: 'monospace' },\n\t\t\t\t\t\t\tcallbacks: {\n\t\t\t\t\t\t\t\tlabel: function(context) {\n\t\t\t\t\t\t\t\t\treturn context.parsed.y + ' SIGNATURES';\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t},\n\t\t\t\t\tscales: {\n\t\t\t\t\t\tx: {\n\t\t\t\t\t\t\tgrid: { color: 'rgba(51, 51, 0, 0.5)', drawBorder: false },\n\t\t\t\t\t\t\tticks: { color: '#666600', font: { size: 11, family: 'monospace' }, maxRotation: 0 }\n\t\t\t\t\t\t},\n\t\t\t\t\t\ty: {\n\t\t\t\t\t\t\tgrid: { color: 'rgba(51, 51, 0, 0.5)', drawBorder: false },\n\t\t\t\t\t\t\tticks: { color: '#666600', font: { size: 11, family: 'monospace' }, precision: 0 },\n\t\t\t\t\t\t\tbeginAtZero: true\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t});\n\t\t})();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "<script>\n\t\t(function() {\n\t\t\tconst ctx = document.getElementById('signing-chart');\n\t\t\tif (!ctx) return;\n\t\t\t\n\t\t\tconst labels = JSON.parse('{ templ.EscapeString(mustMarshalJSON(stats.Labels)) }');\n\t\t\tconst values = JSON.parse('{ templ.EscapeString(mustMarshalJSON(stats.Values)) }');\n\t\t\t\n\t\t\tnew Chart(ctx, {\n\t\t\t\ttype: 'line',\n\t\t\t\tdata: {\n\t\t\t\t\tlabels: labels,\n\t\t\t\t\tdatasets: [{\n\t\t\t\t\t\tdata: values,\n\t\t\t\t\t\tborderColor: '#FFB000',\n\t\t\t\t\t\tbackgroundColor: 'rgba(255, 176, 0, 0.1)',\n\t\t\t\t\t\tborderWidth: 2,\n\t\t\t\t\t\tfill: true,\n\t\t\t\t\t\ttension: 0.4,\n\t\t\t\t\t\tpointBackgroundColor: '#FFB000',\n\t\t\t\t\t\tpointBorderColor: '#000000',\n\t\t\t\t\t\tpointBorderWidth: 2,\n\t\t\t\t\t\tpointRadius: 0,\n\t\t\t\t\t\tpointHoverRadius: 6\n\t\t\t\t\t}]\n\t\t\t\t},\n\t\t\t\toptions: {\n\t\t\t\t\tresponsive: true,\n\t\t\t\t\tmaintainAspectRatio: false,\n\t\t\t\t\tinteraction: {\n\t\t\t\t\t\tintersect: false,\n\t\t\t\t\t\tmode: 'index'\n\t\t\t\t\t},\n\t\t\t\t\tplugins: {\n\t\t\t\t\t\tlegend: { display: false },\n\t\t\t\t\t\ttooltip: {\n\t\t\t\t\t\t\tbackgroundColor: '#000000',\n\t\t\t\t\t\t\tborderColor: '#333300',\n\t\t\t\t\t\t\tborderWidth: 1,\n\t\t\t\t\t\t\ttitleColor: '#FFB000',\n\t\t\t\t\t\t\tbodyColor: '#33FF00',\n\t\t\t\t\t\t\tpadding: 12,\n\t\t\t\t\t\t\tdisplayColors: false,\n\t\t\t\t\t\t\ttitleFont: { family: 'monospace' },\n\t\t\t\t\t\t\tbodyFont: { family: 'monospace' },\n\t\t\t\t\t\t\tcallbacks: {\n\t\t\t\t\t\t\t\tlabel: function(context) {\n\t\t\t\t\t\t\t\t\treturn context.parsed.y + ' SIGNATURES';\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t},\n\t\t\t\t\tscales: {\n\t\t\t\t\t\tx: {\n\t\t\t\t\t\t\tgrid: { color: 'rgba(51, 51, 0, 0.5)', drawBorder: false },\n\t\t\t\t\t\t\tticks: { color: '#666600', font: { size: 11, family: 'monospace' }, maxRotation: 0 }\n\t\t\t\t\t\t},\n\t\t\t\t\t\ty: {\n\t\t\t\t\t\t\tgrid: { color: 'rgba(51, 51, 0, 0.5)', drawBorder: false },\n\t\t\t\t\t\t\tticks: { color: '#666600', font: { size: 11, family: 'monospace' }, precision: 0 },\n\t\t\t\t\t\t\tbeginAtZero: true\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t});\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -582,6 +809,22 @@ func curlExample(keyID string) string {
   -d '{"data": "base64_encoded_message"}'`
 }
 
+func opStackExample(keyID, ethAddr string) string {
+	return `# Configure op-batcher with POPSigner remote signer
+op-batcher \
+  --signer.endpoint="https://your-popsigner-rpc.example.com/rpc" \
+  --signer.address="` + ethAddr + `"
+
+# Environment variables alternative
+export OP_BATCHER_SIGNER_ENDPOINT="https://your-popsigner-rpc.example.com/rpc"
+export OP_BATCHER_SIGNER_ADDRESS="` + ethAddr + `"
+
+# For op-proposer, use same pattern
+op-proposer \
+  --signer.endpoint="https://your-popsigner-rpc.example.com/rpc" \
+  --signer.address="` + ethAddr + `"`
+}
+
 func codeBlock(lang string, code string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -598,25 +841,25 @@ func codeBlock(lang string, code string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var28 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var28 == nil {
-			templ_7745c5c3_Var28 = templ.NopComponent
+		templ_7745c5c3_Var41 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var41 == nil {
+			templ_7745c5c3_Var41 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "<pre class=\"p-4 bg-black border border-[#1A4D1A] text-sm overflow-x-auto font-mono\"><code class=\"text-[#33FF00]\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<pre class=\"p-4 bg-black border border-[#1A4D1A] text-sm overflow-x-auto font-mono\"><code class=\"text-[#33FF00]\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var29 string
-		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(code)
+		var templ_7745c5c3_Var42 string
+		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(code)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 438, Col: 120}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/keys_detail.templ`, Line: 565, Col: 120}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "</code></pre>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "</code></pre>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

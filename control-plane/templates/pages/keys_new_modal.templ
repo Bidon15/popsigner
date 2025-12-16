@@ -28,20 +28,24 @@ templ CreateKeyModal() {
 				<p class="mt-1.5 text-xs text-bao-muted">A unique name to identify this key</p>
 			</div>
 			
-			<!-- Algorithm -->
+			<!-- Network Type -->
 			<div>
-				<label for="algorithm" class="block text-sm font-medium text-bao-text mb-2">
-					Algorithm
+				<label for="network-type" class="block text-sm font-medium text-bao-text mb-2">
+					Network Type
 				</label>
-				<select id="algorithm" 
-						name="algorithm" 
+				<select id="network-type" 
+						name="network_type" 
 						style="background-color: #1a1625; color: #e2e8f0;"
 						class="w-full px-4 py-2.5 border border-bao-border rounded-xl focus:border-bao-accent focus:outline-none focus:ring-1 focus:ring-bao-accent/50 cursor-pointer">
-					<option value="secp256k1" selected>secp256k1 (Celestia, Cosmos, Ethereum)</option>
-					<option value="ed25519">ed25519 (Solana, NEAR)</option>
+					<option value="all" selected>🔑 Universal (All Networks)</option>
+					<option value="celestia">🌌 Celestia / Cosmos</option>
+					<option value="evm">⟠ Ethereum / EVM</option>
 				</select>
-				<p class="mt-1.5 text-xs text-bao-muted">Choose based on your target blockchain</p>
+				<p class="mt-1.5 text-xs text-bao-muted">Select the blockchain network for this key</p>
 			</div>
+			
+			<!-- Algorithm (hidden - secp256k1 is the only supported option) -->
+			<input type="hidden" name="algorithm" value="secp256k1"/>
 			
 			<!-- Namespace -->
 			<div>
@@ -76,7 +80,7 @@ templ CreateKeyModal() {
 					Cancel
 				</button>
 				<button type="submit" 
-						class="px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-amber-400 to-rose-500 text-bao-bg rounded-xl shadow-lg hover:shadow-amber-500/30 transition-shadow">
+						class="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-amber-400 to-rose-500 text-black rounded-xl shadow-lg hover:shadow-amber-500/30 transition-shadow">
 					Create Key
 				</button>
 			}

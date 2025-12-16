@@ -12,15 +12,16 @@ import (
 
 // KeysPageData contains the data for the keys list page.
 type KeysPageData struct {
-	UserName     string
-	UserEmail    string
-	AvatarURL    string
-	OrgName      string
-	OrgPlan      string
-	Keys         []*models.Key
-	Namespaces   []*models.Namespace
-	SearchQuery  string
-	NamespaceID  string
+	UserName      string
+	UserEmail     string
+	AvatarURL     string
+	OrgName       string
+	OrgPlan       string
+	Keys          []*models.Key
+	Namespaces    []*models.Namespace
+	SearchQuery   string
+	NamespaceID   string
+	NetworkFilter string
 }
 
 // KeysListPage renders the keys management page - 80s CRT terminal aesthetic
@@ -40,22 +41,13 @@ templ KeysListPage(data KeysPageData) {
 					<h1 class="text-2xl font-bold text-[#FFB000] uppercase drop-shadow-[0_0_10px_#FFB000]">&gt; KEYS_</h1>
 					<p class="text-[#666600] uppercase">MANAGE YOUR CRYPTOGRAPHIC KEYS</p>
 				</div>
-				<div class="flex gap-3">
-					<button hx-get="/keys/workers/new"
-							hx-target="#modal-content"
-							@click="$dispatch('modal-open')"
-							class="px-4 py-2.5 border border-[#33FF00] text-[#33FF00] hover:bg-[#0D1A0D] transition-colors flex items-center gap-2 uppercase">
-						<span>⚡</span>
-						<span class="hidden sm:inline">CREATE_WORKERS</span>
-					</button>
-					<button hx-get="/keys/new"
-							hx-target="#modal-content"
-							@click="$dispatch('modal-open')"
-							class="px-4 py-2.5 bg-[#FFB000] text-black font-bold hover:bg-[#FFCC00] hover:shadow-[0_0_20px_#FFB000] transition-all flex items-center gap-2 uppercase">
-						<span>+</span>
-						<span>CREATE_KEY</span>
-					</button>
-				</div>
+				<button hx-get="/keys/new"
+						hx-target="#modal-content"
+						@click="$dispatch('modal-open')"
+						class="px-4 py-2.5 bg-[#FFB000] text-black font-bold hover:bg-[#FFCC00] hover:shadow-[0_0_20px_#FFB000] transition-all flex items-center gap-2 uppercase">
+					<span>+</span>
+					<span>CREATE_KEY</span>
+				</button>
 			</div>
 			
 			<!-- Filters -->
@@ -68,7 +60,7 @@ templ KeysListPage(data KeysPageData) {
 						   hx-get="/keys"
 						   hx-trigger="keyup changed delay:300ms, search"
 						   hx-target="#keys-list"
-						   hx-include="[name='namespace']"
+						   hx-include="[name='namespace'], [name='network']"
 						   hx-push-url="true"
 						   class="w-full px-4 py-2.5 pl-10 bg-black border border-[#333300] text-[#33FF00] placeholder-[#336633] focus:border-[#33FF00] focus:shadow-[0_0_10px_rgba(51,255,0,0.3)] focus:outline-none transition-colors font-mono uppercase"/>
 					<svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666600]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,7 +72,7 @@ templ KeysListPage(data KeysPageData) {
 						hx-get="/keys"
 						hx-trigger="change"
 						hx-target="#keys-list"
-						hx-include="[name='q']"
+						hx-include="[name='q'], [name='network']"
 						hx-push-url="true"
 						class="px-4 py-2.5 bg-black border border-[#333300] text-[#33FF00] focus:border-[#33FF00] focus:shadow-[0_0_10px_rgba(51,255,0,0.3)] focus:outline-none min-w-[160px] cursor-pointer font-mono uppercase">
 					<option value="">ALL NAMESPACES</option>
@@ -89,6 +81,19 @@ templ KeysListPage(data KeysPageData) {
 							{ ns.Name }
 						</option>
 					}
+				</select>
+				
+				<!-- Network Filter -->
+				<select name="network"
+						hx-get="/keys"
+						hx-trigger="change"
+						hx-target="#keys-list"
+						hx-include="[name='q'], [name='namespace']"
+						hx-push-url="true"
+						class="px-4 py-2.5 bg-black border border-[#333300] text-[#33FF00] focus:border-[#33FF00] focus:shadow-[0_0_10px_rgba(51,255,0,0.3)] focus:outline-none min-w-[140px] cursor-pointer font-mono uppercase">
+					<option value="">ALL NETWORKS</option>
+					<option value="celestia" selected?={ data.NetworkFilter == "celestia" }>🌌 CELESTIA</option>
+					<option value="evm" selected?={ data.NetworkFilter == "evm" }>⟠ EVM</option>
 				</select>
 			</div>
 			
@@ -109,22 +114,13 @@ templ KeysPageContent(data KeysPageData) {
 				<h1 class="text-2xl font-bold text-[#FFB000] uppercase drop-shadow-[0_0_10px_#FFB000]">&gt; KEYS_</h1>
 				<p class="text-[#666600] uppercase">MANAGE YOUR CRYPTOGRAPHIC KEYS</p>
 			</div>
-			<div class="flex gap-3">
-				<button hx-get="/keys/workers/new"
-						hx-target="#modal-content"
-						@click="$dispatch('modal-open')"
-						class="px-4 py-2.5 border border-[#33FF00] text-[#33FF00] hover:bg-[#0D1A0D] transition-colors flex items-center gap-2 uppercase">
-					<span>⚡</span>
-					<span class="hidden sm:inline">CREATE_WORKERS</span>
-				</button>
-				<button hx-get="/keys/new"
-						hx-target="#modal-content"
-						@click="$dispatch('modal-open')"
-						class="px-4 py-2.5 bg-[#FFB000] text-black font-bold hover:bg-[#FFCC00] hover:shadow-[0_0_20px_#FFB000] transition-all flex items-center gap-2 uppercase">
-					<span>+</span>
-					<span>CREATE_KEY</span>
-				</button>
-			</div>
+			<button hx-get="/keys/new"
+					hx-target="#modal-content"
+					@click="$dispatch('modal-open')"
+					class="px-4 py-2.5 bg-[#FFB000] text-black font-bold hover:bg-[#FFCC00] hover:shadow-[0_0_20px_#FFB000] transition-all flex items-center gap-2 uppercase">
+				<span>+</span>
+				<span>CREATE_KEY</span>
+			</button>
 		</div>
 		
 		<!-- Filters -->
@@ -137,7 +133,7 @@ templ KeysPageContent(data KeysPageData) {
 					   hx-get="/keys"
 					   hx-trigger="keyup changed delay:300ms, search"
 					   hx-target="#keys-list"
-					   hx-include="[name='namespace']"
+					   hx-include="[name='namespace'], [name='network']"
 					   hx-push-url="true"
 					   class="w-full px-4 py-2.5 pl-10 bg-black border border-[#333300] text-[#33FF00] placeholder-[#336633] focus:border-[#33FF00] focus:shadow-[0_0_10px_rgba(51,255,0,0.3)] focus:outline-none transition-colors font-mono uppercase"/>
 				<svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666600]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,7 +145,7 @@ templ KeysPageContent(data KeysPageData) {
 					hx-get="/keys"
 					hx-trigger="change"
 					hx-target="#keys-list"
-					hx-include="[name='q']"
+					hx-include="[name='q'], [name='network']"
 					hx-push-url="true"
 					class="px-4 py-2.5 bg-black border border-[#333300] text-[#33FF00] focus:border-[#33FF00] focus:shadow-[0_0_10px_rgba(51,255,0,0.3)] focus:outline-none min-w-[160px] cursor-pointer font-mono uppercase">
 				<option value="">ALL NAMESPACES</option>
@@ -158,6 +154,19 @@ templ KeysPageContent(data KeysPageData) {
 						{ ns.Name }
 					</option>
 				}
+			</select>
+			
+			<!-- Network Filter -->
+			<select name="network"
+					hx-get="/keys"
+					hx-trigger="change"
+					hx-target="#keys-list"
+					hx-include="[name='q'], [name='namespace']"
+					hx-push-url="true"
+					class="px-4 py-2.5 bg-black border border-[#333300] text-[#33FF00] focus:border-[#33FF00] focus:shadow-[0_0_10px_rgba(51,255,0,0.3)] focus:outline-none min-w-[140px] cursor-pointer font-mono uppercase">
+				<option value="">ALL NETWORKS</option>
+				<option value="celestia" selected?={ data.NetworkFilter == "celestia" }>🌌 CELESTIA</option>
+				<option value="evm" selected?={ data.NetworkFilter == "evm" }>⟠ EVM</option>
 			</select>
 		</div>
 		
@@ -186,10 +195,10 @@ templ KeysList(keys []*models.Key, namespaces []*models.Namespace) {
 		<!-- Terminal-style table header -->
 		<div class="bg-black border border-[#333300] overflow-hidden">
 			<div class="grid grid-cols-12 gap-4 p-4 border-b border-[#333300] text-xs text-[#666600] uppercase">
-				<div class="col-span-3">NAME</div>
-				<div class="col-span-3">ADDRESS</div>
-				<div class="col-span-2">ALGORITHM</div>
-				<div class="col-span-1">EXIT_STATUS</div>
+				<div class="col-span-2">NAME</div>
+				<div class="col-span-4">ADDRESSES</div>
+				<div class="col-span-2">NETWORK</div>
+				<div class="col-span-1">STATUS</div>
 				<div class="col-span-1">CREATED</div>
 				<div class="col-span-2">ACTIONS</div>
 			</div>
@@ -206,7 +215,7 @@ templ KeyRow(key *models.Key, namespaceName string) {
 	<div id={ "key-" + key.ID.String() }
 		 class="grid grid-cols-12 gap-4 p-4 border-b border-[#1A1A00] hover:bg-[#0D1A0D] transition-colors group">
 		<!-- Name -->
-		<div class="col-span-3 flex items-center gap-2">
+		<div class="col-span-2 flex items-center gap-2">
 			<span class="text-[#33FF00]">🔑</span>
 			<div>
 				<span class="text-[#33FF00] font-medium">{ key.Name }</span>
@@ -216,53 +225,73 @@ templ KeyRow(key *models.Key, namespaceName string) {
 			</div>
 		</div>
 		
-		<!-- Address -->
-		<div class="col-span-3 flex items-center">
-			<span class="font-mono text-sm text-[#228B22] truncate" title={ key.Address }>
-				{ key.Address }
-			</span>
+		<!-- Addresses - Shows both Celestia and Ethereum -->
+		<div class="col-span-4 flex flex-col gap-1">
+			<!-- Celestia Address -->
+			<div class="flex items-center gap-2">
+				<span class="text-xs text-[#666600]" title="Celestia">🌌</span>
+				<span class="font-mono text-xs text-[#228B22] truncate" title={ key.Address }>
+					{ truncateAddress(key.Address) }
+				</span>
+				<button onclick={ copyToClipboard(key.Address) }
+						class="p-1 text-[#666600] hover:text-[#33FF00] opacity-0 group-hover:opacity-100 transition-opacity"
+						title="Copy Celestia address">
+					<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+					</svg>
+				</button>
+			</div>
+			<!-- Ethereum Address -->
+			if key.EthAddress != nil && *key.EthAddress != "" {
+				<div class="flex items-center gap-2">
+					<span class="text-xs text-[#666600]" title="Ethereum/EVM">⟠</span>
+					<span class="font-mono text-xs text-[#FFB000] truncate" title={ *key.EthAddress }>
+						{ truncateAddress(*key.EthAddress) }
+					</span>
+					<button onclick={ copyToClipboard(*key.EthAddress) }
+							class="p-1 text-[#666600] hover:text-[#FFB000] opacity-0 group-hover:opacity-100 transition-opacity"
+							title="Copy Ethereum address">
+						<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+						</svg>
+					</button>
+				</div>
+			}
 		</div>
 		
-		<!-- Algorithm -->
+		<!-- Network Type -->
 		<div class="col-span-2 flex items-center">
-			<span class="text-[#33FF00] text-sm uppercase">{ string(key.Algorithm) }</span>
+			if key.NetworkType == models.NetworkTypeCelestia {
+				<span class="text-xs text-[#33FF00] bg-[#33FF00]/10 px-2 py-1 uppercase">🌌 CELESTIA</span>
+			} else if key.NetworkType == models.NetworkTypeEVM {
+				<span class="text-xs text-[#FFB000] bg-[#FFB000]/10 px-2 py-1 uppercase">⟠ EVM</span>
+			} else {
+				<span class="text-xs text-[#666600] bg-[#666600]/10 px-2 py-1 uppercase">🔗 UNIVERSAL</span>
+			}
 		</div>
 		
-		<!-- Export Status -->
+		<!-- Status -->
 		<div class="col-span-1 flex items-center">
 			if key.Exportable {
-				<span class="text-[#33FF00] text-sm uppercase drop-shadow-[0_0_8px_#33FF00]">EXIT_OK</span>
+				<span class="text-[#33FF00] text-xs uppercase drop-shadow-[0_0_8px_#33FF00]">OK</span>
 			} else {
-				<span class="text-[#666600] text-sm uppercase">LOCKED</span>
+				<span class="text-[#666600] text-xs uppercase">LOCKED</span>
 			}
 		</div>
 		
 		<!-- Created -->
 		<div class="col-span-1 flex items-center">
-			<span class="text-[#666600] text-sm" title={ key.CreatedAt.Format(time.RFC3339) }>
+			<span class="text-[#666600] text-xs" title={ key.CreatedAt.Format(time.RFC3339) }>
 				{ keysFormatTimeAgo(key.CreatedAt) }
 			</span>
 		</div>
 		
 		<!-- Actions -->
 		<div class="col-span-2 flex items-center gap-2">
-			<button onclick={ copyToClipboard(key.Address) }
-					class="p-2 text-[#666600] hover:text-[#33FF00] transition-colors"
-					title="Copy address">
-				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-				</svg>
-			</button>
 			<a href={ templ.SafeURL("/keys/" + key.ID.String()) }
-			   class="px-2 py-1 text-sm text-[#FFB000] hover:drop-shadow-[0_0_8px_#FFB000] transition-all uppercase">
+			   class="px-2 py-1 text-xs text-[#FFB000] hover:drop-shadow-[0_0_8px_#FFB000] transition-all uppercase">
 				VIEW →
 			</a>
-			<button hx-post={ "/keys/" + key.ID.String() + "/sign-test" }
-					hx-target="#toast-container"
-					hx-swap="innerHTML"
-					class="px-2 py-1 text-sm text-[#33FF00] hover:drop-shadow-[0_0_8px_#33FF00] transition-all uppercase">
-				SIGN
-			</button>
 		</div>
 	</div>
 }
