@@ -107,7 +107,7 @@ type SignBatchKeyRequest struct {
 // SignKeyResponse is the response from a signing operation.
 type SignKeyResponse struct {
 	KeyID     uuid.UUID `json:"key_id"`
-	Signature string    `json:"signature"` // base64
+	Signature string    `json:"signature"`  // base64
 	PublicKey string    `json:"public_key"` // hex
 	Error     string    `json:"error,omitempty"`
 }
