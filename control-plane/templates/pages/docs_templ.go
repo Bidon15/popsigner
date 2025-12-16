@@ -18,6 +18,7 @@ type DocsPageData struct {
 	OrgName       string
 	OrgPlan       string
 	ActiveSection string
+	ActiveTab     string // "build" or "operate"
 }
 
 // DocsPage renders documentation with Bloomberg terminal aesthetic.
@@ -54,7 +55,7 @@ func DocsPage(data DocsPageData) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"min-h-screen bg-[#0a0a0a] font-mono relative\"><!-- Scanlines --><div class=\"fixed inset-0 pointer-events-none opacity-20\n\t\t\t            bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.3)_2px,rgba(0,0,0,0.3)_4px)]\"></div><!-- Phosphor glow --><div class=\"fixed inset-0 overflow-hidden pointer-events-none\"><div class=\"absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] \n\t\t\t\t            bg-[radial-gradient(ellipse_at_center,rgba(255,176,0,0.08)_0%,transparent_60%)] \n\t\t\t\t            blur-2xl\"></div></div><!-- Vignette --><div class=\"fixed inset-0 pointer-events-none \n\t\t\t            bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.5)_100%)]\"></div><!-- Header --><header class=\"sticky top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-[#333300]\"><div class=\"max-w-5xl mx-auto px-6 py-4 flex items-center justify-between\"><a href=\"/\" class=\"flex items-center gap-2 group\"><span class=\"text-[#FFB000] text-xl\">◇</span> <span class=\"text-[#FFB000] font-bold uppercase tracking-wider\n\t\t\t\t\t\t            group-hover:drop-shadow-[0_0_10px_#FFB000] transition-all\">POPSigner</span></a><div class=\"flex items-center gap-6\"><a href=\"/keys\" class=\"text-sm text-[#33FF00] uppercase hover:drop-shadow-[0_0_5px_#33FF00] transition-all\">Dashboard</a> <a href=\"https://github.com/Bidon15/popsigner\" target=\"_blank\" rel=\"noopener\" class=\"text-sm text-[#33FF00] uppercase hover:drop-shadow-[0_0_5px_#33FF00] transition-all\">GitHub ↗</a></div></div></header><!-- Content --><div class=\"relative z-10 max-w-5xl mx-auto px-6 py-12\"><!-- Hero --><div class=\"mb-12\"><div class=\"text-[#33FF00] text-sm mb-4 opacity-70\"><span class=\"text-[#228B22]\">&gt;</span> cat README.md</div><h1 class=\"text-3xl sm:text-4xl text-[#FFB000] font-bold uppercase tracking-wider mb-4\n\t\t\t\t\t           drop-shadow-[0_0_15px_#FFB000]\">POPSIGNER DOCUMENTATION</h1><p class=\"text-lg text-[#33FF00] opacity-90 max-w-2xl uppercase\">POINT-OF-PRESENCE SIGNING INFRASTRUCTURE. KEYS REMAIN REMOTE. YOU REMAIN SOVEREIGN.</p></div><!-- Quickstart --><section class=\"mb-16\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; QUICKSTART_</h2><div class=\"grid md:grid-cols-3 gap-4\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"min-h-screen bg-[#0a0a0a] font-mono relative\"><!-- Scanlines --><div class=\"fixed inset-0 pointer-events-none opacity-20\n\t\t\t            bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.3)_2px,rgba(0,0,0,0.3)_4px)]\"></div><!-- Phosphor glow --><div class=\"fixed inset-0 overflow-hidden pointer-events-none\"><div class=\"absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] \n\t\t\t\t            bg-[radial-gradient(ellipse_at_center,rgba(255,176,0,0.08)_0%,transparent_60%)] \n\t\t\t\t            blur-2xl\"></div></div><!-- Vignette --><div class=\"fixed inset-0 pointer-events-none \n\t\t\t            bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.5)_100%)]\"></div><!-- Header --><header class=\"sticky top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-[#333300]\"><div class=\"max-w-5xl mx-auto px-6 py-4 flex items-center justify-between\"><a href=\"/\" class=\"flex items-center gap-2 group\"><span class=\"text-[#FFB000] text-xl\">◇</span> <span class=\"text-[#FFB000] font-bold uppercase tracking-wider\n\t\t\t\t\t\t            group-hover:drop-shadow-[0_0_10px_#FFB000] transition-all\">POPSigner</span></a><div class=\"flex items-center gap-6\"><a href=\"/keys\" class=\"text-sm text-[#33FF00] uppercase hover:drop-shadow-[0_0_5px_#33FF00] transition-all\">Dashboard</a> <a href=\"https://github.com/Bidon15/popsigner\" target=\"_blank\" rel=\"noopener\" class=\"text-sm text-[#33FF00] uppercase hover:drop-shadow-[0_0_5px_#33FF00] transition-all\">GitHub ↗</a></div></div></header><!-- Content --><div class=\"relative z-10 max-w-5xl mx-auto px-6 py-12\" x-data=\"{ mainTab: 'build' }\"><!-- Hero --><div class=\"mb-8\"><div class=\"text-[#33FF00] text-sm mb-4 opacity-70\"><span class=\"text-[#228B22]\">&gt;</span> cat README.md</div><h1 class=\"text-3xl sm:text-4xl text-[#FFB000] font-bold uppercase tracking-wider mb-4\n\t\t\t\t\t           drop-shadow-[0_0_15px_#FFB000]\">POPSIGNER DOCUMENTATION</h1><p class=\"text-lg text-[#33FF00] opacity-90 max-w-2xl uppercase\">POINT-OF-PRESENCE SIGNING INFRASTRUCTURE. KEYS REMAIN REMOTE. YOU REMAIN SOVEREIGN.</p></div><!-- Main Navigation Tabs --><div class=\"mb-12 flex gap-2 p-1 bg-black border border-[#333300]\"><button @click=\"mainTab = 'build'\" :class=\"mainTab === 'build' ? 'bg-[#33FF00] text-black' : 'bg-black text-[#888888] hover:text-[#33FF00]'\" class=\"flex-1 px-6 py-3 text-sm font-bold uppercase transition-all flex items-center justify-center gap-2\"><span>🔧</span> BUILD</button> <button @click=\"mainTab = 'operate'\" :class=\"mainTab === 'operate' ? 'bg-[#33FF00] text-black' : 'bg-black text-[#888888] hover:text-[#33FF00]'\" class=\"flex-1 px-6 py-3 text-sm font-bold uppercase transition-all flex items-center justify-center gap-2\"><span>⚙️</span> OPERATE</button></div><!-- BUILD TAB CONTENT --><div x-show=\"mainTab === 'build'\" x-cloak><!-- Quickstart --><section class=\"mb-16\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; QUICKSTART_</h2><div class=\"grid md:grid-cols-3 gap-4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -145,7 +146,137 @@ tokio = { version = "1", features = ["full"] }`).Render(ctx, templ_7745c5c3_Buff
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></section><!-- Footer --><footer class=\"pt-8 border-t border-[#333300]\"><div class=\"flex items-center justify-between text-sm\"><p class=\"text-[#666600] uppercase\">Need help?  <a href=\"https://github.com/Bidon15/popsigner/issues\" target=\"_blank\" class=\"text-[#FFB000] hover:drop-shadow-[0_0_5px_#FFB000] transition-all\">Open an issue</a></p><a href=\"https://github.com/Bidon15/popsigner\" target=\"_blank\" class=\"text-[#33FF00] hover:drop-shadow-[0_0_5px_#33FF00] transition-all uppercase\">⭐ Star on GitHub</a></div></footer></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></section></div><!-- End BUILD TAB --><!-- OPERATE TAB CONTENT --><div x-show=\"mainTab === 'operate'\" x-cloak x-data=\"{ operateTab: 'opstack' }\"><!-- Stack Selector Tabs --><div class=\"mb-8 flex gap-2 p-1 bg-black border border-[#333300]\"><button @click=\"operateTab = 'opstack'\" :style=\"operateTab === 'opstack' ? 'background-color: #FF0420; color: white;' : 'background-color: black; color: #888888;'\" class=\"flex-1 px-6 py-3 text-sm font-bold uppercase transition-all flex items-center justify-center gap-2 hover:opacity-80\"><span>🔴</span> OP STACK</button> <button @click=\"operateTab = 'arbitrum'\" :style=\"operateTab === 'arbitrum' ? 'background-color: #12AAFF; color: white;' : 'background-color: black; color: #888888;'\" class=\"flex-1 px-6 py-3 text-sm font-bold uppercase transition-all flex items-center justify-center gap-2 hover:opacity-80\"><span>🔵</span> ARBITRUM ORBIT</button></div><!-- OP STACK CONTENT --><div x-show=\"operateTab === 'opstack'\" x-cloak><!-- OP Stack Hero --><section class=\"mb-12\"><div class=\"p-6 bg-black border border-[#FF0420] relative overflow-hidden\"><div class=\"absolute top-0 right-0 w-32 h-32 bg-[#FF0420]/10 blur-3xl\"></div><div class=\"relative\"><div class=\"flex items-center gap-3 mb-4\"><span class=\"text-3xl\">🔴</span><h2 class=\"text-2xl text-[#FF0420] font-bold uppercase tracking-wider\">OP STACK REMOTE SIGNER</h2></div><p class=\"text-[#33FF00] opacity-80 uppercase text-sm max-w-2xl\">Run OP-BATCHER and OP-PROPOSER with POPSigner as your remote signing backend. Just set two environment variables. No code changes. No private keys on your nodes.</p></div></div></section><!-- Why Remote Signing --><section class=\"mb-12\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; WHY_REMOTE_SIGNING_</h2><div class=\"grid md:grid-cols-2 gap-4\"><div class=\"p-4 bg-black border border-[#333300]\"><div class=\"flex items-center gap-2 mb-2\"><span class=\"text-[#FF3333]\">⚠️</span> <span class=\"text-[#FF3333] font-bold uppercase\">WITHOUT POPSIGNER</span></div><ul class=\"text-sm text-[#666600] space-y-2 uppercase\"><li>• Private keys stored as env vars</li><li>• Keys exposed if node compromised</li><li>• No audit trail for signatures</li><li>• Manual key rotation nightmare</li></ul></div><div class=\"p-4 bg-black border border-[#33FF00]\"><div class=\"flex items-center gap-2 mb-2\"><span class=\"text-[#33FF00]\">✓</span> <span class=\"text-[#33FF00] font-bold uppercase\">WITH POPSIGNER</span></div><ul class=\"text-sm text-[#33FF00] space-y-2 uppercase\"><li>• Keys never leave HSM/OpenBao</li><li>• Node compromise = no key leak</li><li>• Full audit log of all signatures</li><li>• Managed key lifecycle</li></ul></div></div></section><!-- Setup Steps --><section class=\"mb-12\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; SETUP_STEPS_</h2><div class=\"space-y-6\"><!-- Step 1 --><div class=\"p-5 bg-black border border-[#333300]\"><div class=\"flex items-center gap-3 mb-4\"><div class=\"w-10 h-10 border border-[#FF0420] flex items-center justify-center\"><span class=\"text-[#FF0420] font-bold\">01</span></div><h3 class=\"text-[#FFB000] font-bold uppercase\">CREATE EVM KEY</h3></div><p class=\"text-sm text-[#33FF00] opacity-80 mb-4 uppercase\">Create a key in POPSigner dashboard with \"EVM\" or \"Universal\" network type.</p><div class=\"bg-[#050505] p-4 border border-[#1A1A00]\"><p class=\"text-xs text-[#666600] mb-2\">Dashboard → Keys → Create Key → Select \"⟠ EVM\"</p><p class=\"text-sm text-[#33FF00]\">Your Ethereum address: <span class=\"text-[#FFB000]\">0x742d35Cc6634C0532925a3b844Bc454e4438f44e</span></p></div></div><!-- Step 2 --><div class=\"p-5 bg-black border border-[#333300]\"><div class=\"flex items-center gap-3 mb-4\"><div class=\"w-10 h-10 border border-[#FF0420] flex items-center justify-center\"><span class=\"text-[#FF0420] font-bold\">02</span></div><h3 class=\"text-[#FFB000] font-bold uppercase\">FUND YOUR ADDRESS</h3></div><p class=\"text-sm text-[#33FF00] opacity-80 uppercase\">Send ETH to your batcher/proposer address on L1 for gas fees.</p></div><!-- Step 3 --><div class=\"p-5 bg-black border border-[#333300]\"><div class=\"flex items-center gap-3 mb-4\"><div class=\"w-10 h-10 border border-[#FF0420] flex items-center justify-center\"><span class=\"text-[#FF0420] font-bold\">03</span></div><h3 class=\"text-[#FFB000] font-bold uppercase\">CONFIGURE OP-BATCHER</h3></div><p class=\"text-sm text-[#33FF00] opacity-80 mb-4 uppercase\">Point op-batcher to POPSigner's JSON-RPC gateway.</p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsCodeBlockMulti(opBatcherExample()).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div><!-- Step 4 --><div class=\"p-5 bg-black border border-[#333300]\"><div class=\"flex items-center gap-3 mb-4\"><div class=\"w-10 h-10 border border-[#FF0420] flex items-center justify-center\"><span class=\"text-[#FF0420] font-bold\">04</span></div><h3 class=\"text-[#FFB000] font-bold uppercase\">CONFIGURE OP-PROPOSER</h3></div><p class=\"text-sm text-[#33FF00] opacity-80 mb-4 uppercase\">Same pattern for op-proposer (use a different key for separation of concerns).</p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsCodeBlockMulti(opProposerExample()).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div></div></section><!-- JSON-RPC Methods --><section class=\"mb-12\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; JSON-RPC_METHODS_</h2><p class=\"text-sm text-[#33FF00] opacity-80 mb-4 uppercase\">POPSigner's RPC Gateway implements these Ethereum signing methods:</p><div class=\"space-y-3\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsRPCMethod("eth_accounts", "Returns list of addresses owned by this signer").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsRPCMethod("eth_signTransaction", "Signs and returns RLP-encoded transaction").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsRPCMethod("eth_sign", "Signs arbitrary data with Ethereum prefix").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsRPCMethod("personal_sign", "Signs with personal message prefix (EIP-191)").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div></section><!-- Architecture --><section class=\"mb-12\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; ARCHITECTURE_</h2><div class=\"bg-black border border-[#333300] p-6 font-mono text-sm\"><pre class=\"text-[#33FF00] overflow-x-auto\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(architectureDiagram())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 351, Col: 73}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</pre></div></section><!-- Environment Variables --><section class=\"mb-12\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; ENVIRONMENT_VARIABLES_</h2><div class=\"overflow-x-auto\"><table class=\"w-full text-sm\"><thead><tr class=\"border-b border-[#333300]\"><th class=\"text-left py-3 px-4 text-[#FFB000] uppercase\">Variable</th><th class=\"text-left py-3 px-4 text-[#FFB000] uppercase\">Description</th></tr></thead> <tbody class=\"text-[#33FF00]\"><tr class=\"border-b border-[#1A1A00]\"><td class=\"py-3 px-4 font-mono text-[#FFB000]\">OP_BATCHER_SIGNER_ENDPOINT</td><td class=\"py-3 px-4 opacity-80\">POPSigner RPC Gateway URL</td></tr><tr class=\"border-b border-[#1A1A00]\"><td class=\"py-3 px-4 font-mono text-[#FFB000]\">OP_BATCHER_SIGNER_ADDRESS</td><td class=\"py-3 px-4 opacity-80\">Your batcher's Ethereum address</td></tr><tr class=\"border-b border-[#1A1A00]\"><td class=\"py-3 px-4 font-mono text-[#FFB000]\">OP_PROPOSER_SIGNER_ENDPOINT</td><td class=\"py-3 px-4 opacity-80\">POPSigner RPC Gateway URL</td></tr><tr class=\"border-b border-[#1A1A00]\"><td class=\"py-3 px-4 font-mono text-[#FFB000]\">OP_PROPOSER_SIGNER_ADDRESS</td><td class=\"py-3 px-4 opacity-80\">Your proposer's Ethereum address</td></tr></tbody></table></div></section><!-- Supported Networks --><section class=\"mb-12\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; SUPPORTED_NETWORKS_</h2><div class=\"grid grid-cols-2 md:grid-cols-4 gap-3\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsNetworkBadge("OP Mainnet", "10").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsNetworkBadge("OP Sepolia", "11155420").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsNetworkBadge("Base", "8453").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsNetworkBadge("Base Sepolia", "84532").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsNetworkBadge("Ethereum", "1").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsNetworkBadge("Sepolia", "11155111").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsNetworkBadge("Custom", "Any EIP-155").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div></section></div><!-- End OP STACK CONTENT --><!-- ARBITRUM ORBIT CONTENT --><div x-show=\"operateTab === 'arbitrum'\" x-cloak><!-- Arbitrum Orbit Hero --><section class=\"mb-12\"><div class=\"p-6 bg-black border border-[#12AAFF] relative overflow-hidden\"><div class=\"absolute top-0 right-0 w-32 h-32 bg-[#12AAFF]/10 blur-3xl\"></div><div class=\"relative\"><div class=\"flex items-center gap-3 mb-4\"><span class=\"text-3xl\">🔵</span><h2 class=\"text-2xl text-[#12AAFF] font-bold uppercase tracking-wider\">ARBITRUM ORBIT REMOTE SIGNER</h2></div><p class=\"text-[#33FF00] opacity-80 uppercase text-sm max-w-2xl\">Run Nitro batch-poster and staker with POPSigner using mTLS certificates. Generate certs in dashboard, add 3 flags to Nitro. That's it.</p></div></div></section><!-- Arbitrum Auth Difference --><section class=\"mb-12\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; MTLS_VS_API_KEY_</h2><div class=\"grid md:grid-cols-2 gap-4\"><div class=\"p-4 bg-black border border-[#FF0420]\"><div class=\"flex items-center gap-2 mb-2\"><span class=\"text-[#FF0420]\">🔴</span> <span class=\"text-[#FF0420] font-bold uppercase\">OP STACK (API Key)</span></div><ul class=\"text-sm text-[#33FF00] space-y-2 uppercase\"><li>• API key in X-API-Key header</li><li>• Simpler setup</li><li>• Port 8545</li></ul></div><div class=\"p-4 bg-black border border-[#12AAFF]\"><div class=\"flex items-center gap-2 mb-2\"><span class=\"text-[#12AAFF]\">🔵</span> <span class=\"text-[#12AAFF] font-bold uppercase\">ARBITRUM (mTLS)</span></div><ul class=\"text-sm text-[#33FF00] space-y-2 uppercase\"><li>• Client certificate authentication</li><li>• Native Nitro support</li><li>• Port 8546</li></ul></div></div></section><!-- Arbitrum Setup Steps --><section class=\"mb-12\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; ARBITRUM_SETUP_</h2><div class=\"space-y-6\"><!-- Step 1 --><div class=\"p-5 bg-black border border-[#333300]\"><div class=\"flex items-center gap-3 mb-4\"><div class=\"w-10 h-10 border border-[#12AAFF] flex items-center justify-center\"><span class=\"text-[#12AAFF] font-bold\">01</span></div><h3 class=\"text-[#FFB000] font-bold uppercase\">CREATE EVM KEY</h3></div><p class=\"text-sm text-[#33FF00] opacity-80 mb-4 uppercase\">Create a key in POPSigner dashboard with \"EVM\" network type.</p><div class=\"bg-[#050505] p-4 border border-[#1A1A00]\"><p class=\"text-xs text-[#666600] mb-2\">Dashboard → Keys → Create Key → Select \"⟠ EVM\"</p><p class=\"text-sm text-[#33FF00]\">Your Ethereum address: <span class=\"text-[#12AAFF]\">0x742d35Cc6634C0532925a3b844Bc454e4438f44e</span></p></div></div><!-- Step 2 --><div class=\"p-5 bg-black border border-[#333300]\"><div class=\"flex items-center gap-3 mb-4\"><div class=\"w-10 h-10 border border-[#12AAFF] flex items-center justify-center\"><span class=\"text-[#12AAFF] font-bold\">02</span></div><h3 class=\"text-[#FFB000] font-bold uppercase\">GENERATE MTLS CERTIFICATE</h3></div><p class=\"text-sm text-[#33FF00] opacity-80 mb-4 uppercase\">Generate a client certificate in the Certificates settings page.</p><div class=\"bg-[#050505] p-4 border border-[#1A1A00] space-y-3\"><p class=\"text-xs text-[#666600]\">Dashboard → Settings → Certificates → Generate Certificate</p><div class=\"grid grid-cols-3 gap-3 pt-2\"><div class=\"text-center\"><span class=\"text-xl\">📜</span><p class=\"text-xs text-[#33FF00] mt-1\">client.crt</p></div><div class=\"text-center\"><span class=\"text-xl\">🔑</span><p class=\"text-xs text-[#FFB000] mt-1\">client.key</p></div><div class=\"text-center\"><span class=\"text-xl\">🏛️</span><p class=\"text-xs text-[#33FF00] mt-1\">popsigner-ca.crt</p></div></div><p class=\"text-xs text-[#FF3333] pt-2\">⚠ Download immediately - private key shown only once!</p></div></div><!-- Step 3 --><div class=\"p-5 bg-black border border-[#333300]\"><div class=\"flex items-center gap-3 mb-4\"><div class=\"w-10 h-10 border border-[#12AAFF] flex items-center justify-center\"><span class=\"text-[#12AAFF] font-bold\">03</span></div><h3 class=\"text-[#FFB000] font-bold uppercase\">CONFIGURE NITRO BATCH POSTER</h3></div><p class=\"text-sm text-[#33FF00] opacity-80 mb-4 uppercase\">Point Nitro batch-poster to POPSigner with mTLS certificates.</p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsCodeBlockMulti(nitroBatchPosterExample()).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div><!-- Step 4 --><div class=\"p-5 bg-black border border-[#333300]\"><div class=\"flex items-center gap-3 mb-4\"><div class=\"w-10 h-10 border border-[#12AAFF] flex items-center justify-center\"><span class=\"text-[#12AAFF] font-bold\">04</span></div><h3 class=\"text-[#FFB000] font-bold uppercase\">CONFIGURE NITRO STAKER</h3></div><p class=\"text-sm text-[#33FF00] opacity-80 mb-4 uppercase\">Same pattern for staker (use a different key for separation of concerns).</p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsCodeBlockMulti(nitroStakerExample()).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div></div></section><!-- Nitro Architecture --><section class=\"mb-12\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; NITRO_ARCHITECTURE_</h2><div class=\"bg-black border border-[#333300] p-6 font-mono text-sm\"><pre class=\"text-[#33FF00] overflow-x-auto\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var4 string
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(nitroArchitectureDiagram())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 556, Col: 78}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</pre></div></section><!-- Nitro Environment Variables --><section class=\"mb-12\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; NITRO_FLAGS_</h2><div class=\"overflow-x-auto\"><table class=\"w-full text-sm\"><thead><tr class=\"border-b border-[#333300]\"><th class=\"text-left py-3 px-4 text-[#FFB000] uppercase\">Flag</th><th class=\"text-left py-3 px-4 text-[#FFB000] uppercase\">Description</th></tr></thead> <tbody class=\"text-[#33FF00]\"><tr class=\"border-b border-[#1A1A00]\"><td class=\"py-3 px-4 font-mono text-[#12AAFF]\">--*.external-signer.url</td><td class=\"py-3 px-4 opacity-80\">POPSigner mTLS endpoint URL</td></tr><tr class=\"border-b border-[#1A1A00]\"><td class=\"py-3 px-4 font-mono text-[#12AAFF]\">--*.external-signer.address</td><td class=\"py-3 px-4 opacity-80\">Your Ethereum address (0x...)</td></tr><tr class=\"border-b border-[#1A1A00]\"><td class=\"py-3 px-4 font-mono text-[#12AAFF]\">--*.external-signer.method</td><td class=\"py-3 px-4 opacity-80\">eth_signTransaction</td></tr><tr class=\"border-b border-[#1A1A00]\"><td class=\"py-3 px-4 font-mono text-[#12AAFF]\">--*.external-signer.client-cert</td><td class=\"py-3 px-4 opacity-80\">Path to client.crt</td></tr><tr class=\"border-b border-[#1A1A00]\"><td class=\"py-3 px-4 font-mono text-[#12AAFF]\">--*.external-signer.client-private-key</td><td class=\"py-3 px-4 opacity-80\">Path to client.key</td></tr><tr class=\"border-b border-[#1A1A00]\"><td class=\"py-3 px-4 font-mono text-[#12AAFF]\">--*.external-signer.root-ca</td><td class=\"py-3 px-4 opacity-80\">Path to popsigner-ca.crt</td></tr></tbody></table></div><p class=\"text-xs text-[#666600] mt-4 uppercase\">* Replace with: node.batch-poster.data-poster | node.staker.data-poster | parent-chain.wallet</p></section><!-- Supported Orbit Chains --><section class=\"mb-12\"><h2 class=\"text-xl text-[#FFB000] font-bold uppercase tracking-wider mb-6\n\t\t\t\t\t           drop-shadow-[0_0_8px_#FFB000]\">&gt; SUPPORTED_ORBIT_CHAINS_</h2><div class=\"grid grid-cols-2 md:grid-cols-4 gap-3\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsOrbitNetworkBadge("Arbitrum One", "42161").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsOrbitNetworkBadge("Arbitrum Nova", "42170").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsOrbitNetworkBadge("Arbitrum Sepolia", "421614").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = docsOrbitNetworkBadge("Custom Orbit", "Any L3").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</div></section></div><!-- End ARBITRUM ORBIT CONTENT --></div><!-- End OPERATE TAB --><!-- Footer --><footer class=\"pt-8 border-t border-[#333300]\"><div class=\"flex items-center justify-between text-sm\"><p class=\"text-[#666600] uppercase\">Need help?  <a href=\"https://github.com/Bidon15/popsigner/issues\" target=\"_blank\" class=\"text-[#FFB000] hover:drop-shadow-[0_0_5px_#FFB000] transition-all\">Open an issue</a></p><a href=\"https://github.com/Bidon15/popsigner\" target=\"_blank\" class=\"text-[#33FF00] hover:drop-shadow-[0_0_5px_#33FF00] transition-all uppercase\">⭐ Star on GitHub</a></div></footer></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -175,51 +306,51 @@ func docsStepCard(number, title, description string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var3 == nil {
-			templ_7745c5c3_Var3 = templ.NopComponent
+		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var5 == nil {
+			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"group p-5 bg-black border border-[#1A4D1A] hover:border-[#33FF00] transition-all\"><div class=\"w-10 h-10 border border-[#33FF00] flex items-center justify-center mb-4\n\t\t            group-hover:shadow-[0_0_10px_#33FF00] transition-all\"><span class=\"text-[#33FF00] font-bold group-hover:text-[#FFB000] transition-colors\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(number)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 192, Col: 95}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</span></div><h3 class=\"text-sm text-[#FFB000] font-bold uppercase tracking-wide mb-1\n\t\t           group-hover:drop-shadow-[0_0_5px_#FFB000] transition-all\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(title)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 196, Col: 10}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</h3><p class=\"text-xs text-[#33FF00] opacity-70 uppercase\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"group p-5 bg-black border border-[#1A4D1A] hover:border-[#33FF00] transition-all\"><div class=\"w-10 h-10 border border-[#33FF00] flex items-center justify-center mb-4\n\t\t            group-hover:shadow-[0_0_10px_#33FF00] transition-all\"><span class=\"text-[#33FF00] font-bold group-hover:text-[#FFB000] transition-colors\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(description)
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(number)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 198, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 650, Col: 95}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</span></div><h3 class=\"text-sm text-[#FFB000] font-bold uppercase tracking-wide mb-1\n\t\t           group-hover:drop-shadow-[0_0_5px_#FFB000] transition-all\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var7 string
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(title)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 654, Col: 10}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</h3><p class=\"text-xs text-[#33FF00] opacity-70 uppercase\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var8 string
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(description)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 656, Col: 70}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -243,25 +374,25 @@ func docsCodeBlock(code string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var7 == nil {
-			templ_7745c5c3_Var7 = templ.NopComponent
+		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var9 == nil {
+			templ_7745c5c3_Var9 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div class=\"relative group\"><div class=\"bg-black border border-[#333300] p-4 overflow-x-auto\"><pre class=\"text-sm text-[#33FF00]\"><code>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<div class=\"relative group\"><div class=\"bg-black border border-[#333300] p-4 overflow-x-auto\"><pre class=\"text-sm text-[#33FF00]\"><code>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(code)
+		var templ_7745c5c3_Var10 string
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(code)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 205, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 663, Col: 51}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</code></pre></div><button onclick=\"navigator.clipboard.writeText(this.previousElementSibling.querySelector('code').innerText); this.innerText='✓ COPIED'; setTimeout(() => this.innerText='[COPY]', 2000)\" class=\"absolute top-2 right-2 text-xs text-[#666600] hover:text-[#FFB000] uppercase opacity-0 group-hover:opacity-100 transition-all\">[COPY]</button></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</code></pre></div><button onclick=\"navigator.clipboard.writeText(this.previousElementSibling.querySelector('code').innerText); this.innerText='✓ COPIED'; setTimeout(() => this.innerText='[COPY]', 2000)\" class=\"absolute top-2 right-2 text-xs text-[#666600] hover:text-[#FFB000] uppercase opacity-0 group-hover:opacity-100 transition-all\">[COPY]</button></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -285,25 +416,25 @@ func docsCodeBlockMulti(code string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var9 == nil {
-			templ_7745c5c3_Var9 = templ.NopComponent
+		templ_7745c5c3_Var11 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var11 == nil {
+			templ_7745c5c3_Var11 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"relative group\"><div class=\"bg-black border border-[#333300] overflow-x-auto\"><div class=\"flex items-center justify-between border-b border-[#333300] px-4 py-2 bg-[#050505]\"><span class=\"text-xs text-[#666600] uppercase\">CODE</span> <button onclick=\"navigator.clipboard.writeText(this.closest('.group').querySelector('code').innerText); this.innerText='✓ COPIED'; setTimeout(() => this.innerText='[COPY]', 2000)\" class=\"text-xs text-[#666600] hover:text-[#FFB000] uppercase transition-all\">[COPY]</button></div><div class=\"p-4\"><pre class=\"text-sm text-[#33FF00] leading-relaxed\"><code>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<div class=\"relative group\"><div class=\"bg-black border border-[#333300] overflow-x-auto\"><div class=\"flex items-center justify-between border-b border-[#333300] px-4 py-2 bg-[#050505]\"><span class=\"text-xs text-[#666600] uppercase\">CODE</span> <button onclick=\"navigator.clipboard.writeText(this.closest('.group').querySelector('code').innerText); this.innerText='✓ COPIED'; setTimeout(() => this.innerText='[COPY]', 2000)\" class=\"text-xs text-[#666600] hover:text-[#FFB000] uppercase transition-all\">[COPY]</button></div><div class=\"p-4\"><pre class=\"text-sm text-[#33FF00] leading-relaxed\"><code>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(code)
+		var templ_7745c5c3_Var12 string
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(code)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 225, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 683, Col: 68}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</code></pre></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "</code></pre></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -327,79 +458,79 @@ func docsAPIEndpoint(method, path, description string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var11 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var11 == nil {
-			templ_7745c5c3_Var11 = templ.NopComponent
+		templ_7745c5c3_Var13 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var13 == nil {
+			templ_7745c5c3_Var13 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"p-4 bg-black border border-[#333300] hover:border-[#FFB000] transition-all group\"><div class=\"flex items-center gap-3 mb-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<div class=\"p-4 bg-black border border-[#333300] hover:border-[#FFB000] transition-all group\"><div class=\"flex items-center gap-3 mb-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if method == "POST" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<span class=\"px-2 py-1 text-xs font-bold bg-[#33FF00]/20 text-[#33FF00] uppercase\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<span class=\"px-2 py-1 text-xs font-bold bg-[#33FF00]/20 text-[#33FF00] uppercase\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(method)
+			var templ_7745c5c3_Var14 string
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(method)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 235, Col: 95}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 693, Col: 95}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</span> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</span> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<span class=\"px-2 py-1 text-xs font-bold bg-[#FFB000]/20 text-[#FFB000] uppercase\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<span class=\"px-2 py-1 text-xs font-bold bg-[#FFB000]/20 text-[#FFB000] uppercase\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var13 string
-			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(method)
+			var templ_7745c5c3_Var15 string
+			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(method)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 237, Col: 95}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 695, Col: 95}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</span> ")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</span> ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<code class=\"text-sm text-[#FFB000] group-hover:drop-shadow-[0_0_5px_#FFB000] transition-all\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<code class=\"text-sm text-[#FFB000] group-hover:drop-shadow-[0_0_5px_#FFB000] transition-all\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var14 string
-		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(path)
+		var templ_7745c5c3_Var16 string
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(path)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 239, Col: 103}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 697, Col: 103}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</code></div><p class=\"text-sm text-[#33FF00] opacity-70 uppercase\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var15 string
-		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(description)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 241, Col: 70}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</code></div><p class=\"text-sm text-[#33FF00] opacity-70 uppercase\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</p></div>")
+		var templ_7745c5c3_Var17 string
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(description)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 699, Col: 70}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -495,6 +626,288 @@ func curlSignExample() string {
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"data": "base64_encoded_data"}'`
+}
+
+// OP Stack helper functions
+
+func opBatcherExample() string {
+	return `# Option 1: Command line flags
+op-batcher \
+  --l1-eth-rpc="https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY" \
+  --l2-eth-rpc="http://localhost:8545" \
+  --rollup-rpc="http://localhost:8547" \
+  --signer.endpoint="https://rpc.popsigner.com" \
+  --signer.address="0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+
+# Option 2: Environment variables
+export OP_BATCHER_SIGNER_ENDPOINT="https://rpc.popsigner.com"
+export OP_BATCHER_SIGNER_ADDRESS="0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+
+# Then run without the signer flags
+op-batcher --l1-eth-rpc="..." --l2-eth-rpc="..." --rollup-rpc="..."`
+}
+
+func opProposerExample() string {
+	return `# Option 1: Command line flags
+op-proposer \
+  --l1-eth-rpc="https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY" \
+  --rollup-rpc="http://localhost:8547" \
+  --l2oo-address="0x..." \
+  --signer.endpoint="https://rpc.popsigner.com" \
+  --signer.address="0x9876543210abcdef..."
+
+# Option 2: Environment variables
+export OP_PROPOSER_SIGNER_ENDPOINT="https://rpc.popsigner.com"
+export OP_PROPOSER_SIGNER_ADDRESS="0x9876543210abcdef..."
+
+op-proposer --l1-eth-rpc="..." --rollup-rpc="..." --l2oo-address="..."`
+}
+
+func architectureDiagram() string {
+	return `┌─────────────────┐     ┌─────────────────┐
+│   op-batcher    │     │   op-proposer   │
+│  (no priv key)  │     │  (no priv key)  │
+└────────┬────────┘     └────────┬────────┘
+         │                       │
+         │  eth_signTransaction  │
+         │                       │
+         ▼                       ▼
+┌─────────────────────────────────────────┐
+│         POPSigner RPC Gateway           │
+│    https://rpc.popsigner.com        │
+├─────────────────────────────────────────┤
+│  • API Key Authentication               │
+│  • Per-address Rate Limiting            │
+│  • Request Logging & Audit              │
+└────────────────┬────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────┐
+│           POPSigner Core                │
+├─────────────────────────────────────────┤
+│  Control Plane  │  OpenBao + secp256k1  │
+│  (PostgreSQL)   │  (HSM-backed keys)    │
+└─────────────────────────────────────────┘`
+}
+
+func docsRPCMethod(method, description string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var18 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var18 == nil {
+			templ_7745c5c3_Var18 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<div class=\"p-4 bg-black border border-[#333300] hover:border-[#FF0420] transition-all group flex items-center justify-between\"><div><code class=\"text-[#FF0420] font-bold group-hover:drop-shadow-[0_0_5px_#FF0420] transition-all\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var19 string
+		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(method)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 858, Col: 107}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</code><p class=\"text-sm text-[#33FF00] opacity-70 uppercase mt-1\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var20 string
+		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(description)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 859, Col: 76}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</p></div><span class=\"text-[#666600] text-xs uppercase\">JSON-RPC 2.0</span></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func docsNetworkBadge(name, chainID string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var21 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var21 == nil {
+			templ_7745c5c3_Var21 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<div class=\"p-3 bg-black border border-[#333300] text-center\"><p class=\"text-sm text-[#FFB000] font-bold uppercase\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var22 string
+		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(name)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 867, Col: 62}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "</p><p class=\"text-xs text-[#666600] mt-1\">Chain ID: ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var23 string
+		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(chainID)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 868, Col: 60}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "</p></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func docsOrbitNetworkBadge(name, chainID string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var24 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var24 == nil {
+			templ_7745c5c3_Var24 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "<div class=\"p-3 bg-black border border-[#12AAFF]/50 text-center hover:border-[#12AAFF] transition-colors\"><p class=\"text-sm text-[#12AAFF] font-bold uppercase\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var25 string
+		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(name)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 874, Col: 62}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "</p><p class=\"text-xs text-[#666600] mt-1\">Chain ID: ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var26 string
+		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(chainID)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/docs.templ`, Line: 875, Col: 60}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "</p></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// Nitro helper functions
+
+func nitroBatchPosterExample() string {
+	return `# Nitro batch poster with POPSigner mTLS
+nitro \
+  --node.batch-poster.enable=true \
+  --node.batch-poster.data-poster.external-signer.url="https://rpc.popsigner.com:8546" \
+  --node.batch-poster.data-poster.external-signer.address="0x742d35Cc6634C0532925a3b844Bc454e4438f44e" \
+  --node.batch-poster.data-poster.external-signer.method="eth_signTransaction" \
+  --node.batch-poster.data-poster.external-signer.client-cert="/etc/nitro/certs/client.crt" \
+  --node.batch-poster.data-poster.external-signer.client-private-key="/etc/nitro/certs/client.key" \
+  --node.batch-poster.data-poster.external-signer.root-ca="/etc/nitro/certs/popsigner-ca.crt"`
+}
+
+func nitroStakerExample() string {
+	return `# Nitro staker with POPSigner mTLS
+nitro \
+  --node.staker.enable=true \
+  --node.staker.data-poster.external-signer.url="https://rpc.popsigner.com:8546" \
+  --node.staker.data-poster.external-signer.address="0x9876543210abcdef..." \
+  --node.staker.data-poster.external-signer.method="eth_signTransaction" \
+  --node.staker.data-poster.external-signer.client-cert="/etc/nitro/certs/client.crt" \
+  --node.staker.data-poster.external-signer.client-private-key="/etc/nitro/certs/client.key" \
+  --node.staker.data-poster.external-signer.root-ca="/etc/nitro/certs/popsigner-ca.crt"`
+}
+
+func nitroArchitectureDiagram() string {
+	return `┌─────────────────┐     ┌─────────────────┐
+│  Nitro Batch    │     │  Nitro Staker   │
+│    Poster       │     │                 │
+│  (no priv key)  │     │  (no priv key)  │
+└────────┬────────┘     └────────┬────────┘
+         │                       │
+         │  mTLS + eth_signTx    │
+         │  (client.crt/key)     │
+         ▼                       ▼
+┌─────────────────────────────────────────┐
+│      POPSigner mTLS Gateway :8546       │
+│    https://rpc.popsigner.com:8546   │
+├─────────────────────────────────────────┤
+│  • mTLS Client Cert Authentication      │
+│  • Cert → Organization mapping          │
+│  • Per-address Rate Limiting            │
+│  • Request Logging & Audit              │
+└────────────────┬────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────┐
+│           POPSigner Core                │
+├─────────────────────────────────────────┤
+│  Control Plane  │  OpenBao + secp256k1  │
+│  (PostgreSQL)   │  (HSM-backed keys)    │
+└─────────────────────────────────────────┘`
 }
 
 var _ = templruntime.GeneratedTemplate
