@@ -45,41 +45,6 @@ rules:
   - update
   - watch
 - apiGroups:
-  - popsigner.com
-  resources:
-  - popsignerbackups
-  - popsignerclusters
-  - popsignerrestores
-  - popsignertenants
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - popsigner.com
-  resources:
-  - popsignerbackups/finalizers
-  - popsignerclusters/finalizers
-  - popsignerrestores/finalizers
-  - popsignertenants/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - popsigner.com
-  resources:
-  - popsignerbackups/status
-  - popsignerclusters/status
-  - popsignerrestores/status
-  - popsignertenants/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
   - batch
   resources:
   - jobs
@@ -115,3 +80,38 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - popsigner.com
+  resources:
+  - popsignerbackups
+  - popsignerclusters
+  - popsignerrestores
+  - popsignertenants
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - popsigner.com
+  resources:
+  - popsignerbackups/finalizers
+  - popsignerclusters/finalizers
+  - popsignerrestores/finalizers
+  - popsignertenants/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - popsigner.com
+  resources:
+  - popsignerbackups/status
+  - popsignerclusters/status
+  - popsignerrestores/status
+  - popsignertenants/status
+  verbs:
+  - get
+  - patch
+  - update

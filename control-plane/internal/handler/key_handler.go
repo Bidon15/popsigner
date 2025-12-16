@@ -58,6 +58,7 @@ type CreateKeyHTTPRequest struct {
 	NamespaceID string            `json:"namespace_id"`
 	Name        string            `json:"name"`
 	Algorithm   string            `json:"algorithm,omitempty"`
+	NetworkType string            `json:"network_type,omitempty"`
 	Exportable  bool              `json:"exportable"`
 	Metadata    map[string]string `json:"metadata,omitempty"`
 }
@@ -93,11 +94,17 @@ func (h *KeyHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	networkType := req.NetworkType
+	if networkType == "" {
+		networkType = "all" // Default
+	}
+
 	key, err := h.keyService.Create(r.Context(), service.CreateKeyRequest{
 		OrgID:       orgID,
 		NamespaceID: namespaceID,
 		Name:        req.Name,
 		Algorithm:   req.Algorithm,
+		NetworkType: networkType,
 		Exportable:  req.Exportable,
 		Metadata:    req.Metadata,
 	})
@@ -190,7 +197,17 @@ func (h *KeyHandler) List(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	keys, err := h.keyService.List(r.Context(), orgID, nsID)
+	// Parse network filter
+	networkFilter := r.URL.Query().Get("network")
+	var networkType *models.NetworkType
+	if networkFilter != "" && networkFilter != "all" {
+		nt := models.NetworkType(networkFilter)
+		if nt.Valid() {
+			networkType = &nt
+		}
+	}
+
+	keys, err := h.keyService.List(r.Context(), orgID, nsID, networkType)
 	if err != nil {
 		response.Error(w, err)
 		return
@@ -394,6 +411,8 @@ type KeyResponse struct {
 	Name        string                 `json:"name"`
 	PublicKey   string                 `json:"public_key"` // Hex encoded
 	Address     string                 `json:"address"`
+	EthAddress  string                 `json:"eth_address,omitempty"` // 0x... address
+	NetworkType models.NetworkType     `json:"network_type"`
 	Algorithm   models.Algorithm       `json:"algorithm"`
 	Exportable  bool                   `json:"exportable"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
@@ -408,12 +427,19 @@ func toKeyResponse(key *models.Key) *KeyResponse {
 		_ = json.Unmarshal(key.Metadata, &metadata)
 	}
 
+	ethAddr := ""
+	if key.EthAddress != nil {
+		ethAddr = *key.EthAddress
+	}
+
 	return &KeyResponse{
 		ID:          key.ID,
 		NamespaceID: key.NamespaceID,
 		Name:        key.Name,
 		PublicKey:   hex.EncodeToString(key.PublicKey),
 		Address:     key.Address,
+		EthAddress:  ethAddr,
+		NetworkType: key.NetworkType,
 		Algorithm:   key.Algorithm,
 		Exportable:  key.Exportable,
 		Metadata:    metadata,

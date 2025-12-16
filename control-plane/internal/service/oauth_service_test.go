@@ -144,8 +144,9 @@ func TestNewOAuthService(t *testing.T) {
 	}
 
 	providers := svc.GetSupportedProviders()
-	if len(providers) != 3 {
-		t.Errorf("expected 3 providers, got %d", len(providers))
+	// BanhBaoRing supports GitHub and Google OAuth only
+	if len(providers) != 2 {
+		t.Errorf("expected 2 providers (GitHub and Google), got %d", len(providers))
 	}
 }
 
@@ -530,7 +531,7 @@ func TestGetSupportedProviders(t *testing.T) {
 				OAuthGoogleSecret: "secret",
 				OAuthCallbackURL:  "http://localhost",
 			},
-			expected: 3,
+			expected: 2, // BanhBaoRing supports GitHub and Google OAuth only
 		},
 		{
 			name: "Only GitHub configured",

@@ -27,8 +27,7 @@ spec:
     name: v1
     schema:
       openAPIV3Schema:
-        description: POPSignerRestore is the Schema for the popsignerrestores
-          API
+        description: POPSignerRestore is the Schema for the popsignerrestores API
         properties:
           apiVersion:
             description: |-

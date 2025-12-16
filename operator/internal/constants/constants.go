@@ -10,11 +10,12 @@ const (
 	LabelManagedBy = "app.kubernetes.io/managed-by"
 
 	// Component names
-	ComponentOpenBao   = "openbao"
-	ComponentAPI       = "api"
-	ComponentDashboard = "dashboard"
-	ComponentPostgres  = "postgres"
-	ComponentRedis     = "redis"
+	ComponentOpenBao    = "openbao"
+	ComponentAPI        = "api"
+	ComponentDashboard  = "dashboard"
+	ComponentPostgres   = "postgres"
+	ComponentRedis      = "redis"
+	ComponentRPCGateway = "rpc-gateway"
 
 	// Phases
 	PhasePending      = "Pending"
@@ -47,19 +48,21 @@ const (
 	ManagedBy = "popsigner-operator"
 
 	// Default versions
-	DefaultOpenBaoVersion   = "2.0.0"
-	DefaultPluginVersion    = "1.0.0"
-	DefaultPostgresVersion  = "16"
-	DefaultRedisVersion     = "7"
-	DefaultAPIVersion       = "1.0.0"
-	DefaultDashboardVersion = "1.0.0"
+	DefaultOpenBaoVersion      = "2.0.0"
+	DefaultPluginVersion       = "1.0.0"
+	DefaultPostgresVersion     = "16"
+	DefaultRedisVersion        = "7"
+	DefaultAPIVersion          = "1.0.0"
+	DefaultDashboardVersion    = "1.0.0"
+	DefaultRPCGatewayVersion   = "1.0.0"
 
 	// Default resources
-	DefaultOpenBaoReplicas   = 3
-	DefaultAPIReplicas       = 2
-	DefaultDashboardReplicas = 2
-	DefaultDatabaseReplicas  = 1
-	DefaultRedisReplicas     = 1
+	DefaultOpenBaoReplicas     = 3
+	DefaultAPIReplicas         = 2
+	DefaultDashboardReplicas   = 2
+	DefaultDatabaseReplicas    = 1
+	DefaultRedisReplicas       = 1
+	DefaultRPCGatewayReplicas  = 2
 
 	// Default storage sizes
 	DefaultOpenBaoStorageSize    = "10Gi"
@@ -76,6 +79,7 @@ const (
 	PortRedis          = 6379
 	PortPrometheus     = 9090
 	PortGrafana        = 3000
+	PortRPCGateway     = 8545
 )
 
 // Labels returns standard labels for a component

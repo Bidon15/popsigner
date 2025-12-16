@@ -24,7 +24,7 @@ type mockKeyService struct {
 	createFunc      func(ctx context.Context, req service.CreateKeyRequest) (*models.Key, error)
 	createBatchFunc func(ctx context.Context, req service.CreateBatchKeyRequest) ([]*models.Key, error)
 	getFunc         func(ctx context.Context, orgID, keyID uuid.UUID) (*models.Key, error)
-	listFunc        func(ctx context.Context, orgID uuid.UUID, namespaceID *uuid.UUID) ([]*models.Key, error)
+	listFunc        func(ctx context.Context, orgID uuid.UUID, namespaceID *uuid.UUID, networkType *models.NetworkType) ([]*models.Key, error)
 	deleteFunc      func(ctx context.Context, orgID, keyID uuid.UUID) error
 	signFunc        func(ctx context.Context, orgID, keyID uuid.UUID, data []byte, prehashed bool) (*service.SignKeyResponse, error)
 	signBatchFunc   func(ctx context.Context, req service.SignBatchKeyRequest) ([]*service.SignKeyResponse, error)
@@ -53,9 +53,9 @@ func (m *mockKeyService) Get(ctx context.Context, orgID, keyID uuid.UUID) (*mode
 	return nil, nil
 }
 
-func (m *mockKeyService) List(ctx context.Context, orgID uuid.UUID, namespaceID *uuid.UUID) ([]*models.Key, error) {
+func (m *mockKeyService) List(ctx context.Context, orgID uuid.UUID, namespaceID *uuid.UUID, networkType *models.NetworkType) ([]*models.Key, error) {
 	if m.listFunc != nil {
-		return m.listFunc(ctx, orgID, namespaceID)
+		return m.listFunc(ctx, orgID, namespaceID, networkType)
 	}
 	return nil, nil
 }
@@ -341,7 +341,7 @@ func TestKeyHandler_List(t *testing.T) {
 		{
 			name: "lists keys successfully",
 			mockService: &mockKeyService{
-				listFunc: func(ctx context.Context, oID uuid.UUID, nsID *uuid.UUID) ([]*models.Key, error) {
+				listFunc: func(ctx context.Context, oID uuid.UUID, nsID *uuid.UUID, nt *models.NetworkType) ([]*models.Key, error) {
 					return []*models.Key{
 						{ID: uuid.New(), Name: "key-1", PublicKey: []byte{0x02}, CreatedAt: time.Now()},
 						{ID: uuid.New(), Name: "key-2", PublicKey: []byte{0x02}, CreatedAt: time.Now()},
@@ -354,7 +354,7 @@ func TestKeyHandler_List(t *testing.T) {
 		{
 			name: "returns empty list",
 			mockService: &mockKeyService{
-				listFunc: func(ctx context.Context, oID uuid.UUID, nsID *uuid.UUID) ([]*models.Key, error) {
+				listFunc: func(ctx context.Context, oID uuid.UUID, nsID *uuid.UUID, nt *models.NetworkType) ([]*models.Key, error) {
 					return []*models.Key{}, nil
 				},
 			},
@@ -364,7 +364,7 @@ func TestKeyHandler_List(t *testing.T) {
 		{
 			name: "handles service error",
 			mockService: &mockKeyService{
-				listFunc: func(ctx context.Context, oID uuid.UUID, nsID *uuid.UUID) ([]*models.Key, error) {
+				listFunc: func(ctx context.Context, oID uuid.UUID, nsID *uuid.UUID, nt *models.NetworkType) ([]*models.Key, error) {
 					return nil, apierrors.ErrInternal
 				},
 			},

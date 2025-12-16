@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/sessions"
 
 	"github.com/Bidon15/popsigner/control-plane/internal/models"
+	"github.com/Bidon15/popsigner/control-plane/internal/repository"
 	"github.com/Bidon15/popsigner/control-plane/internal/service"
 	"github.com/Bidon15/popsigner/control-plane/templates/pages"
 )
@@ -43,6 +44,8 @@ type WebHandler struct {
 	orgService    service.OrgService
 	auditService  service.AuditService
 	apiKeyService service.APIKeyService
+	certService   service.CertificateService
+	usageRepo     repository.UsageRepository
 	sessionStore  sessions.Store
 }
 
@@ -59,6 +62,8 @@ func NewWebHandler(
 	orgService service.OrgService,
 	auditService service.AuditService,
 	apiKeyService service.APIKeyService,
+	certService service.CertificateService,
+	usageRepo repository.UsageRepository,
 	sessionStore sessions.Store,
 ) *WebHandler {
 	return &WebHandler{
@@ -67,6 +72,8 @@ func NewWebHandler(
 		orgService:    orgService,
 		auditService:  auditService,
 		apiKeyService: apiKeyService,
+		certService:   certService,
+		usageRepo:     usageRepo,
 		sessionStore:  sessionStore,
 	}
 }
@@ -163,6 +170,13 @@ func (h *WebHandler) Routes() chi.Router {
 			r.Get("/api-keys/new", h.SettingsAPIKeysNewModal)
 			r.Post("/api-keys", h.SettingsAPIKeysCreate)
 			r.Delete("/api-keys/{id}", h.SettingsAPIKeysDelete)
+
+			// Certificate management
+			r.Get("/certificates", h.SettingsCertificates)
+			r.Get("/certificates/new", h.SettingsCertificatesNewModal)
+			r.Post("/certificates", h.SettingsCertificatesCreate)
+			r.Post("/certificates/{id}/revoke", h.SettingsCertificatesRevoke)
+			r.Delete("/certificates/{id}", h.SettingsCertificatesDelete)
 		})
 
 		// Audit log detail
@@ -772,24 +786,42 @@ func (h *WebHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
+
 	// Fetch key count for the organization
-	keys, err := h.keyService.List(r.Context(), org.ID, nil)
+	keys, err := h.keyService.List(ctx, org.ID, nil, nil)
 	keyCount := 0
 	if err == nil {
 		keyCount = len(keys)
 	}
 
+	// Fetch API call count from usage metrics
+	apiCallCount := int64(0)
+	if h.usageRepo != nil {
+		if count, err := h.usageRepo.GetCurrentPeriod(ctx, org.ID, "api_calls"); err == nil {
+			apiCallCount = count
+		}
+	}
+
+	// Fetch signature count from usage metrics
+	signatureCount := int64(0)
+	if h.usageRepo != nil {
+		if count, err := h.usageRepo.GetCurrentPeriod(ctx, org.ID, "signatures"); err == nil {
+			signatureCount = count
+		}
+	}
+
 	// Get signature limit from plan
 	signatureLimit := 1000 // Default free tier
-	if limits, err := h.orgService.GetLimits(r.Context(), org.ID); err == nil && limits != nil {
+	if limits, err := h.orgService.GetLimits(ctx, org.ID); err == nil && limits != nil {
 		signatureLimit = int(limits.SignaturesPerMonth)
 	}
 
 	data := pages.DashboardData{
 		User:           user,
 		KeyCount:       keyCount,
-		SignatureCount: 0, // TODO: Get from usage service when available
-		APICallCount:   0, // TODO: Get from usage service when available
+		SignatureCount: int(signatureCount),
+		APICallCount:   int(apiCallCount),
 		SignatureLimit: signatureLimit,
 	}
 

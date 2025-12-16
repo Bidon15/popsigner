@@ -102,10 +102,12 @@ WARNING: Handle exported private keys with extreme care.`,
 func init() {
 	// List flags
 	keysListCmd.Flags().String("namespace", "", "filter by namespace ID")
+	keysListCmd.Flags().String("network", "", "filter by network type (celestia, evm, all)")
 
 	// Create flags
 	keysCreateCmd.Flags().String("namespace", "", "namespace ID (uses default if not set)")
 	keysCreateCmd.Flags().Bool("exportable", false, "allow key to be exported")
+	keysCreateCmd.Flags().String("network-type", "all", "network type: celestia, evm, or all")
 	keysCreateCmd.Flags().StringToString("metadata", nil, "key metadata (key=value pairs)")
 
 	// Create batch flags
@@ -144,16 +146,21 @@ func runKeysList(cmd *cobra.Command, args []string) error {
 
 	ctx := context.Background()
 
-	var nsID *uuid.UUID
+	opts := &api.ListKeysOptions{}
+
 	if nsStr, _ := cmd.Flags().GetString("namespace"); nsStr != "" {
 		id, err := uuid.Parse(nsStr)
 		if err != nil {
 			return fmt.Errorf("invalid namespace ID: %w", err)
 		}
-		nsID = &id
+		opts.NamespaceID = &id
 	}
 
-	keys, err := client.ListKeys(ctx, nsID)
+	if network, _ := cmd.Flags().GetString("network"); network != "" {
+		opts.Network = api.NetworkType(network)
+	}
+
+	keys, err := client.ListKeys(ctx, opts)
 	if err != nil {
 		printError(err)
 		return err
@@ -172,21 +179,40 @@ func runKeysList(cmd *cobra.Command, args []string) error {
 	}
 
 	w := newTable()
-	printTableHeader(w, "ID", "NAME", "ADDRESS", "ALGORITHM", "EXPORTABLE")
+	printTableHeader(w, "ID", "NAME", "ADDRESS", "NETWORK", "EXPORTABLE")
 	for _, k := range keys {
 		exportable := "-"
 		if k.Exportable {
 			exportable = colorGreen("yes")
 		}
+		// Show EVM address if available, otherwise Celestia address
+		addr := k.Address
+		if k.EthAddress != nil && *k.EthAddress != "" {
+			addr = *k.EthAddress
+		}
+		network := formatNetworkType(k.NetworkType)
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 			truncate(k.ID.String(), 12),
 			k.Name,
-			truncate(k.Address, 16),
-			k.Algorithm,
+			truncate(addr, 16),
+			network,
 			exportable,
 		)
 	}
 	return w.Flush()
+}
+
+func formatNetworkType(nt api.NetworkType) string {
+	switch nt {
+	case api.NetworkTypeCelestia:
+		return colorYellow("celestia")
+	case api.NetworkTypeEVM:
+		return colorGreen("evm")
+	case api.NetworkTypeAll:
+		return "all"
+	default:
+		return string(nt)
+	}
 }
 
 func runKeysCreate(cmd *cobra.Command, args []string) error {
@@ -204,6 +230,7 @@ func runKeysCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	exportable, _ := cmd.Flags().GetBool("exportable")
+	networkType, _ := cmd.Flags().GetString("network-type")
 	metadata, _ := cmd.Flags().GetStringToString("metadata")
 
 	ctx := context.Background()
@@ -213,6 +240,7 @@ func runKeysCreate(cmd *cobra.Command, args []string) error {
 		NamespaceID: nsID,
 		Algorithm:   "secp256k1",
 		Exportable:  exportable,
+		NetworkType: api.NetworkType(networkType),
 		Metadata:    metadata,
 	})
 	if err != nil {
@@ -225,9 +253,13 @@ func runKeysCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("%s Created key: %s\n", colorGreen("✓"), keyName)
-	fmt.Printf("  ID:        %s\n", key.ID)
-	fmt.Printf("  Address:   %s\n", key.Address)
-	fmt.Printf("  PublicKey: %s\n", truncate(key.PublicKey, 40))
+	fmt.Printf("  ID:          %s\n", key.ID)
+	fmt.Printf("  Address:     %s\n", key.Address)
+	if key.EthAddress != nil && *key.EthAddress != "" {
+		fmt.Printf("  ETH Address: %s\n", *key.EthAddress)
+	}
+	fmt.Printf("  Network:     %s\n", formatNetworkType(key.NetworkType))
+	fmt.Printf("  PublicKey:   %s\n", truncate(key.PublicKey, 40))
 	if exportable {
 		fmt.Printf("  %s Key is marked as exportable\n", colorYellow("⚠"))
 	}
@@ -311,6 +343,10 @@ func runKeysGet(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Name:        %s\n", key.Name)
 	fmt.Printf("Namespace:   %s\n", key.NamespaceID)
 	fmt.Printf("Address:     %s\n", key.Address)
+	if key.EthAddress != nil && *key.EthAddress != "" {
+		fmt.Printf("ETH Address: %s\n", *key.EthAddress)
+	}
+	fmt.Printf("Network:     %s\n", formatNetworkType(key.NetworkType))
 	fmt.Printf("PublicKey:   %s\n", key.PublicKey)
 	fmt.Printf("Algorithm:   %s\n", key.Algorithm)
 	fmt.Printf("Exportable:  %v\n", key.Exportable)

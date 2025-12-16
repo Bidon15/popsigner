@@ -10,6 +10,7 @@ import (
 	"github.com/Bidon15/popsigner/control-plane/internal/models"
 	apierrors "github.com/Bidon15/popsigner/control-plane/internal/pkg/errors"
 	"github.com/Bidon15/popsigner/control-plane/internal/pkg/response"
+	"github.com/Bidon15/popsigner/control-plane/internal/repository"
 	"github.com/Bidon15/popsigner/control-plane/internal/service"
 )
 
@@ -167,6 +168,31 @@ func GetScopesFromContext(ctx context.Context) []string {
 		}
 	}
 	return nil
+}
+
+// SetOrgIDInContext sets the organization ID in the context.
+// This is primarily used for testing.
+func SetOrgIDInContext(ctx context.Context, orgID uuid.UUID) context.Context {
+	return context.WithValue(ctx, OrgIDKey, orgID.String())
+}
+
+// TrackAPIUsage returns a middleware that tracks API usage by incrementing
+// the "api_calls" metric for authenticated requests. Must be used after APIKeyAuth.
+func TrackAPIUsage(usageRepo repository.UsageRepository) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Get org ID from context (set by APIKeyAuth)
+			orgID := GetOrgIDFromContext(r.Context())
+			if orgID != uuid.Nil && usageRepo != nil {
+				// Increment API call counter asynchronously to not block the request
+				go func() {
+					_ = usageRepo.Increment(context.Background(), orgID, "api_calls", 1)
+				}()
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 // OptionalAPIKeyAuth returns a middleware that attempts API key authentication

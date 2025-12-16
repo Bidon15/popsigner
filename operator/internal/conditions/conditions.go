@@ -7,16 +7,17 @@ import (
 
 // Condition types
 const (
-	TypeReady          = "Ready"
-	TypeTLSReady       = "TLSReady"
-	TypeDatabaseReady  = "DatabaseReady"
-	TypeRedisReady     = "RedisReady"
-	TypeOpenBaoReady   = "OpenBaoReady"
-	TypeAPIReady       = "APIReady"
-	TypeDashboardReady = "DashboardReady"
-	TypeBackupSuccess  = "BackupSucceeded"
-	TypeRestoreSuccess = "RestoreSucceeded"
-	TypeTenantReady    = "TenantReady"
+	TypeReady           = "Ready"
+	TypeTLSReady        = "TLSReady"
+	TypeDatabaseReady   = "DatabaseReady"
+	TypeRedisReady      = "RedisReady"
+	TypeOpenBaoReady    = "OpenBaoReady"
+	TypeAPIReady        = "APIReady"
+	TypeDashboardReady  = "DashboardReady"
+	TypeRPCGatewayReady = "RPCGatewayReady"
+	TypeBackupSuccess   = "BackupSucceeded"
+	TypeRestoreSuccess  = "RestoreSucceeded"
+	TypeTenantReady     = "TenantReady"
 )
 
 // Condition reasons
@@ -28,6 +29,7 @@ const (
 	ReasonFailed          = "Failed"
 	ReasonNotReady        = "NotReady"
 	ReasonReady           = "Ready"
+	ReasonDisabled        = "Disabled"
 	ReasonBackupRunning   = "BackupRunning"
 	ReasonBackupComplete  = "BackupComplete"
 	ReasonBackupFailed    = "BackupFailed"

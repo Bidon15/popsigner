@@ -254,16 +254,28 @@ func (h *WebHandler) Usage(w http.ResponseWriter, r *http.Request) {
 	dashboardData := buildDashboardData(user, org, "/usage")
 
 	// Get key count from key service
-	keys, _ := h.keyService.List(ctx, oid, nil)
+	keys, _ := h.keyService.List(ctx, oid, nil, nil)
 	keyCount := int64(len(keys))
+
+	// Get usage metrics from usage repository
+	signatureCount := int64(0)
+	apiCallCount := int64(0)
+	if h.usageRepo != nil {
+		if count, err := h.usageRepo.GetCurrentPeriod(ctx, oid, "signatures"); err == nil {
+			signatureCount = count
+		}
+		if count, err := h.usageRepo.GetCurrentPeriod(ctx, oid, "api_calls"); err == nil {
+			apiCallCount = count
+		}
+	}
 
 	data := pages.UsagePageData{
 		DashboardData:    dashboardData,
-		Signatures:       0, // Usage tracking coming soon
+		Signatures:       signatureCount,
 		SignaturesLimit:  limits.SignaturesPerMonth,
 		Keys:             keyCount,
 		KeysLimit:        int64(limits.Keys),
-		APICalls:         0, // Usage tracking coming soon
+		APICalls:         apiCallCount,
 		TeamMembers:      1, // Default to 1 for the owner
 		TeamMembersLimit: int64(limits.TeamMembers),
 		SignaturesData:   displaySigData,

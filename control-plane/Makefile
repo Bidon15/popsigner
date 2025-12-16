@@ -148,3 +148,46 @@ install-web-deps:
 	@echo "Installing air for hot reload..."
 	go install github.com/cosmtrek/air@latest
 	@echo "Done! Make sure you have Node.js installed for Tailwind CSS"
+
+# ============================================
+# RPC Gateway Commands
+# ============================================
+
+## Build RPC gateway binary
+build-rpc-gateway:
+	CGO_ENABLED=0 $(GOBUILD) -o bin/rpc-gateway ./cmd/rpc-gateway
+
+## Run RPC gateway locally
+run-rpc-gateway:
+	$(GOCMD) run ./cmd/rpc-gateway
+
+## Run RPC gateway with hot reload (requires air)
+dev-rpc-gateway:
+	air -c .air.rpc-gateway.toml
+
+## Build Docker image for RPC gateway
+docker-rpc-gateway:
+	docker build -f docker/Dockerfile.rpc-gateway -t popsigner/rpc-gateway:latest .
+
+## Push Docker image for RPC gateway
+docker-push-rpc-gateway:
+	docker push popsigner/rpc-gateway:latest
+
+## Run RPC gateway in Docker
+docker-run-rpc-gateway:
+	docker run -d --name rpc-gateway \
+		-p 8545:8545 \
+		--network host \
+		-e BANHBAO_DATABASE_HOST=localhost \
+		-e BANHBAO_REDIS_HOST=localhost \
+		-e BANHBAO_OPENBAO_ADDRESS=http://localhost:8200 \
+		popsigner/rpc-gateway:latest
+
+## Stop and remove RPC gateway Docker container
+docker-stop-rpc-gateway:
+	docker stop rpc-gateway || true
+	docker rm rpc-gateway || true
+
+## Test RPC gateway
+test-rpc-gateway:
+	$(GOTEST) -v -race ./cmd/rpc-gateway/... ./internal/handler/jsonrpc/... ./internal/middleware/...

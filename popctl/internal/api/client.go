@@ -158,3 +158,46 @@ func (c *Client) Delete(ctx context.Context, path string) error {
 	return c.do(ctx, http.MethodDelete, path, nil, nil)
 }
 
+// PostNoResponse performs a POST request without expecting a JSON response.
+func (c *Client) PostNoResponse(ctx context.Context, path string, body interface{}) error {
+	return c.do(ctx, http.MethodPost, path, body, nil)
+}
+
+// GetRaw performs a GET request and returns the raw response body.
+func (c *Client) GetRaw(ctx context.Context, path string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+path, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+c.apiKey)
+	req.Header.Set("User-Agent", "popctl/1.0")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if resp.StatusCode >= 400 {
+		var apiErr struct {
+			Error APIError `json:"error"`
+		}
+		if err := json.Unmarshal(body, &apiErr); err != nil {
+			return nil, &APIError{
+				Message:    fmt.Sprintf("HTTP %d: %s", resp.StatusCode, string(body)),
+				StatusCode: resp.StatusCode,
+			}
+		}
+		apiErr.Error.StatusCode = resp.StatusCode
+		return nil, &apiErr.Error
+	}
+
+	return body, nil
+}
+

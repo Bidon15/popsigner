@@ -7,11 +7,34 @@ import (
 	"github.com/google/uuid"
 )
 
-// ListKeys returns all keys, optionally filtered by namespace.
-func (c *Client) ListKeys(ctx context.Context, namespaceID *uuid.UUID) ([]Key, error) {
+// ListKeysOptions contains options for listing keys.
+type ListKeysOptions struct {
+	NamespaceID *uuid.UUID
+	Network     NetworkType
+}
+
+// ListKeys returns all keys, optionally filtered by namespace and network.
+func (c *Client) ListKeys(ctx context.Context, opts *ListKeysOptions) ([]Key, error) {
 	path := "/v1/keys"
-	if namespaceID != nil {
-		path = fmt.Sprintf("/v1/keys?namespace_id=%s", namespaceID)
+	params := []string{}
+
+	if opts != nil {
+		if opts.NamespaceID != nil {
+			params = append(params, fmt.Sprintf("namespace_id=%s", opts.NamespaceID))
+		}
+		if opts.Network != "" && opts.Network != NetworkTypeAll {
+			params = append(params, fmt.Sprintf("network=%s", opts.Network))
+		}
+	}
+
+	if len(params) > 0 {
+		path = path + "?"
+		for i, p := range params {
+			if i > 0 {
+				path += "&"
+			}
+			path += p
+		}
 	}
 
 	var resp keysResponse
@@ -39,6 +62,9 @@ func (c *Client) CreateKey(ctx context.Context, req CreateKeyRequest) (*Key, err
 	}
 	if req.Algorithm != "" {
 		body["algorithm"] = req.Algorithm
+	}
+	if req.NetworkType != "" {
+		body["network_type"] = req.NetworkType
 	}
 	if len(req.Metadata) > 0 {
 		body["metadata"] = req.Metadata

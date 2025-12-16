@@ -43,6 +43,102 @@ type POPSignerClusterSpec struct {
 	// Billing configuration
 	// +kubebuilder:default={}
 	Billing BillingSpec `json:"billing,omitempty"`
+
+	// RPCGateway configures the JSON-RPC gateway for OP Stack integration.
+	// +optional
+	RPCGateway RPCGatewaySpec `json:"rpcGateway,omitempty"`
+}
+
+// RPCGatewaySpec defines the configuration for the JSON-RPC gateway.
+type RPCGatewaySpec struct {
+	// Enabled controls whether the RPC gateway is deployed.
+	// +optional
+	// +kubebuilder:default=false
+	Enabled bool `json:"enabled,omitempty"`
+
+	// Replicas is the number of gateway replicas.
+	// +optional
+	// +kubebuilder:default=2
+	// +kubebuilder:validation:Minimum=1
+	Replicas int32 `json:"replicas,omitempty"`
+
+	// Image is the container image for the gateway.
+	// +optional
+	Image string `json:"image,omitempty"`
+
+	// Version is the image tag/version.
+	// +optional
+	Version string `json:"version,omitempty"`
+
+	// Resources defines the CPU/memory resources for the gateway.
+	// +optional
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+
+	// RateLimit configures per-address rate limiting.
+	// +optional
+	RateLimit RateLimitConfig `json:"rateLimit,omitempty"`
+
+	// TLS configures TLS/mTLS settings.
+	// +optional
+	TLS RPCGatewayTLSConfig `json:"tls,omitempty"`
+
+	// MTLS configures mutual TLS for Arbitrum Nitro integration.
+	// +optional
+	MTLS MTLSConfig `json:"mtls,omitempty"`
+}
+
+// RateLimitConfig defines rate limiting configuration.
+type RateLimitConfig struct {
+	// RequestsPerSecond is the maximum requests per second per address.
+	// +optional
+	// +kubebuilder:default=100
+	RequestsPerSecond int `json:"requestsPerSecond,omitempty"`
+
+	// BurstSize is the maximum burst size.
+	// +optional
+	// +kubebuilder:default=200
+	BurstSize int `json:"burstSize,omitempty"`
+}
+
+// RPCGatewayTLSConfig defines TLS settings for the gateway.
+type RPCGatewayTLSConfig struct {
+	// Enabled controls whether TLS is enabled.
+	// +optional
+	// +kubebuilder:default=false
+	Enabled bool `json:"enabled,omitempty"`
+
+	// SecretName is the name of the TLS secret.
+	// +optional
+	SecretName string `json:"secretName,omitempty"`
+
+	// MutualTLS enables mutual TLS (client certificate verification).
+	// +optional
+	// +kubebuilder:default=false
+	MutualTLS bool `json:"mutualTLS,omitempty"`
+}
+
+// MTLSConfig configures mutual TLS for Arbitrum Nitro integration.
+type MTLSConfig struct {
+	// Enabled enables mTLS client certificate authentication.
+	// +optional
+	Enabled bool `json:"enabled,omitempty"`
+
+	// CASecretName is the name of the Secret containing the CA certificate.
+	// If not specified, uses "{cluster-name}-rpc-gateway-ca".
+	// +optional
+	CASecretName string `json:"caSecretName,omitempty"`
+
+	// CASecretKey is the key in the Secret containing the CA certificate PEM.
+	// Defaults to "ca.crt".
+	// +optional
+	CASecretKey string `json:"caSecretKey,omitempty"`
+
+	// ClientAuthType specifies the client authentication policy.
+	// Options: "NoClientCert", "RequestClientCert", "RequireAnyClientCert", "VerifyClientCertIfGiven", "RequireAndVerifyClientCert"
+	// Defaults to "VerifyClientCertIfGiven" (allows both API key and mTLS).
+	// +optional
+	// +kubebuilder:validation:Enum=NoClientCert;RequestClientCert;RequireAnyClientCert;VerifyClientCertIfGiven;RequireAndVerifyClientCert
+	ClientAuthType string `json:"clientAuthType,omitempty"`
 }
 
 // OpenBaoSpec configures the OpenBao cluster
@@ -325,11 +421,12 @@ type POPSignerClusterStatus struct {
 	Phase string `json:"phase,omitempty"`
 
 	// Component statuses
-	OpenBao   ComponentStatus `json:"openbao,omitempty"`
-	API       ComponentStatus `json:"api,omitempty"`
-	Dashboard ComponentStatus `json:"dashboard,omitempty"`
-	Database  ComponentStatus `json:"database,omitempty"`
-	Redis     ComponentStatus `json:"redis,omitempty"`
+	OpenBao    ComponentStatus `json:"openbao,omitempty"`
+	API        ComponentStatus `json:"api,omitempty"`
+	Dashboard  ComponentStatus `json:"dashboard,omitempty"`
+	Database   ComponentStatus `json:"database,omitempty"`
+	Redis      ComponentStatus `json:"redis,omitempty"`
+	RPCGateway ComponentStatus `json:"rpcGateway,omitempty"`
 
 	// Access endpoints
 	Endpoints EndpointsStatus `json:"endpoints,omitempty"`
@@ -352,10 +449,11 @@ type ComponentStatus struct {
 
 // EndpointsStatus contains the access endpoints for the cluster
 type EndpointsStatus struct {
-	API       string `json:"api,omitempty"`
-	Dashboard string `json:"dashboard,omitempty"`
-	OpenBao   string `json:"openbao,omitempty"`
-	Grafana   string `json:"grafana,omitempty"`
+	API        string `json:"api,omitempty"`
+	Dashboard  string `json:"dashboard,omitempty"`
+	OpenBao    string `json:"openbao,omitempty"`
+	Grafana    string `json:"grafana,omitempty"`
+	RPCGateway string `json:"rpcGateway,omitempty"`
 }
 
 // +kubebuilder:object:root=true

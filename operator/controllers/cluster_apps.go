@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -16,6 +18,7 @@ import (
 	"github.com/Bidon15/popsigner/operator/internal/resources"
 	"github.com/Bidon15/popsigner/operator/internal/resources/api"
 	"github.com/Bidon15/popsigner/operator/internal/resources/dashboard"
+	"github.com/Bidon15/popsigner/operator/internal/resources/rpcgateway"
 )
 
 // reconcileAPI handles API resources.
@@ -245,6 +248,162 @@ func (r *ClusterReconciler) updateAppsStatus(ctx context.Context, cluster *popsi
 
 	if err := r.updateDashboardStatus(ctx, cluster); err != nil {
 		return fmt.Errorf("failed to update Dashboard status: %w", err)
+	}
+
+	if err := r.updateRPCGatewayStatus(ctx, cluster); err != nil {
+		return fmt.Errorf("failed to update RPC Gateway status: %w", err)
+	}
+
+	return nil
+}
+
+// reconcileRPCGateway ensures the RPC Gateway is deployed if enabled.
+func (r *ClusterReconciler) reconcileRPCGateway(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
+	log := log.FromContext(ctx)
+
+	if !cluster.Spec.RPCGateway.Enabled {
+		// Gateway not enabled, ensure resources are deleted
+		return r.cleanupRPCGateway(ctx, cluster)
+	}
+
+	log.Info("Reconciling RPC Gateway")
+
+	// Create/Update Deployment
+	deployment := rpcgateway.Deployment(cluster)
+	if err := r.createOrUpdate(ctx, cluster, deployment); err != nil {
+		return fmt.Errorf("failed to reconcile RPC Gateway deployment: %w", err)
+	}
+
+	// Create/Update Service
+	service := rpcgateway.Service(cluster)
+	if err := r.createOrUpdate(ctx, cluster, service); err != nil {
+		return fmt.Errorf("failed to reconcile RPC Gateway service: %w", err)
+	}
+
+	// Create/Update HPA
+	hpa := rpcgateway.HorizontalPodAutoscaler(cluster)
+	if err := r.createOrUpdate(ctx, cluster, hpa); err != nil {
+		return fmt.Errorf("failed to reconcile RPC Gateway HPA: %w", err)
+	}
+
+	log.Info("RPC Gateway reconciled successfully")
+	return nil
+}
+
+// cleanupRPCGateway removes RPC Gateway resources when disabled.
+func (r *ClusterReconciler) cleanupRPCGateway(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
+	log := log.FromContext(ctx)
+	name := resources.ResourceName(cluster.Name, constants.ComponentRPCGateway)
+
+	// Delete HPA
+	hpa := &autoscalingv2.HorizontalPodAutoscaler{}
+	if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: cluster.Namespace}, hpa); err == nil {
+		if err := r.Delete(ctx, hpa); err != nil && !errors.IsNotFound(err) {
+			return fmt.Errorf("failed to delete RPC Gateway HPA: %w", err)
+		}
+		log.Info("Deleted RPC Gateway HPA")
+	}
+
+	// Delete Service
+	svc := &corev1.Service{}
+	if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: cluster.Namespace}, svc); err == nil {
+		if err := r.Delete(ctx, svc); err != nil && !errors.IsNotFound(err) {
+			return fmt.Errorf("failed to delete RPC Gateway service: %w", err)
+		}
+		log.Info("Deleted RPC Gateway Service")
+	}
+
+	// Delete Deployment
+	deploy := &appsv1.Deployment{}
+	if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: cluster.Namespace}, deploy); err == nil {
+		if err := r.Delete(ctx, deploy); err != nil && !errors.IsNotFound(err) {
+			return fmt.Errorf("failed to delete RPC Gateway deployment: %w", err)
+		}
+		log.Info("Deleted RPC Gateway Deployment")
+	}
+
+	return nil
+}
+
+// isRPCGatewayReady checks if RPC Gateway pods are ready.
+// Returns true if gateway is disabled or all pods are ready.
+func (r *ClusterReconciler) isRPCGatewayReady(ctx context.Context, cluster *popsignerv1.POPSignerCluster) bool {
+	// Gateway is disabled
+	if !cluster.Spec.RPCGateway.Enabled {
+		return true
+	}
+
+	name := resources.ResourceName(cluster.Name, constants.ComponentRPCGateway)
+
+	deployment := &appsv1.Deployment{}
+	if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: cluster.Namespace}, deployment); err != nil {
+		return false
+	}
+
+	expectedReplicas := cluster.Spec.RPCGateway.Replicas
+	if expectedReplicas == 0 {
+		expectedReplicas = int32(constants.DefaultRPCGatewayReplicas)
+	}
+
+	return deployment.Status.ReadyReplicas >= expectedReplicas
+}
+
+// updateRPCGatewayStatus updates the cluster status with RPC Gateway info.
+func (r *ClusterReconciler) updateRPCGatewayStatus(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
+	// RPC Gateway is disabled
+	if !cluster.Spec.RPCGateway.Enabled {
+		cluster.Status.RPCGateway = popsignerv1.ComponentStatus{
+			Ready:   true,
+			Message: "Disabled",
+		}
+		conditions.SetCondition(&cluster.Status.Conditions, conditions.TypeRPCGatewayReady,
+			metav1.ConditionTrue, conditions.ReasonDisabled, "RPC Gateway is disabled")
+		return nil
+	}
+
+	name := resources.ResourceName(cluster.Name, constants.ComponentRPCGateway)
+
+	deployment := &appsv1.Deployment{}
+	if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: cluster.Namespace}, deployment); err != nil {
+		if errors.IsNotFound(err) {
+			cluster.Status.RPCGateway = popsignerv1.ComponentStatus{
+				Ready:   false,
+				Message: "Deployment not found",
+			}
+			return nil
+		}
+		return err
+	}
+
+	expectedReplicas := *deployment.Spec.Replicas
+	ready := deployment.Status.ReadyReplicas >= expectedReplicas
+
+	version := cluster.Spec.RPCGateway.Version
+	if version == "" {
+		version = constants.DefaultRPCGatewayVersion
+	}
+
+	cluster.Status.RPCGateway = popsignerv1.ComponentStatus{
+		Ready:    ready,
+		Version:  version,
+		Replicas: fmt.Sprintf("%d/%d", deployment.Status.ReadyReplicas, expectedReplicas),
+	}
+
+	condStatus := metav1.ConditionFalse
+	reason := conditions.ReasonNotReady
+	message := fmt.Sprintf("Waiting for RPC Gateway pods: %d/%d ready", deployment.Status.ReadyReplicas, expectedReplicas)
+
+	if ready {
+		condStatus = metav1.ConditionTrue
+		reason = conditions.ReasonReady
+		message = "RPC Gateway is ready"
+	}
+
+	conditions.SetCondition(&cluster.Status.Conditions, conditions.TypeRPCGatewayReady, condStatus, reason, message)
+
+	// Update endpoints
+	if ready && cluster.Spec.Domain != "" {
+		cluster.Status.Endpoints.RPCGateway = fmt.Sprintf("https://rpc.%s", cluster.Spec.Domain)
 	}
 
 	return nil

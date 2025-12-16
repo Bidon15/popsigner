@@ -144,6 +144,11 @@ $build_fn "secp256k1-plugin" \
     "plugin/Dockerfile" \
     "plugin"
 
+# Build RPC gateway (for OP Stack and Arbitrum Nitro)
+$build_fn "rpc-gateway" \
+    "control-plane/docker/Dockerfile.rpc-gateway" \
+    "control-plane"
+
 echo "============================================"
 echo "✅ All images built successfully!"
 echo "============================================"
@@ -152,6 +157,7 @@ echo "Images:"
 echo "  - $REGISTRY/operator:$VERSION"
 echo "  - $REGISTRY/control-plane:$VERSION"
 echo "  - $REGISTRY/secp256k1-plugin:$VERSION"
+echo "  - $REGISTRY/rpc-gateway:$VERSION"
 echo ""
 echo "Platform: $PLATFORM"
 if $PUSH; then

@@ -6,6 +6,15 @@ import (
 	"github.com/google/uuid"
 )
 
+// NetworkType represents the primary network type for a key.
+type NetworkType string
+
+const (
+	NetworkTypeCelestia NetworkType = "celestia"
+	NetworkTypeEVM      NetworkType = "evm"
+	NetworkTypeAll      NetworkType = "all"
+)
+
 // Key represents a cryptographic key.
 type Key struct {
 	ID          uuid.UUID         `json:"id"`
@@ -13,6 +22,8 @@ type Key struct {
 	Name        string            `json:"name"`
 	PublicKey   string            `json:"public_key"`
 	Address     string            `json:"address"`
+	EthAddress  *string           `json:"eth_address,omitempty"`
+	NetworkType NetworkType       `json:"network_type"`
 	Algorithm   string            `json:"algorithm"`
 	Exportable  bool              `json:"exportable"`
 	Metadata    map[string]string `json:"metadata,omitempty"`
@@ -26,6 +37,7 @@ type CreateKeyRequest struct {
 	NamespaceID uuid.UUID         `json:"namespace_id"`
 	Algorithm   string            `json:"algorithm,omitempty"`
 	Exportable  bool              `json:"exportable,omitempty"`
+	NetworkType NetworkType       `json:"network_type,omitempty"`
 	Metadata    map[string]string `json:"metadata,omitempty"`
 }
 
@@ -110,6 +122,51 @@ type BatchSignResponse struct {
 	Count      int               `json:"count"`
 }
 
+// CertificateStatus represents the status of a certificate.
+type CertificateStatus string
+
+const (
+	CertificateStatusActive  CertificateStatus = "active"
+	CertificateStatusExpired CertificateStatus = "expired"
+	CertificateStatusRevoked CertificateStatus = "revoked"
+)
+
+// Certificate represents an mTLS client certificate.
+type Certificate struct {
+	ID               string            `json:"id"`
+	Name             string            `json:"name"`
+	Fingerprint      string            `json:"fingerprint"`
+	CommonName       string            `json:"common_name"`
+	SerialNumber     string            `json:"serial_number"`
+	Status           CertificateStatus `json:"status"`
+	IssuedAt         time.Time         `json:"issued_at"`
+	ExpiresAt        time.Time         `json:"expires_at"`
+	RevokedAt        *time.Time        `json:"revoked_at,omitempty"`
+	RevocationReason *string           `json:"revocation_reason,omitempty"`
+	CreatedAt        time.Time         `json:"created_at"`
+}
+
+// CertificateBundle contains the certificate files for download.
+type CertificateBundle struct {
+	ClientCert     string `json:"client_cert"`      // PEM-encoded certificate
+	ClientKey      string `json:"client_key"`       // PEM-encoded private key
+	CACert         string `json:"ca_cert"`          // PEM-encoded CA certificate
+	Fingerprint    string `json:"fingerprint"`
+	ExpiresAt      string `json:"expires_at"`
+	NitroConfigTip string `json:"nitro_config_tip"`
+}
+
+// CreateCertificateRequest is the request for creating a certificate.
+type CreateCertificateRequest struct {
+	Name           string `json:"name"`
+	ValidityPeriod string `json:"validity_period,omitempty"` // e.g., "8760h" for 1 year
+}
+
+// RevokeCertificateRequest is the request for revoking a certificate.
+type RevokeCertificateRequest struct {
+	Reason string `json:"reason,omitempty"`
+}
+
 // API response wrappers
 
 type keyResponse struct {
@@ -153,5 +210,20 @@ type signResponse struct {
 
 type batchSignResponseWrapper struct {
 	Data BatchSignResponse `json:"data"`
+}
+
+type certificateResponse struct {
+	Data Certificate `json:"data"`
+}
+
+type certificatesResponse struct {
+	Data struct {
+		Certificates []Certificate `json:"certificates"`
+		Total        int           `json:"total"`
+	} `json:"data"`
+}
+
+type certificateBundleResponse struct {
+	Data CertificateBundle `json:"data"`
 }
 

@@ -10,7 +10,9 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Bidon15/popsigner/control-plane/internal/models"
+	"github.com/Bidon15/popsigner/control-plane/internal/repository"
 	"github.com/Bidon15/popsigner/control-plane/internal/service"
+	"github.com/Bidon15/popsigner/control-plane/templates/components"
 	"github.com/Bidon15/popsigner/control-plane/templates/layouts"
 	"github.com/Bidon15/popsigner/control-plane/templates/pages"
 )
@@ -442,6 +444,202 @@ func (h *WebHandler) SettingsAPIKeysDelete(w http.ResponseWriter, r *http.Reques
 	// Re-render the API keys list
 	apiKeys, _ := h.apiKeyService.List(ctx, org.ID)
 	component := pages.APIKeysList(apiKeys)
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// ============================================
+// Certificate Settings Handlers
+// ============================================
+
+// SettingsCertificates renders the certificates settings page.
+func (h *WebHandler) SettingsCertificates(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	user, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	// Get certificates for the organization
+	var certs []models.Certificate
+	if h.certService != nil {
+		certList, err := h.certService.List(ctx, org.ID.String(), repository.CertificateFilterAll)
+		if err == nil && certList != nil {
+			certs = certList.Certificates
+		}
+	}
+
+	dashboardData := buildDashboardData(user, org, "/settings/certificates")
+
+	data := pages.CertificatesPageData{
+		DashboardData: dashboardData,
+		Certificates:  certs,
+		Total:         len(certs),
+	}
+
+	// Handle HTMX partial request for list refresh
+	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") == "certificates-list" {
+		component := pages.CertificatesList(certs)
+		templ.Handler(component).ServeHTTP(w, r)
+		return
+	}
+
+	component := pages.CertificatesPage(data)
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// SettingsCertificatesNewModal renders the create certificate modal.
+func (h *WebHandler) SettingsCertificatesNewModal(w http.ResponseWriter, r *http.Request) {
+	_, _, err := h.getUserAndOrg(r)
+	if err != nil {
+		http.Error(w, "Session expired or no organization. Please refresh the page.", http.StatusUnauthorized)
+		return
+	}
+
+	component := pages.CreateCertificateModal()
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// SettingsCertificatesCreate handles certificate creation.
+func (h *WebHandler) SettingsCertificatesCreate(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	_, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		errMsg := "Session expired. Please refresh and try again."
+		if err == ErrNoOrganization {
+			errMsg = "No organization found. Please complete onboarding first."
+		}
+		component := pages.CertificateCreateError(errMsg)
+		templ.Handler(component).ServeHTTP(w, r)
+		return
+	}
+
+	if h.certService == nil {
+		component := pages.CertificateCreateError("Certificate service not available")
+		templ.Handler(component).ServeHTTP(w, r)
+		return
+	}
+
+	name := r.FormValue("name")
+	validityPeriod := r.FormValue("validity_period")
+
+	if name == "" {
+		component := pages.CertificateCreateError("Certificate name is required")
+		templ.Handler(component).ServeHTTP(w, r)
+		return
+	}
+
+	// Parse validity period
+	duration := models.DefaultValidityPeriod
+	if validityPeriod != "" {
+		d, err := time.ParseDuration(validityPeriod)
+		if err == nil {
+			duration = d
+		}
+	}
+
+	req := &models.CreateCertificateRequest{
+		OrgID:          org.ID,
+		Name:           name,
+		ValidityPeriod: duration,
+	}
+
+	bundle, err := h.certService.Issue(ctx, req)
+	if err != nil {
+		component := pages.CertificateCreateError("Failed to generate certificate: " + err.Error())
+		templ.Handler(component).ServeHTTP(w, r)
+		return
+	}
+
+	// Return the download modal with the certificate bundle
+	component := components.CertDownloadModal(bundle)
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// SettingsCertificatesRevoke handles certificate revocation.
+func (h *WebHandler) SettingsCertificatesRevoke(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	certID := chi.URLParam(r, "id")
+	if certID == "" {
+		http.Error(w, "Invalid certificate ID", http.StatusBadRequest)
+		return
+	}
+
+	_, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Session expired", "type": "error"}}`)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	if h.certService == nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Certificate service not available", "type": "error"}}`)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = h.certService.Revoke(ctx, org.ID.String(), certID, "User requested revocation")
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Failed to revoke certificate", "type": "error"}}`)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Re-render the certificates list
+	certList, _ := h.certService.List(ctx, org.ID.String(), repository.CertificateFilterAll)
+	var certs []models.Certificate
+	if certList != nil {
+		certs = certList.Certificates
+	}
+	component := pages.CertificatesList(certs)
+	templ.Handler(component).ServeHTTP(w, r)
+}
+
+// SettingsCertificatesDelete handles certificate deletion.
+func (h *WebHandler) SettingsCertificatesDelete(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	certID := chi.URLParam(r, "id")
+	if certID == "" {
+		http.Error(w, "Invalid certificate ID", http.StatusBadRequest)
+		return
+	}
+
+	_, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Session expired", "type": "error"}}`)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	if h.certService == nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Certificate service not available", "type": "error"}}`)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = h.certService.Delete(ctx, org.ID.String(), certID)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"toast": {"message": "Failed to delete certificate", "type": "error"}}`)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Re-render the certificates list
+	certList, _ := h.certService.List(ctx, org.ID.String(), repository.CertificateFilterAll)
+	var certs []models.Certificate
+	if certList != nil {
+		certs = certList.Certificates
+	}
+	component := pages.CertificatesList(certs)
 	templ.Handler(component).ServeHTTP(w, r)
 }
 

@@ -90,7 +90,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
-	// Phase 4: Applications (API, Dashboard)
+	// Phase 4: Applications (API, Dashboard, RPC Gateway)
 	if err := r.reconcileAPI(ctx, cluster); err != nil {
 		log.Error(err, "Failed to reconcile API")
 		return ctrl.Result{}, err
@@ -98,6 +98,11 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	if err := r.reconcileDashboard(ctx, cluster); err != nil {
 		log.Error(err, "Failed to reconcile Dashboard")
+		return ctrl.Result{}, err
+	}
+
+	if err := r.reconcileRPCGateway(ctx, cluster); err != nil {
+		log.Error(err, "Failed to reconcile RPC Gateway")
 		return ctrl.Result{}, err
 	}
 
