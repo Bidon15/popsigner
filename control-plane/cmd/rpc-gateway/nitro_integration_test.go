@@ -40,22 +40,22 @@ import (
 
 // Environment variables for Nitro integration tests.
 const (
-	envMTLSURL       = "POPSIGNER_MTLS_URL"       // e.g., https://rpc.popsigner.com:8546
-	envCACert        = "POPSIGNER_CA_CERT"        // Path to CA certificate
-	envClientCert    = "POPSIGNER_CLIENT_CERT"    // Path to client certificate
-	envClientKey     = "POPSIGNER_CLIENT_KEY"     // Path to client private key
-	envNitroAddress  = "POPSIGNER_SIGNER_ADDRESS" // Ethereum address to sign with
-	envNitroChainID  = "POPSIGNER_CHAIN_ID"       // Chain ID (default: Arbitrum One)
+	envMTLSURL      = "POPSIGNER_MTLS_URL"       // e.g., https://rpc.popsigner.com:8546
+	envCACert       = "POPSIGNER_CA_CERT"        // Path to CA certificate
+	envClientCert   = "POPSIGNER_CLIENT_CERT"    // Path to client certificate
+	envClientKey    = "POPSIGNER_CLIENT_KEY"     // Path to client private key
+	envNitroAddress = "POPSIGNER_SIGNER_ADDRESS" // Ethereum address to sign with
+	envNitroChainID = "POPSIGNER_CHAIN_ID"       // Chain ID (default: Arbitrum One)
 )
 
 // NitroTestConfig holds the configuration for Nitro integration tests.
 type NitroTestConfig struct {
-	MTLSURL       string
-	CACertPath    string
+	MTLSURL        string
+	CACertPath     string
 	ClientCertPath string
-	ClientKeyPath string
-	SignerAddress string
-	ChainID       string
+	ClientKeyPath  string
+	SignerAddress  string
+	ChainID        string
 }
 
 // loadNitroTestConfig loads configuration from environment variables.
@@ -266,7 +266,7 @@ func TestNitroEthSignTransaction(t *testing.T) {
 	txParams := map[string]interface{}{
 		"from":     cfg.SignerAddress,
 		"to":       "0x0000000000000000000000000000000000000000",
-		"gas":      "0x5208",    // 21000
+		"gas":      "0x5208",     // 21000
 		"gasPrice": "0x3b9aca00", // 1 Gwei
 		"value":    "0x0",
 		"nonce":    "0x0",
@@ -478,8 +478,8 @@ func TestNitroErrorCases(t *testing.T) {
 			wantErrCode: -32602, // Invalid params
 		},
 		{
-			name:        "Wrong from address",
-			method:      "eth_signTransaction",
+			name:   "Wrong from address",
+			method: "eth_signTransaction",
 			params: []interface{}{map[string]interface{}{
 				"from":     "0x0000000000000000000000000000000000000001", // Not our address
 				"to":       "0x0000000000000000000000000000000000000000",
@@ -601,4 +601,3 @@ func BenchmarkNitroEthSignTransaction(b *testing.B) {
 		}
 	}
 }
-

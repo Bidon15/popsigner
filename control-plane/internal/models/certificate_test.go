@@ -157,13 +157,13 @@ func TestOrgIDFromCN(t *testing.T) {
 		{
 			name:    "valid org CN",
 			cn:      "org_01J5K7ABC123",
-			want:    "org_01J5K7ABC123",
+			want:    "01J5K7ABC123",
 			wantErr: false,
 		},
 		{
 			name:    "valid org CN with full ULID",
 			cn:      "org_01HY7XQKJ3ABCDEFGH1234567",
-			want:    "org_01HY7XQKJ3ABCDEFGH1234567",
+			want:    "01HY7XQKJ3ABCDEFGH1234567",
 			wantErr: false,
 		},
 		{
@@ -187,7 +187,7 @@ func TestOrgIDFromCN(t *testing.T) {
 		{
 			name:    "just prefix",
 			cn:      "org_",
-			want:    "org_",
+			want:    "",
 			wantErr: false,
 		},
 	}

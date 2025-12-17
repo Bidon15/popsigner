@@ -63,12 +63,14 @@ func (c *Certificate) Status() CertificateStatus {
 }
 
 // OrgIDFromCN extracts the organization ID from a certificate Common Name.
-// Expected format: "org_01J5K7XXXXXXXXXXX" or "org_{ulid}"
+// Expected format: "org_01J5K7XXXXXXXXXXX" or "org_{uuid}"
+// Returns just the ID part (without the "org_" prefix).
 func OrgIDFromCN(cn string) (string, error) {
 	if !strings.HasPrefix(cn, "org_") {
 		return "", fmt.Errorf("invalid CN format: must start with 'org_'")
 	}
-	return cn, nil
+	// Return just the ID part, without the "org_" prefix
+	return strings.TrimPrefix(cn, "org_"), nil
 }
 
 // CNFromOrgID creates a Common Name from an organization ID.
