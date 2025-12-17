@@ -56,9 +56,9 @@ func (r *certificateRepo) Create(ctx context.Context, cert *models.Certificate) 
 	query := `
 		INSERT INTO client_certificates (
 			id, org_id, name, fingerprint, common_name, serial_number,
-			issued_at, expires_at, revoked_at, revocation_reason, created_at
+			issued_at, expires_at, revoked_at, revocation_reason, created_at, certificate_pem
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 		)`
 
 	if cert.CreatedAt.IsZero() {
@@ -77,6 +77,7 @@ func (r *certificateRepo) Create(ctx context.Context, cert *models.Certificate) 
 		cert.RevokedAt,
 		cert.RevocationReason,
 		cert.CreatedAt,
+		cert.CertificatePEM,
 	)
 	return err
 }
@@ -85,7 +86,7 @@ func (r *certificateRepo) Create(ctx context.Context, cert *models.Certificate) 
 func (r *certificateRepo) GetByID(ctx context.Context, id string) (*models.Certificate, error) {
 	query := `
 		SELECT id, org_id, name, fingerprint, common_name, serial_number,
-		       issued_at, expires_at, revoked_at, revocation_reason, created_at
+		       issued_at, expires_at, revoked_at, revocation_reason, created_at, certificate_pem
 		FROM client_certificates WHERE id = $1`
 
 	var cert models.Certificate
@@ -101,6 +102,7 @@ func (r *certificateRepo) GetByID(ctx context.Context, id string) (*models.Certi
 		&cert.RevokedAt,
 		&cert.RevocationReason,
 		&cert.CreatedAt,
+		&cert.CertificatePEM,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil

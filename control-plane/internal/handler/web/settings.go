@@ -667,6 +667,41 @@ func (h *WebHandler) SettingsCertificatesDownloadCA(w http.ResponseWriter, r *ht
 	w.Write(caCert)
 }
 
+// SettingsCertificatesDownload serves a client certificate for download.
+func (h *WebHandler) SettingsCertificatesDownload(w http.ResponseWriter, r *http.Request) {
+	certID := chi.URLParam(r, "id")
+	if certID == "" {
+		http.Error(w, "Invalid certificate ID", http.StatusBadRequest)
+		return
+	}
+
+	_, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if h.certService == nil {
+		http.Error(w, "Certificate service not available", http.StatusInternalServerError)
+		return
+	}
+
+	bundle, err := h.certService.DownloadBundle(r.Context(), org.ID.String(), certID)
+	if err != nil {
+		http.Error(w, "Certificate not found", http.StatusNotFound)
+		return
+	}
+
+	if len(bundle.ClientCert) == 0 {
+		http.Error(w, "Certificate data not available (legacy certificate)", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/x-pem-file")
+	w.Header().Set("Content-Disposition", "attachment; filename=client.crt")
+	w.Write(bundle.ClientCert)
+}
+
 // ============================================
 // Helper Functions
 // ============================================

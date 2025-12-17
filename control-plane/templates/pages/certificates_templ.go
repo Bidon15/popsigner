@@ -265,44 +265,57 @@ func certificateRow(cert models.Certificate) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if cert.Status() == models.CertificateStatusActive {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<button hx-post=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<!-- Download Certificate --> <a href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs("/settings/certificates/" + cert.ID.String() + "/revoke")
+			var templ_7745c5c3_Var12 templ.SafeURL
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/settings/certificates/" + cert.ID.String() + "/download"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 174, Col: 77}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 175, Col: 86}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\" hx-confirm=\"Are you sure you want to revoke this certificate? This action cannot be undone and any services using this certificate will lose access.\" hx-target=\"#certificates-list\" hx-swap=\"outerHTML\" class=\"px-3 py-1.5 text-sm font-bold text-[#FF3333] border border-[#FF3333] \n\t\t\t\t\t       hover:bg-[#FF3333]/20 hover:shadow-[0_0_10px_rgba(255,51,51,0.3)] \n\t\t\t\t\t       transition-all uppercase opacity-0 group-hover:opacity-100\">[ REVOKE ]</button> ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		if cert.IsRevoked() {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<button hx-delete=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\" download=\"client.crt\" class=\"px-3 py-1.5 text-sm font-bold text-[#33FF00] border border-[#33FF00] \n\t\t\t          hover:bg-[#33FF00]/20 hover:shadow-[0_0_10px_rgba(51,255,0,0.3)] \n\t\t\t          transition-all uppercase opacity-0 group-hover:opacity-100 flex items-center gap-1\" title=\"Download client certificate (private key not included)\"><svg class=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4\"></path></svg> CERT</a> <button hx-post=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var13 string
-			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("/settings/certificates/" + cert.ID.String())
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("/settings/certificates/" + cert.ID.String() + "/revoke")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 185, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 186, Col: 77}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\" hx-confirm=\"Delete this certificate record permanently?\" hx-target=\"#certificates-list\" hx-swap=\"outerHTML\" class=\"px-3 py-1.5 text-sm font-bold text-[#666600] border border-[#333300] \n\t\t\t\t\t\t       hover:text-[#FF3333] hover:border-[#FF3333] \n\t\t\t\t\t\t       transition-all uppercase opacity-0 group-hover:opacity-100\">[ DELETE ]</button>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\" hx-confirm=\"Are you sure you want to revoke this certificate? This action cannot be undone and any services using this certificate will lose access.\" hx-target=\"#certificates-list\" hx-swap=\"outerHTML\" class=\"px-3 py-1.5 text-sm font-bold text-[#FF3333] border border-[#FF3333] \n\t\t\t\t\t       hover:bg-[#FF3333]/20 hover:shadow-[0_0_10px_rgba(255,51,51,0.3)] \n\t\t\t\t\t       transition-all uppercase opacity-0 group-hover:opacity-100\">[ REVOKE ]</button> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</div></div>")
+		if cert.IsRevoked() {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<button hx-delete=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var14 string
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs("/settings/certificates/" + cert.ID.String())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 197, Col: 67}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\" hx-confirm=\"Delete this certificate record permanently?\" hx-target=\"#certificates-list\" hx-swap=\"outerHTML\" class=\"px-3 py-1.5 text-sm font-bold text-[#666600] border border-[#333300] \n\t\t\t\t\t\t       hover:text-[#FF3333] hover:border-[#FF3333] \n\t\t\t\t\t\t       transition-all uppercase opacity-0 group-hover:opacity-100\">[ DELETE ]</button>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -327,24 +340,24 @@ func certStatusBadge(cert models.Certificate) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var14 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var14 == nil {
-			templ_7745c5c3_Var14 = templ.NopComponent
+		templ_7745c5c3_Var15 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var15 == nil {
+			templ_7745c5c3_Var15 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		switch cert.Status() {
 		case models.CertificateStatusActive:
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<span class=\"px-2 py-0.5 text-xs font-bold bg-[#33FF00]/10 text-[#33FF00] border border-[#33FF00] uppercase\">● ACTIVE</span>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<span class=\"px-2 py-0.5 text-xs font-bold bg-[#33FF00]/10 text-[#33FF00] border border-[#33FF00] uppercase\">● ACTIVE</span>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		case models.CertificateStatusExpired:
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<span class=\"px-2 py-0.5 text-xs font-bold bg-[#FFB000]/10 text-[#FFB000] border border-[#FFB000] uppercase\">○ EXPIRED</span>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<span class=\"px-2 py-0.5 text-xs font-bold bg-[#FFB000]/10 text-[#FFB000] border border-[#FFB000] uppercase\">○ EXPIRED</span>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		case models.CertificateStatusRevoked:
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<span class=\"px-2 py-0.5 text-xs font-bold bg-[#FF3333]/10 text-[#FF3333] border border-[#FF3333] uppercase\">✕ REVOKED</span>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<span class=\"px-2 py-0.5 text-xs font-bold bg-[#FF3333]/10 text-[#FF3333] border border-[#FF3333] uppercase\">✕ REVOKED</span>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -370,12 +383,12 @@ func CreateCertificateModal() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var15 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var15 == nil {
-			templ_7745c5c3_Var15 = templ.NopComponent
+		templ_7745c5c3_Var16 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var16 == nil {
+			templ_7745c5c3_Var16 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<div class=\"max-w-lg w-full bg-black border border-[#333300]\"><!-- Header --><div class=\"flex items-center justify-between p-5 border-b border-[#333300]\"><h3 class=\"text-lg font-bold text-[#FFB000] uppercase\">_GENERATE_CERTIFICATE</h3><button @click=\"$dispatch('modal-close')\" class=\"p-1.5 text-[#666600] hover:text-[#FFB000] hover:bg-[#FFB000]/10 transition-colors\"><svg class=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M6 18L18 6M6 6l12 12\"></path></svg></button></div><!-- Body --><div class=\"p-5\"><form hx-post=\"/settings/certificates\" hx-target=\"#cert-result\" hx-swap=\"innerHTML\" class=\"space-y-6\"><div id=\"cert-result\"><div><label for=\"name\" class=\"block text-sm font-bold text-[#FFB000] mb-2 uppercase\">CERTIFICATE_NAME</label> <input type=\"text\" id=\"name\" name=\"name\" placeholder=\"nitro-production\" required class=\"w-full px-4 py-3 bg-black border border-[#333300] text-[#33FF00] \n\t\t\t\t\t\t\t          placeholder:text-[#336633] focus:outline-none focus:border-[#33FF00] \n\t\t\t\t\t\t\t          focus:shadow-[0_0_10px_rgba(51,255,0,0.3)] transition-all font-mono\"><p class=\"mt-1 text-xs text-[#666600]\">A friendly name to identify this certificate</p></div><div class=\"mt-6\"><label for=\"validity_period\" class=\"block text-sm font-bold text-[#FFB000] mb-2 uppercase\">VALIDITY_PERIOD</label> <select id=\"validity_period\" name=\"validity_period\" class=\"w-full px-4 py-3 bg-black border border-[#333300] text-[#33FF00] \n\t\t\t\t\t\t\t\t       focus:outline-none focus:border-[#33FF00] \n\t\t\t\t\t\t\t\t       focus:shadow-[0_0_10px_rgba(51,255,0,0.3)] transition-all font-mono\"><option value=\"8760h\">1 Year (Recommended)</option> <option value=\"4380h\">6 Months</option> <option value=\"2190h\">3 Months</option> <option value=\"720h\">30 Days</option></select><p class=\"mt-1 text-xs text-[#666600]\">Certificate expiration period</p></div><!-- Footer --><div class=\"flex items-center justify-end gap-3 pt-6 mt-6 border-t border-[#333300]\"><button type=\"button\" @click=\"$dispatch('modal-close')\" class=\"px-4 py-2 text-sm font-bold text-[#666600] border border-[#333300] \n\t\t\t\t\t\t\t\t       hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase\">[ CANCEL ]</button> <button type=\"submit\" class=\"px-6 py-2 bg-[#FFB000] text-black font-bold uppercase\n\t\t\t\t\t\t\t\t       hover:bg-[#FFCC00] hover:shadow-[0_0_15px_#FFB000] transition-all\">[ GENERATE ]</button></div></div></form></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<div class=\"max-w-lg w-full bg-black border border-[#333300]\"><!-- Header --><div class=\"flex items-center justify-between p-5 border-b border-[#333300]\"><h3 class=\"text-lg font-bold text-[#FFB000] uppercase\">_GENERATE_CERTIFICATE</h3><button @click=\"$dispatch('modal-close')\" class=\"p-1.5 text-[#666600] hover:text-[#FFB000] hover:bg-[#FFB000]/10 transition-colors\"><svg class=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M6 18L18 6M6 6l12 12\"></path></svg></button></div><!-- Body --><div class=\"p-5\"><form hx-post=\"/settings/certificates\" hx-target=\"#cert-result\" hx-swap=\"innerHTML\" class=\"space-y-6\"><div id=\"cert-result\"><div><label for=\"name\" class=\"block text-sm font-bold text-[#FFB000] mb-2 uppercase\">CERTIFICATE_NAME</label> <input type=\"text\" id=\"name\" name=\"name\" placeholder=\"nitro-production\" required class=\"w-full px-4 py-3 bg-black border border-[#333300] text-[#33FF00] \n\t\t\t\t\t\t\t          placeholder:text-[#336633] focus:outline-none focus:border-[#33FF00] \n\t\t\t\t\t\t\t          focus:shadow-[0_0_10px_rgba(51,255,0,0.3)] transition-all font-mono\"><p class=\"mt-1 text-xs text-[#666600]\">A friendly name to identify this certificate</p></div><div class=\"mt-6\"><label for=\"validity_period\" class=\"block text-sm font-bold text-[#FFB000] mb-2 uppercase\">VALIDITY_PERIOD</label> <select id=\"validity_period\" name=\"validity_period\" class=\"w-full px-4 py-3 bg-black border border-[#333300] text-[#33FF00] \n\t\t\t\t\t\t\t\t       focus:outline-none focus:border-[#33FF00] \n\t\t\t\t\t\t\t\t       focus:shadow-[0_0_10px_rgba(51,255,0,0.3)] transition-all font-mono\"><option value=\"8760h\">1 Year (Recommended)</option> <option value=\"4380h\">6 Months</option> <option value=\"2190h\">3 Months</option> <option value=\"720h\">30 Days</option></select><p class=\"mt-1 text-xs text-[#666600]\">Certificate expiration period</p></div><!-- Footer --><div class=\"flex items-center justify-end gap-3 pt-6 mt-6 border-t border-[#333300]\"><button type=\"button\" @click=\"$dispatch('modal-close')\" class=\"px-4 py-2 text-sm font-bold text-[#666600] border border-[#333300] \n\t\t\t\t\t\t\t\t       hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase\">[ CANCEL ]</button> <button type=\"submit\" class=\"px-6 py-2 bg-[#FFB000] text-black font-bold uppercase\n\t\t\t\t\t\t\t\t       hover:bg-[#FFCC00] hover:shadow-[0_0_15px_#FFB000] transition-all\">[ GENERATE ]</button></div></div></form></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -400,25 +413,25 @@ func CertificateCreateError(message string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var16 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var16 == nil {
-			templ_7745c5c3_Var16 = templ.NopComponent
+		templ_7745c5c3_Var17 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var17 == nil {
+			templ_7745c5c3_Var17 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<div class=\"space-y-6\"><div class=\"p-4 bg-[#FF3333]/10 border border-[#FF3333] relative\"><div class=\"absolute inset-0 pointer-events-none opacity-10\n\t\t\t            bg-[repeating-linear-gradient(0deg,transparent,transparent_1px,rgba(0,0,0,0.3)_1px,rgba(0,0,0,0.3)_2px)]\"></div><div class=\"relative flex items-start gap-3\"><span class=\"text-[#FF3333] text-xl drop-shadow-[0_0_5px_#FF3333]\">✗</span><div><p class=\"font-bold text-[#FF3333] uppercase text-sm\">ERROR</p><p class=\"text-sm text-[#CC2222] mt-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<div class=\"space-y-6\"><div class=\"p-4 bg-[#FF3333]/10 border border-[#FF3333] relative\"><div class=\"absolute inset-0 pointer-events-none opacity-10\n\t\t\t            bg-[repeating-linear-gradient(0deg,transparent,transparent_1px,rgba(0,0,0,0.3)_1px,rgba(0,0,0,0.3)_2px)]\"></div><div class=\"relative flex items-start gap-3\"><span class=\"text-[#FF3333] text-xl drop-shadow-[0_0_5px_#FF3333]\">✗</span><div><p class=\"font-bold text-[#FF3333] uppercase text-sm\">ERROR</p><p class=\"text-sm text-[#CC2222] mt-1\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(message)
+		var templ_7745c5c3_Var18 string
+		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 301, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 313, Col: 53}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</p></div></div></div><div class=\"flex items-center justify-end gap-3 pt-6 border-t border-[#333300]\"><button type=\"button\" @click=\"$dispatch('modal-close')\" class=\"px-4 py-2 text-sm font-bold text-[#666600] border border-[#333300] \n\t\t\t\t\t       hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase\">[ CLOSE ]</button> <button type=\"button\" onclick=\"location.reload()\" class=\"px-6 py-2 bg-[#FFB000] text-black font-bold uppercase\n\t\t\t\t\t       hover:bg-[#FFCC00] hover:shadow-[0_0_15px_#FFB000] transition-all\">[ TRY AGAIN ]</button></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</p></div></div></div><div class=\"flex items-center justify-end gap-3 pt-6 border-t border-[#333300]\"><button type=\"button\" @click=\"$dispatch('modal-close')\" class=\"px-4 py-2 text-sm font-bold text-[#666600] border border-[#333300] \n\t\t\t\t\t       hover:text-[#FFB000] hover:border-[#FFB000] transition-colors uppercase\">[ CLOSE ]</button> <button type=\"button\" onclick=\"location.reload()\" class=\"px-6 py-2 bg-[#FFB000] text-black font-bold uppercase\n\t\t\t\t\t       hover:bg-[#FFCC00] hover:shadow-[0_0_15px_#FFB000] transition-all\">[ TRY AGAIN ]</button></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -171,6 +171,18 @@ templ certificateRow(cert models.Certificate) {
 		
 		<div class="flex items-center gap-2">
 		if cert.Status() == models.CertificateStatusActive {
+			<!-- Download Certificate -->
+			<a href={ templ.SafeURL("/settings/certificates/" + cert.ID.String() + "/download") }
+			   download="client.crt"
+			   class="px-3 py-1.5 text-sm font-bold text-[#33FF00] border border-[#33FF00] 
+			          hover:bg-[#33FF00]/20 hover:shadow-[0_0_10px_rgba(51,255,0,0.3)] 
+			          transition-all uppercase opacity-0 group-hover:opacity-100 flex items-center gap-1"
+			   title="Download client certificate (private key not included)">
+				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+				</svg>
+				CERT
+			</a>
 			<button hx-post={ "/settings/certificates/" + cert.ID.String() + "/revoke" }
 					hx-confirm="Are you sure you want to revoke this certificate? This action cannot be undone and any services using this certificate will lose access."
 					hx-target="#certificates-list"

@@ -25,6 +25,7 @@ type Certificate struct {
 	RevokedAt        *time.Time `json:"revoked_at,omitempty" db:"revoked_at"`     // NULL if not revoked
 	RevocationReason *string    `json:"revocation_reason,omitempty" db:"revocation_reason"`
 	CreatedAt        time.Time  `json:"created_at" db:"created_at"`
+	CertificatePEM   *string    `json:"certificate_pem,omitempty" db:"certificate_pem"` // PEM-encoded cert for re-download
 }
 
 // IsRevoked returns true if the certificate has been revoked.

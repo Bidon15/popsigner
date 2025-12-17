@@ -137,17 +137,19 @@ func (s *certificateService) Issue(ctx context.Context, req *models.CreateCertif
 		return nil, fmt.Errorf("calculating fingerprint: %w", err)
 	}
 
-	// Store certificate metadata
+	// Store certificate metadata (including PEM for re-download)
+	certPEM := issued.CertificatePEM
 	cert := &models.Certificate{
-		ID:           uuid.New(),
-		OrgID:        req.OrgID,
-		Name:         req.Name,
-		Fingerprint:  fingerprint,
-		CommonName:   cn,
-		SerialNumber: issued.SerialNumber,
-		IssuedAt:     issued.IssuedAt,
-		ExpiresAt:    issued.ExpiresAt,
-		CreatedAt:    time.Now(),
+		ID:             uuid.New(),
+		OrgID:          req.OrgID,
+		Name:           req.Name,
+		Fingerprint:    fingerprint,
+		CommonName:     cn,
+		SerialNumber:   issued.SerialNumber,
+		IssuedAt:       issued.IssuedAt,
+		ExpiresAt:      issued.ExpiresAt,
+		CreatedAt:      time.Now(),
+		CertificatePEM: &certPEM, // Store for re-download (private key is NOT stored)
 	}
 
 	if err := s.repo.Create(ctx, cert); err != nil {
@@ -307,8 +309,8 @@ func (s *certificateService) GetCACertificate(ctx context.Context) ([]byte, erro
 }
 
 // DownloadBundle returns the certificate bundle for download.
-// Note: The private key is only available immediately after issue.
-// This method is a placeholder for future implementation of secure key storage.
+// Note: The private key is NOT stored and only available during issue.
+// The client certificate and CA certificate can be re-downloaded anytime.
 func (s *certificateService) DownloadBundle(ctx context.Context, orgID, certID string) (*models.CertificateBundle, error) {
 	// Get certificate
 	cert, err := s.repo.GetByID(ctx, certID)
@@ -331,15 +333,25 @@ func (s *certificateService) DownloadBundle(ctx context.Context, orgID, certID s
 		return nil, fmt.Errorf("getting CA certificate: %w", err)
 	}
 
-	// Note: We can't return the private key here as it was only provided during issue
-	// The bundle will only include the CA cert for the client to verify
-	return &models.CertificateBundle{
+	// Build the bundle with client cert (if stored) and CA cert
+	// Note: Private key is NEVER stored for security reasons
+	bundle := &models.CertificateBundle{
 		CACert:      []byte(ca.CertificatePEM),
 		Fingerprint: cert.Fingerprint,
 		ExpiresAt:   cert.ExpiresAt.Format(time.RFC3339),
-		NitroConfigTip: `# Note: Private key was only available during certificate issuance.
-# If you need a new certificate, please issue a new one.`,
-	}, nil
+		NitroConfigTip: `# Arbitrum Nitro configuration
+# Note: Private key must be retrieved from your secure backup.
+--node.batch-poster.data-poster.external-signer.root-ca=/path/to/popsigner-ca.crt
+--node.batch-poster.data-poster.external-signer.client-cert=/path/to/client.crt
+--node.batch-poster.data-poster.external-signer.client-private-key=/path/to/client.key`,
+	}
+
+	// Include client certificate if stored
+	if cert.CertificatePEM != nil && *cert.CertificatePEM != "" {
+		bundle.ClientCert = []byte(*cert.CertificatePEM)
+	}
+
+	return bundle, nil
 }
 
 // calculateFingerprint computes SHA256 fingerprint from PEM certificate.
