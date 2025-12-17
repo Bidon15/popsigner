@@ -56,7 +56,7 @@ func CertificatesPage(data CertificatesPageData) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"space-y-6\"><!-- Page Header --><div class=\"flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4\"><div><h1 class=\"text-2xl font-bold text-[#FFB000] uppercase tracking-wide\">_MTLS_CERTIFICATES</h1><p class=\"text-[#666600] mt-1 text-sm\">Client certificates for Arbitrum Nitro integration</p></div><button hx-get=\"/settings/certificates/new\" hx-target=\"#modal-content\" @click=\"$dispatch('modal-open')\" class=\"inline-flex items-center gap-2 px-5 py-2.5 bg-[#FFB000] text-black font-bold uppercase \n\t\t\t\t\t\t       hover:bg-[#FFCC00] hover:shadow-[0_0_20px_#FFB000] transition-all duration-200\"><svg class=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 6v6m0 0v6m0-6h6m-6 0H6\"></path></svg> [ GENERATE CERTIFICATE ]</button></div><!-- Info Banner - CRT Style --><div class=\"p-4 bg-[#FFB000]/10 border border-[#FFB000] relative\"><!-- Scanlines --><div class=\"absolute inset-0 pointer-events-none opacity-10\n\t\t\t\t            bg-[repeating-linear-gradient(0deg,transparent,transparent_1px,rgba(0,0,0,0.3)_1px,rgba(0,0,0,0.3)_2px)]\"></div><div class=\"relative flex items-start gap-3\"><span class=\"text-[#FFB000] text-xl drop-shadow-[0_0_5px_#FFB000]\">🔐</span><div><p class=\"font-bold text-[#FFB000] uppercase text-sm\">ARBITRUM NITRO INTEGRATION</p><p class=\"text-sm text-[#CC8800] mt-1\">Generate client certificates for mTLS authentication with Arbitrum Nitro nodes. Each certificate is bound to your organization and can be used with the batch poster or staker.</p></div></div></div><!-- Certificates List --><div id=\"certificates-list\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"space-y-6\"><!-- Page Header --><div class=\"flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4\"><div><h1 class=\"text-2xl font-bold text-[#FFB000] uppercase tracking-wide\">_MTLS_CERTIFICATES</h1><p class=\"text-[#666600] mt-1 text-sm\">Client certificates for Arbitrum Nitro integration</p></div><button hx-get=\"/settings/certificates/new\" hx-target=\"#modal-content\" @click=\"$dispatch('modal-open')\" class=\"inline-flex items-center gap-2 px-5 py-2.5 bg-[#FFB000] text-black font-bold uppercase \n\t\t\t\t\t\t       hover:bg-[#FFCC00] hover:shadow-[0_0_20px_#FFB000] transition-all duration-200\"><svg class=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 6v6m0 0v6m0-6h6m-6 0H6\"></path></svg> [ GENERATE CERTIFICATE ]</button></div><!-- Info Banner - CRT Style --><div class=\"p-4 bg-[#FFB000]/10 border border-[#FFB000] relative\"><!-- Scanlines --><div class=\"absolute inset-0 pointer-events-none opacity-10\n\t\t\t\t            bg-[repeating-linear-gradient(0deg,transparent,transparent_1px,rgba(0,0,0,0.3)_1px,rgba(0,0,0,0.3)_2px)]\"></div><div class=\"relative flex items-start justify-between gap-4\"><div class=\"flex items-start gap-3\"><span class=\"text-[#FFB000] text-xl drop-shadow-[0_0_5px_#FFB000]\">🔐</span><div><p class=\"font-bold text-[#FFB000] uppercase text-sm\">ARBITRUM NITRO INTEGRATION</p><p class=\"text-sm text-[#CC8800] mt-1\">Generate client certificates for mTLS authentication with Arbitrum Nitro nodes. Each certificate is bound to your organization and can be used with the batch poster or staker.</p></div></div><!-- CA Download Button - Always Available --><a href=\"/settings/certificates/ca\" download=\"popsigner-ca.crt\" class=\"shrink-0 flex items-center gap-2 px-3 py-2 bg-black border border-[#33FF00] text-[#33FF00]\n\t\t\t\t\t          hover:bg-[#33FF00]/10 hover:shadow-[0_0_10px_rgba(51,255,0,0.3)] transition-all text-sm font-bold uppercase\"><svg class=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4\"></path></svg> CA CERT</a></div></div><!-- One-time download notice --><div class=\"p-3 bg-[#1A1A00] border border-[#333300] text-xs text-[#666600]\"><span class=\"text-[#FFB000]\">⚠</span> <strong>Note:</strong> Client certificates and private keys are only available at generation time. The CA certificate can be re-downloaded anytime using the button above.</div><!-- Certificates List --><div id=\"certificates-list\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -184,7 +184,7 @@ func certificateRow(cert models.Certificate) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(cert.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 126, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 144, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -205,7 +205,7 @@ func certificateRow(cert models.Certificate) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(truncateFingerprint(cert.Fingerprint))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 130, Col: 88}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 148, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -218,7 +218,7 @@ func certificateRow(cert models.Certificate) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(cert.IssuedAt.Format("Jan 2, 2006"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 133, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 151, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -231,7 +231,7 @@ func certificateRow(cert models.Certificate) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(cert.ExpiresAt.Format("Jan 2, 2006"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 137, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 155, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -244,7 +244,7 @@ func certificateRow(cert models.Certificate) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(truncateSerial(cert.SerialNumber))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 143, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 161, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -272,7 +272,7 @@ func certificateRow(cert models.Certificate) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs("/settings/certificates/" + cert.ID.String() + "/revoke")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 156, Col: 77}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 174, Col: 77}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -291,7 +291,7 @@ func certificateRow(cert models.Certificate) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("/settings/certificates/" + cert.ID.String())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 167, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 185, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -412,7 +412,7 @@ func CertificateCreateError(message string) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 283, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/certificates.templ`, Line: 301, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {

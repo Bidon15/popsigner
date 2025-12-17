@@ -174,6 +174,7 @@ func (h *WebHandler) Routes() chi.Router {
 			// Certificate management
 			r.Get("/certificates", h.SettingsCertificates)
 			r.Get("/certificates/new", h.SettingsCertificatesNewModal)
+			r.Get("/certificates/ca", h.SettingsCertificatesDownloadCA)
 			r.Post("/certificates", h.SettingsCertificatesCreate)
 			r.Post("/certificates/{id}/revoke", h.SettingsCertificatesRevoke)
 			r.Delete("/certificates/{id}", h.SettingsCertificatesDelete)

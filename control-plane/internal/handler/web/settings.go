@@ -643,6 +643,30 @@ func (h *WebHandler) SettingsCertificatesDelete(w http.ResponseWriter, r *http.R
 	templ.Handler(component).ServeHTTP(w, r)
 }
 
+// SettingsCertificatesDownloadCA serves the CA certificate for download.
+func (h *WebHandler) SettingsCertificatesDownloadCA(w http.ResponseWriter, r *http.Request) {
+	_, _, err := h.getUserAndOrg(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if h.certService == nil {
+		http.Error(w, "Certificate service not available", http.StatusInternalServerError)
+		return
+	}
+
+	caCert, err := h.certService.GetCACertificate(r.Context())
+	if err != nil {
+		http.Error(w, "Failed to retrieve CA certificate", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/x-pem-file")
+	w.Header().Set("Content-Disposition", "attachment; filename=popsigner-ca.crt")
+	w.Write(caCert)
+}
+
 // ============================================
 // Helper Functions
 // ============================================

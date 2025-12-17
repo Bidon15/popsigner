@@ -41,16 +41,34 @@ templ CertificatesPage(data CertificatesPageData) {
 				<!-- Scanlines -->
 				<div class="absolute inset-0 pointer-events-none opacity-10
 				            bg-[repeating-linear-gradient(0deg,transparent,transparent_1px,rgba(0,0,0,0.3)_1px,rgba(0,0,0,0.3)_2px)]"></div>
-				<div class="relative flex items-start gap-3">
-					<span class="text-[#FFB000] text-xl drop-shadow-[0_0_5px_#FFB000]">🔐</span>
-					<div>
-						<p class="font-bold text-[#FFB000] uppercase text-sm">ARBITRUM NITRO INTEGRATION</p>
-						<p class="text-sm text-[#CC8800] mt-1">
-							Generate client certificates for mTLS authentication with Arbitrum Nitro nodes.
-							Each certificate is bound to your organization and can be used with the batch poster or staker.
-						</p>
+				<div class="relative flex items-start justify-between gap-4">
+					<div class="flex items-start gap-3">
+						<span class="text-[#FFB000] text-xl drop-shadow-[0_0_5px_#FFB000]">🔐</span>
+						<div>
+							<p class="font-bold text-[#FFB000] uppercase text-sm">ARBITRUM NITRO INTEGRATION</p>
+							<p class="text-sm text-[#CC8800] mt-1">
+								Generate client certificates for mTLS authentication with Arbitrum Nitro nodes.
+								Each certificate is bound to your organization and can be used with the batch poster or staker.
+							</p>
+						</div>
 					</div>
+					<!-- CA Download Button - Always Available -->
+					<a href="/settings/certificates/ca"
+					   download="popsigner-ca.crt"
+					   class="shrink-0 flex items-center gap-2 px-3 py-2 bg-black border border-[#33FF00] text-[#33FF00]
+					          hover:bg-[#33FF00]/10 hover:shadow-[0_0_10px_rgba(51,255,0,0.3)] transition-all text-sm font-bold uppercase">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+						</svg>
+						CA CERT
+					</a>
 				</div>
+			</div>
+			
+			<!-- One-time download notice -->
+			<div class="p-3 bg-[#1A1A00] border border-[#333300] text-xs text-[#666600]">
+				<span class="text-[#FFB000]">⚠</span> <strong>Note:</strong> Client certificates and private keys are only available at generation time.
+				The CA certificate can be re-downloaded anytime using the button above.
 			</div>
 			
 			<!-- Certificates List -->
