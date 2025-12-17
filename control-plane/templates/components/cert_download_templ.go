@@ -75,46 +75,46 @@ func CertDownloadModal(bundle *models.CertificateBundle) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" download=\"popsigner-ca.crt\" class=\"flex flex-col items-center p-4 bg-[#0A0A0A] border border-[#333300] \n\t\t\t\t          hover:border-[#33FF00] hover:shadow-[0_0_10px_rgba(51,255,0,0.3)] transition-all group\"><span class=\"text-3xl mb-2 group-hover:drop-shadow-[0_0_8px_#33FF00] transition-all\">🏛️</span> <span class=\"text-sm font-bold text-[#33FF00] uppercase\">popsigner-ca.crt</span> <span class=\"text-xs text-[#666600]\">CA Certificate</span></a></div><!-- Nitro Configuration --><div><h4 class=\"text-sm font-bold text-[#FFB000] uppercase tracking-wide mb-2\">ARBITRUM NITRO CONFIGURATION</h4><div class=\"relative bg-[#0A0A0A] border border-[#333300] p-4 overflow-x-auto\"><pre class=\"text-xs text-[#33FF00] font-mono\"><code>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" download=\"popsigner-ca.crt\" class=\"flex flex-col items-center p-4 bg-[#0A0A0A] border border-[#333300] \n\t\t\t\t          hover:border-[#33FF00] hover:shadow-[0_0_10px_rgba(51,255,0,0.3)] transition-all group\"><span class=\"text-3xl mb-2 group-hover:drop-shadow-[0_0_8px_#33FF00] transition-all\">🏛️</span> <span class=\"text-sm font-bold text-[#33FF00] uppercase\">popsigner-ca.crt</span> <span class=\"text-xs text-[#666600]\">CA Certificate</span></a></div><!-- Nitro Configuration --><div><div class=\"flex items-center justify-between mb-2\"><h4 class=\"text-sm font-bold text-[#FFB000] uppercase tracking-wide\">ARBITRUM NITRO CONFIGURATION</h4><a href=\"https://docs.popsigner.com/integrations/arbitrum-nitro\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-xs text-[#666600] hover:text-[#33FF00] transition-colors flex items-center gap-1\">View docs <svg class=\"w-3 h-3\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14\"></path></svg></a></div><div class=\"relative bg-[#0A0A0A] border border-[#333300] p-4 overflow-x-auto max-h-32\"><pre class=\"text-xs text-[#33FF00] font-mono whitespace-pre-wrap break-all\"><code>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(bundle.NitroConfigTip)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/cert_download.templ`, Line: 79, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/cert_download.templ`, Line: 91, Col: 110}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</code></pre></div></div><!-- Certificate Details --><div class=\"p-4 bg-[#0A0A0A] border border-[#333300]\"><h4 class=\"text-sm font-bold text-[#FFB000] uppercase tracking-wide mb-3\">CERTIFICATE_DETAILS</h4><dl class=\"grid grid-cols-2 gap-x-4 gap-y-2 text-sm\"><dt class=\"text-[#666600]\">Fingerprint:</dt><dd class=\"font-mono text-[#33FF00]\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</code></pre></div></div><!-- Certificate Details --><div class=\"p-4 bg-[#0A0A0A] border border-[#333300]\"><h4 class=\"text-sm font-bold text-[#FFB000] uppercase tracking-wide mb-3\">CERTIFICATE_DETAILS</h4><div class=\"space-y-2 text-sm\"><div class=\"flex flex-col sm:flex-row sm:items-start gap-1\"><span class=\"text-[#666600] shrink-0 sm:w-24\">Fingerprint:</span> <span class=\"font-mono text-[#33FF00] text-xs break-all\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(truncateCertFingerprint(bundle.Fingerprint))
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(bundle.Fingerprint)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/cert_download.templ`, Line: 90, Col: 87}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/cert_download.templ`, Line: 103, Col: 83}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</dd><dt class=\"text-[#666600]\">Expires:</dt><dd class=\"text-[#33FF00]\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</span></div><div class=\"flex flex-col sm:flex-row sm:items-center gap-1\"><span class=\"text-[#666600] shrink-0 sm:w-24\">Expires:</span> <span class=\"text-[#33FF00]\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(bundle.ExpiresAt)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/cert_download.templ`, Line: 92, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/cert_download.templ`, Line: 107, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</dd></dl></div></div><!-- Footer --><div class=\"flex items-center justify-end gap-3 p-5 border-t border-[#333300]\"><button type=\"button\" @click=\"$dispatch('modal-close'); location.reload()\" class=\"px-6 py-2 bg-[#33FF00] text-black font-bold uppercase\n\t\t\t\t\t       hover:shadow-[0_0_15px_#33FF00] transition-all\">[ DONE ]</button></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</span></div></div></div></div><!-- Footer --><div class=\"flex items-center justify-end gap-3 p-5 border-t border-[#333300]\"><button type=\"button\" @click=\"$dispatch('modal-close'); location.reload()\" class=\"px-6 py-2 bg-[#33FF00] text-black font-bold uppercase\n\t\t\t\t\t       hover:shadow-[0_0_15px_#33FF00] transition-all\">[ DONE ]</button></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -151,7 +151,7 @@ func CertDownloadBundleOnly(bundle *models.CertificateBundle) templ.Component {
 		var templ_7745c5c3_Var9 templ.SafeURL
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("data:application/x-pem-file;base64," + certBase64Encode(bundle.ClientCert)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/cert_download.templ`, Line: 113, Col: 103}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/cert_download.templ`, Line: 129, Col: 103}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -164,7 +164,7 @@ func CertDownloadBundleOnly(bundle *models.CertificateBundle) templ.Component {
 		var templ_7745c5c3_Var10 templ.SafeURL
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("data:application/x-pem-file;base64," + certBase64Encode(bundle.ClientKey)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/cert_download.templ`, Line: 120, Col: 102}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/cert_download.templ`, Line: 136, Col: 102}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -177,7 +177,7 @@ func CertDownloadBundleOnly(bundle *models.CertificateBundle) templ.Component {
 		var templ_7745c5c3_Var11 templ.SafeURL
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("data:application/x-pem-file;base64," + certBase64Encode(bundle.CACert)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/cert_download.templ`, Line: 127, Col: 99}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/cert_download.templ`, Line: 143, Col: 99}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
