@@ -405,6 +405,28 @@ func oauthRedirectHandler(oauthSvc service.OAuthService, provider string) http.H
 			SameSite: http.SameSiteLaxMode,
 		})
 
+		// Store return URL based on subdomain or query param
+		// This allows POPKins users to return to POPKins after login
+		returnTo := r.URL.Query().Get("return_to")
+		if returnTo == "" {
+			// Check if coming from POPKins subdomain
+			host := strings.ToLower(r.Host)
+			if strings.HasPrefix(host, "popkins.") {
+				returnTo = "/deployments"
+			} else {
+				returnTo = "/dashboard"
+			}
+		}
+		http.SetCookie(w, &http.Cookie{
+			Name:     "oauth_return_to",
+			Value:    returnTo,
+			Path:     "/",
+			MaxAge:   300, // 5 minutes
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+		})
+
 		http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
 	}
 }
@@ -458,8 +480,22 @@ func oauthCallbackHandler(oauthSvc service.OAuthService, provider string, cfg *c
 			MaxAge: -1,
 		})
 
-		// Redirect to dashboard
-		http.Redirect(w, r, "/dashboard", http.StatusFound)
+		// Get return URL from cookie (set during OAuth redirect)
+		returnTo := "/dashboard" // default
+		if cookie, err := r.Cookie("oauth_return_to"); err == nil && cookie.Value != "" {
+			returnTo = cookie.Value
+		}
+
+		// Clear the return URL cookie
+		http.SetCookie(w, &http.Cookie{
+			Name:   "oauth_return_to",
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
+		})
+
+		// Redirect to the appropriate destination
+		http.Redirect(w, r, returnTo, http.StatusFound)
 	}
 }
 
