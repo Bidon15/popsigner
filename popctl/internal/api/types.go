@@ -167,6 +167,41 @@ type RevokeCertificateRequest struct {
 	Reason string `json:"reason,omitempty"`
 }
 
+// Deployment represents a chain deployment.
+type Deployment struct {
+	ID           string  `json:"id"`
+	ChainID      int64   `json:"chain_id"`
+	Stack        string  `json:"stack"`
+	Status       string  `json:"status"`
+	CurrentStage *string `json:"current_stage,omitempty"`
+	Error        *string `json:"error,omitempty"`
+	CreatedAt    string  `json:"created_at"`
+	UpdatedAt    string  `json:"updated_at"`
+}
+
+// CreateDeploymentRequest is the request for creating a deployment.
+type CreateDeploymentRequest struct {
+	ChainID int64                  `json:"chain_id"`
+	Stack   string                 `json:"stack"`
+	Config  map[string]interface{} `json:"config"`
+}
+
+// Artifact represents a deployment artifact.
+type Artifact struct {
+	Type      string      `json:"type"`
+	Content   interface{} `json:"content"`
+	CreatedAt string      `json:"created_at"`
+}
+
+// Transaction represents a deployment transaction.
+type Transaction struct {
+	ID          string  `json:"id"`
+	Stage       string  `json:"stage"`
+	TxHash      string  `json:"tx_hash"`
+	Description *string `json:"description,omitempty"`
+	CreatedAt   string  `json:"created_at"`
+}
+
 // API response wrappers
 
 type keyResponse struct {
@@ -225,5 +260,34 @@ type certificatesResponse struct {
 
 type certificateBundleResponse struct {
 	Data CertificateBundle `json:"data"`
+}
+
+type deploymentResponse struct {
+	Data Deployment `json:"data"`
+}
+
+type deploymentsResponse struct {
+	Data []Deployment `json:"data"`
+}
+
+type artifactsResponse struct {
+	Data struct {
+		Artifacts []Artifact `json:"artifacts"`
+	} `json:"data"`
+}
+
+type artifactResponse struct {
+	Data Artifact `json:"data"`
+}
+
+type transactionsResponse struct {
+	Data []Transaction `json:"data"`
+}
+
+type startDeploymentResponse struct {
+	Data struct {
+		Status  string `json:"status"`
+		Message string `json:"message"`
+	} `json:"data"`
 }
 
