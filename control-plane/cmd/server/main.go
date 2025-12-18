@@ -22,6 +22,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	bootstraphandler "github.com/Bidon15/popsigner/control-plane/internal/bootstrap/handler"
+	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/opstack"
+	bootstraporchestrator "github.com/Bidon15/popsigner/control-plane/internal/bootstrap/orchestrator"
 	bootstraprepo "github.com/Bidon15/popsigner/control-plane/internal/bootstrap/repository"
 	"github.com/Bidon15/popsigner/control-plane/internal/config"
 	"github.com/Bidon15/popsigner/control-plane/internal/database"
@@ -126,17 +128,65 @@ func main() {
 	keyHandler := handler.NewKeyHandler(keySvc)
 	signHandler := handler.NewSignHandler(keySvc)
 
-	// Initialize bootstrap (deployment) handler
+	// Initialize bootstrap (deployment) repository
 	bootstrapRepo := bootstraprepo.NewPostgresRepository(db.Pool())
-	deploymentHandler := bootstraphandler.NewDeploymentHandler(bootstrapRepo, nil) // orchestrator added later
+
+	// Initialize OP Stack orchestrator for chain deployments
+	opstackOrch := opstack.NewOrchestrator(
+		bootstrapRepo,
+		&opstack.DefaultSignerFactory{},
+		opstack.NewEthClientFactory(),
+		opstack.OrchestratorConfig{
+			Logger: logger,
+		},
+	)
+	logger.Info("OP Stack orchestrator initialized")
+
+	// Initialize key resolver and API key manager for orchestrator
+	keyResolver := bootstraporchestrator.NewKeyServiceResolver(keySvc)
+	apiKeyManager := bootstraporchestrator.NewDefaultAPIKeyManager(apiKeySvc)
+
+	// Determine POPSigner endpoint (for signing requests during deployment)
+	// Use the server's own address since it hosts the signing API
+	signerEndpoint := fmt.Sprintf("http://localhost:%d", cfg.Server.Port)
+	if cfg.Server.Environment == "production" {
+		signerEndpoint = "https://api.popsigner.com"
+	} else if cfg.Server.Environment == "dev" {
+		signerEndpoint = "https://dashboard.popsigner.com" // Dev cluster uses this
+	}
+
+	// Initialize unified orchestrator that dispatches to stack-specific orchestrators
+	unifiedOrch := bootstraporchestrator.New(
+		bootstrapRepo,
+		opstackOrch,
+		keyResolver,
+		apiKeyManager,
+		bootstraporchestrator.Config{
+			Logger:         logger,
+			SignerEndpoint: signerEndpoint,
+		},
+	)
+	logger.Info("Unified orchestrator initialized", slog.String("signer_endpoint", signerEndpoint))
+
+	// Initialize bootstrap (deployment) handler with the orchestrator
+	deploymentHandler := bootstraphandler.NewDeploymentHandler(bootstrapRepo, unifiedOrch)
 
 	// Initialize POPKins (chain deployment) handler
 	// Uses same session store as main dashboard for SSO
 	authSvc := service.NewAuthService(userRepo, sessionRepo, service.DefaultAuthServiceConfig())
 	orgSvc := service.NewOrgService(orgRepo, userRepo, service.DefaultOrgServiceConfig())
 	// POPKins uses same session mechanism as main dashboard (cookie + DB lookup)
-	popkinsHandler := popkins.NewHandler(authSvc, orgSvc, keySvc, bootstrapRepo, nil, sessionRepo, userRepo)
+	// Pass the unified orchestrator so deployments are started automatically
+	popkinsHandler := popkins.NewHandler(authSvc, orgSvc, keySvc, bootstrapRepo, unifiedOrch, sessionRepo, userRepo)
 	logger.Info("POPKins handler initialized")
+
+	// Process any pending deployments from previous server runs
+	go func() {
+		time.Sleep(5 * time.Second) // Wait for server to be fully up
+		if err := unifiedOrch.ProcessPendingDeployments(context.Background()); err != nil {
+			logger.Error("Failed to process pending deployments", slog.String("error", err.Error()))
+		}
+	}()
 
 	logger.Info("OAuth providers configured",
 		slog.Any("providers", oauthSvc.GetSupportedProviders()),

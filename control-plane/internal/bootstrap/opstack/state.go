@@ -201,7 +201,7 @@ func (w *StateWriter) GetTransactionsByStage(ctx context.Context, stage Stage) (
 	return stageTxs, nil
 }
 
-// MarkComplete marks the deployment as successfully completed.
+// MarkComplete marks the deployment as successfully completed with real on-chain transactions.
 func (w *StateWriter) MarkComplete(ctx context.Context) error {
 	stageStr := StageCompleted.String()
 	if err := w.repo.UpdateDeploymentStatus(ctx, w.deploymentID, repository.StatusCompleted, &stageStr); err != nil {
@@ -210,6 +210,20 @@ func (w *StateWriter) MarkComplete(ctx context.Context) error {
 
 	if w.onUpdate != nil {
 		w.onUpdate(w.deploymentID, stageStr)
+	}
+
+	return nil
+}
+
+// MarkSimulated marks the deployment as completed in simulation mode (no real contracts deployed).
+func (w *StateWriter) MarkSimulated(ctx context.Context) error {
+	stageStr := StageCompleted.String()
+	if err := w.repo.UpdateDeploymentStatus(ctx, w.deploymentID, repository.StatusSimulated, &stageStr); err != nil {
+		return fmt.Errorf("mark simulated: %w", err)
+	}
+
+	if w.onUpdate != nil {
+		w.onUpdate(w.deploymentID, "simulated")
 	}
 
 	return nil

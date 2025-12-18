@@ -188,17 +188,18 @@ func (o *Orchestrator) Deploy(ctx context.Context, deploymentID uuid.UUID, onPro
 		return err
 	}
 
-	// 9. Mark complete
-	if err := stateWriter.MarkComplete(ctx); err != nil {
-		return fmt.Errorf("mark complete: %w", err)
+	// 9. Mark as simulated (no real contracts deployed yet - op-deployer integration pending)
+	// TODO: Change to MarkComplete() once op-deployer integration is complete
+	if err := stateWriter.MarkSimulated(ctx); err != nil {
+		return fmt.Errorf("mark simulated: %w", err)
 	}
 
-	o.logger.Info("OP Stack deployment completed successfully",
+	o.logger.Info("OP Stack deployment simulation completed",
 		slog.String("deployment_id", deploymentID.String()),
 	)
 
 	if onProgress != nil {
-		onProgress(StageCompleted, 1.0, "Deployment completed successfully!")
+		onProgress(StageCompleted, 1.0, "Simulation completed - no real contracts deployed (op-deployer integration pending)")
 	}
 
 	return nil
@@ -357,7 +358,11 @@ func (o *Orchestrator) stageInit(ctx context.Context, dctx *DeploymentContext) e
 
 	requiredFunding := dctx.Config.RequiredFundingWei
 	if balance.Cmp(requiredFunding) < 0 {
-		return fmt.Errorf("insufficient deployer balance: have %s wei, need %s wei", balance, requiredFunding)
+		// Format balance in ETH for human readability
+		haveETH := weiToETH(balance)
+		needETH := weiToETH(requiredFunding)
+		return fmt.Errorf("insufficient deployer balance for %s: have %s ETH, need %s ETH. Fund this address on L1 and retry", 
+			dctx.Config.DeployerAddress, haveETH, needETH)
 	}
 
 	o.logger.Info("init stage completed",
@@ -652,5 +657,32 @@ type DeploymentStatus struct {
 	CurrentStage     Stage
 	TransactionCount int
 	Error            *string
+}
+
+// weiToETH converts wei to ETH as a human-readable string.
+func weiToETH(wei *big.Int) string {
+	if wei == nil {
+		return "0"
+	}
+	// 1 ETH = 10^18 wei
+	ethInWei := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
+	
+	// Calculate whole ETH and remainder
+	eth := new(big.Int).Div(wei, ethInWei)
+	remainder := new(big.Int).Mod(wei, ethInWei)
+	
+	if remainder.Sign() == 0 {
+		return eth.String()
+	}
+	
+	// Format with decimals (up to 4 decimal places)
+	decimalPart := new(big.Int).Mul(remainder, big.NewInt(10000))
+	decimalPart.Div(decimalPart, ethInWei)
+	
+	if decimalPart.Sign() == 0 {
+		return eth.String()
+	}
+	
+	return fmt.Sprintf("%s.%04d", eth, decimalPart.Int64())
 }
 

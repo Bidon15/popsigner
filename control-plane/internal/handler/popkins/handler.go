@@ -20,7 +20,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 
-	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/bundle"
 	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/repository"
 	"github.com/Bidon15/popsigner/control-plane/internal/models"
 	mainrepo "github.com/Bidon15/popsigner/control-plane/internal/repository"
@@ -35,15 +34,20 @@ const (
 	SessionCookieName = "banhbao_session"
 )
 
+// Orchestrator defines the interface for starting deployments.
+type Orchestrator interface {
+	StartDeployment(ctx context.Context, deploymentID uuid.UUID) error
+}
+
 // Handler handles POPKins-specific HTTP requests.
 type Handler struct {
-	authService service.AuthService
-	orgService  service.OrgService
-	keyService  service.KeyService
-	deployRepo  repository.Repository
-	bundler     *bundle.Bundler
-	sessionRepo mainrepo.SessionRepository
-	userRepo    mainrepo.UserRepository
+	authService  service.AuthService
+	orgService   service.OrgService
+	keyService   service.KeyService
+	deployRepo   repository.Repository
+	orchestrator Orchestrator
+	sessionRepo  mainrepo.SessionRepository
+	userRepo     mainrepo.UserRepository
 }
 
 // NewHandler creates a new POPKins handler.
@@ -52,18 +56,18 @@ func NewHandler(
 	orgService service.OrgService,
 	keyService service.KeyService,
 	deployRepo repository.Repository,
-	bundler *bundle.Bundler,
+	orchestrator Orchestrator,
 	sessionRepo mainrepo.SessionRepository,
 	userRepo mainrepo.UserRepository,
 ) *Handler {
 	return &Handler{
-		authService: authService,
-		orgService:  orgService,
-		keyService:  keyService,
-		deployRepo:  deployRepo,
-		bundler:     bundler,
-		sessionRepo: sessionRepo,
-		userRepo:    userRepo,
+		authService:  authService,
+		orgService:   orgService,
+		keyService:   keyService,
+		deployRepo:   deployRepo,
+		orchestrator: orchestrator,
+		sessionRepo:  sessionRepo,
+		userRepo:     userRepo,
 	}
 }
 
@@ -298,6 +302,13 @@ func (h *Handler) DeploymentsCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Parse L1 chain ID as uint64
+	l1ChainID, err := strconv.ParseUint(r.FormValue("l1_chain_id"), 10, 64)
+	if err != nil || l1ChainID == 0 {
+		http.Redirect(w, r, buildErrorRedirect(2, "Invalid L1 chain ID"), http.StatusFound)
+		return
+	}
+
 	// Validate keys are selected
 	deployerKey := r.FormValue("deployer_key")
 	batcherKey := r.FormValue("batcher_key")
@@ -310,9 +321,9 @@ func (h *Handler) DeploymentsCreate(w http.ResponseWriter, r *http.Request) {
 	// Build deployment config
 	config := map[string]interface{}{
 		"chain_name":   chainName,
-		"chain_id":     chainID,
+		"chain_id":     uint64(chainID),
 		"l1_rpc":       l1RPC,
-		"l1_chain_id":  r.FormValue("l1_chain_id"),
+		"l1_chain_id":  l1ChainID,
 		"da":           r.FormValue("da"),
 		"deployer_key": deployerKey,
 		"batcher_key":  batcherKey,
@@ -349,6 +360,25 @@ func (h *Handler) DeploymentsCreate(w http.ResponseWriter, r *http.Request) {
 		"stack", stack,
 		"org_id", org.ID,
 	)
+
+	// Start the deployment orchestrator
+	if h.orchestrator != nil {
+		if err := h.orchestrator.StartDeployment(r.Context(), deployment.ID); err != nil {
+			slog.Error("failed to start deployment orchestrator",
+				"deployment_id", deployment.ID,
+				"error", err,
+			)
+			// Don't fail - deployment was created, orchestrator can retry later
+		} else {
+			slog.Info("deployment orchestrator started",
+				"deployment_id", deployment.ID,
+			)
+		}
+	} else {
+		slog.Warn("no orchestrator configured, deployment will remain pending",
+			"deployment_id", deployment.ID,
+		)
+	}
 
 	// Redirect to deployment status page
 	http.Redirect(w, r, "/deployments/"+deployment.ID.String()+"/status", http.StatusFound)
@@ -848,10 +878,54 @@ func (h *Handler) DownloadBundle(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Bundle download not yet implemented", http.StatusNotImplemented)
 }
 
-// DeploymentResume handles resuming a paused deployment
+// DeploymentResume handles resuming a failed/paused deployment
 func (h *Handler) DeploymentResume(w http.ResponseWriter, r *http.Request) {
-	// Placeholder
-	http.Redirect(w, r, "/deployments", http.StatusFound)
+	deploymentID := chi.URLParam(r, "id")
+	if deploymentID == "" {
+		http.Redirect(w, r, "/deployments", http.StatusFound)
+		return
+	}
+
+	deployID, err := uuid.Parse(deploymentID)
+	if err != nil {
+		slog.Error("invalid deployment ID", "id", deploymentID, "error", err)
+		http.Redirect(w, r, "/deployments", http.StatusFound)
+		return
+	}
+
+	// Get deployment to verify it exists and can be resumed
+	deployment, err := h.deployRepo.GetDeployment(r.Context(), deployID)
+	if err != nil {
+		slog.Error("failed to get deployment", "id", deploymentID, "error", err)
+		http.Redirect(w, r, "/deployments", http.StatusFound)
+		return
+	}
+
+	// Only resume failed or paused deployments
+	if deployment.Status != "failed" && deployment.Status != "paused" {
+		slog.Warn("cannot resume deployment", "id", deploymentID, "status", deployment.Status)
+		http.Redirect(w, r, "/deployments/"+deploymentID, http.StatusFound)
+		return
+	}
+
+	// Reset deployment status to pending so orchestrator picks it up
+	if err := h.deployRepo.UpdateDeploymentStatus(r.Context(), deployID, "pending", nil); err != nil {
+		slog.Error("failed to reset deployment status", "id", deploymentID, "error", err)
+		http.Redirect(w, r, "/deployments/"+deploymentID, http.StatusFound)
+		return
+	}
+
+	// Start deployment asynchronously
+	go func() {
+		if err := h.orchestrator.StartDeployment(context.Background(), deployID); err != nil {
+			slog.Error("failed to resume deployment", "deployment_id", deployID, "error", err)
+		}
+	}()
+
+	slog.Info("deployment resumed", "id", deploymentID)
+	
+	// Redirect to status page to see progress
+	http.Redirect(w, r, "/deployments/"+deploymentID+"/status", http.StatusFound)
 }
 
 // ============================================

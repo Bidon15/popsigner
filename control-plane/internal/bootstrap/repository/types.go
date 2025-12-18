@@ -28,8 +28,10 @@ const (
 	StatusRunning Status = "running"
 	// StatusPaused indicates the deployment is paused (can be resumed).
 	StatusPaused Status = "paused"
-	// StatusCompleted indicates the deployment finished successfully.
+	// StatusCompleted indicates the deployment finished successfully with real on-chain transactions.
 	StatusCompleted Status = "completed"
+	// StatusSimulated indicates the deployment ran in simulation mode (no real contracts deployed).
+	StatusSimulated Status = "simulated"
 	// StatusFailed indicates the deployment failed.
 	StatusFailed Status = "failed"
 )

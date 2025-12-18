@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/google/uuid"
 )
@@ -13,6 +14,7 @@ type Repository interface {
 	GetDeployment(ctx context.Context, id uuid.UUID) (*Deployment, error)
 	GetDeploymentByChainID(ctx context.Context, chainID int64) (*Deployment, error)
 	UpdateDeploymentStatus(ctx context.Context, id uuid.UUID, status Status, stage *string) error
+	UpdateDeploymentConfig(ctx context.Context, id uuid.UUID, config json.RawMessage) error
 	SetDeploymentError(ctx context.Context, id uuid.UUID, errMsg string) error
 	ListDeploymentsByStatus(ctx context.Context, status Status) ([]*Deployment, error)
 	ListAllDeployments(ctx context.Context) ([]*Deployment, error)

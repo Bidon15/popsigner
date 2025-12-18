@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -95,6 +96,23 @@ func (r *PostgresRepository) UpdateDeploymentStatus(ctx context.Context, id uuid
 	result, err := r.pool.Exec(ctx, query, id, status, stage)
 	if err != nil {
 		return fmt.Errorf("UpdateDeploymentStatus: %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// UpdateDeploymentConfig updates the config JSON of a deployment.
+func (r *PostgresRepository) UpdateDeploymentConfig(ctx context.Context, id uuid.UUID, config json.RawMessage) error {
+	query := `
+		UPDATE deployments
+		SET config = $2, updated_at = NOW()
+		WHERE id = $1`
+
+	result, err := r.pool.Exec(ctx, query, id, config)
+	if err != nil {
+		return fmt.Errorf("UpdateDeploymentConfig: %w", err)
 	}
 	if result.RowsAffected() == 0 {
 		return ErrNotFound
