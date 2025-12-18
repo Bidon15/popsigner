@@ -51,6 +51,7 @@ func (h *Handler) Routes() chi.Router {
 	r.Route("/deployments", func(r chi.Router) {
 		r.Get("/", h.DeploymentsList)           // GET /deployments
 		r.Get("/new", h.DeploymentsNew)         // GET /deployments/new
+		r.Post("/new", h.DeploymentsNew)        // POST /deployments/new (wizard steps)
 		r.Post("/", h.DeploymentsCreate)        // POST /deployments
 
 		// Individual deployment routes
