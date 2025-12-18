@@ -12,6 +12,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -168,6 +169,17 @@ func (h *Handler) DeploymentsNew(w http.ResponseWriter, r *http.Request) {
 				BatcherKey:  r.FormValue("batcher_key"),
 				ProposerKey: r.FormValue("proposer_key"),
 			}
+			slog.Info("DeploymentsNew POST form data",
+				"step", step,
+				"stack", formData.Stack,
+				"chain_name", formData.ChainName,
+				"chain_id", formData.ChainID,
+				"l1_chain_id", formData.L1ChainID,
+				"da", formData.DA,
+				"deployer_key", formData.DeployerKey,
+			)
+		} else {
+			slog.Error("failed to parse form", "error", err)
 		}
 	} else {
 		// Also check query params (for redirects back from inline key creation)
@@ -353,18 +365,19 @@ func (h *Handler) CreateKeyInline(w http.ResponseWriter, r *http.Request) {
 
 	slog.Info("key created inline", "name", keyName, "org_id", org.ID)
 
-	// Build redirect URL preserving wizard state
-	redirectURL := fmt.Sprintf("/deployments/new?step=3&stack=%s&chain_name=%s&chain_id=%s&l1_rpc=%s&l1_chain_id=%s&da=%s&deployer_key=%s&batcher_key=%s&proposer_key=%s",
-		r.FormValue("stack"),
-		r.FormValue("chain_name"),
-		r.FormValue("chain_id"),
-		r.FormValue("l1_rpc"),
-		r.FormValue("l1_chain_id"),
-		r.FormValue("da"),
-		r.FormValue("deployer_key"),
-		r.FormValue("batcher_key"),
-		r.FormValue("proposer_key"),
-	)
+	// Build redirect URL preserving wizard state (URL-encode values!)
+	q := make(url.Values)
+	q.Set("step", "3")
+	q.Set("stack", r.FormValue("stack"))
+	q.Set("chain_name", r.FormValue("chain_name"))
+	q.Set("chain_id", r.FormValue("chain_id"))
+	q.Set("l1_rpc", r.FormValue("l1_rpc"))
+	q.Set("l1_chain_id", r.FormValue("l1_chain_id"))
+	q.Set("da", r.FormValue("da"))
+	q.Set("deployer_key", r.FormValue("deployer_key"))
+	q.Set("batcher_key", r.FormValue("batcher_key"))
+	q.Set("proposer_key", r.FormValue("proposer_key"))
+	redirectURL := "/deployments/new?" + q.Encode()
 
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
