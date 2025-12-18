@@ -32,8 +32,8 @@ Each task file follows a standard format:
 |------|--------|-------|-------------|
 | [TASK-010: SignerFn Implementation](./TASK-010-opstack-signerfn.md) | ✅ Done | Agent-OP1 | op-deployer signing integration |
 | [TASK-011: StateWriter Implementation](./TASK-011-opstack-statewriter.md) | ✅ Done | Agent-OP2 | State persistence |
-| [TASK-012: Orchestrator Core](./TASK-012-opstack-orchestrator.md) | 🟡 In Progress | Agent-OP1 | Stage execution engine |
-| [TASK-013: Artifact Extraction](./TASK-013-opstack-artifacts.md) | 🔲 Open | - | Genesis, rollup.json generation |
+| [TASK-012: Orchestrator Core](./TASK-012-opstack-orchestrator.md) | ✅ Done | Agent-OP1 | Stage execution engine |
+| [TASK-013: Artifact Extraction](./TASK-013-opstack-artifacts.md) | 🟡 In Progress | Agent-OP2 | Genesis, rollup.json generation |
 
 ### Stream 3: Nitro Deployment
 | Task | Status | Agent | Description |
@@ -41,7 +41,7 @@ Each task file follows a standard format:
 | [TASK-020: Viem Account (TypeScript)](./TASK-020-nitro-viem-account.md) | ✅ Done | Agent-N1 | Custom Viem account for mTLS signing |
 | [TASK-021: Deploy Script (TypeScript)](./TASK-021-nitro-deploy-script.md) | ✅ Done | Agent-N2 | orbit-sdk deployment script |
 | [TASK-022: Go Wrapper](./TASK-022-nitro-go-wrapper.md) | ✅ Done | Agent-N1 | Subprocess execution |
-| [TASK-023: Nitro Config Builder](./TASK-023-nitro-config.md) | 🔲 Open | - | chain-info.json, node-config.json |
+| [TASK-023: Nitro Config Builder](./TASK-023-nitro-config.md) | ✅ Done | Agent-N2 | chain-info.json, node-config.json |
 
 ### Stream 4: Post-Deployment (Unified)
 | Task | Status | Agent | Description |
