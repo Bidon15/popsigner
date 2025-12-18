@@ -5,9 +5,13 @@
   "description": "Nitro chain deployment worker with POPSigner mTLS integration",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "nitro-deployer": "dist/cli.js"
+  },
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
+    "deploy": "ts-node src/cli.ts",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "lint": "eslint src --ext .ts",
@@ -22,6 +26,7 @@
     "@types/node": "^20.0.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.0",
     "typescript": "^5.0.0"
   },
   "engines": {

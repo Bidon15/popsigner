@@ -140,3 +140,205 @@ export class MTLSConfigError extends Error {
   }
 }
 
+// ============================================================================
+// Nitro Deployment Types
+// ============================================================================
+
+/**
+ * Data availability type for the chain.
+ */
+export type DataAvailabilityType = 'rollup' | 'anytrust' | 'celestia';
+
+/**
+ * Configuration for deploying a Nitro/Orbit chain.
+ * Passed as JSON input to the deployment script.
+ */
+export interface NitroDeploymentConfig {
+  /**
+   * Chain ID for the new L2/L3 chain.
+   * Must be unique and not conflict with existing chains.
+   */
+  chainId: number;
+
+  /**
+   * Human-readable name for the chain.
+   */
+  chainName: string;
+
+  /**
+   * Parent chain ID (e.g., 42161 for Arbitrum One, 421614 for Arbitrum Sepolia).
+   */
+  parentChainId: number;
+
+  /**
+   * Parent chain RPC endpoint URL.
+   */
+  parentChainRpc: string;
+
+  /**
+   * Chain owner address - receives admin rights over the chain.
+   * Also used as the deployer address for the transaction.
+   */
+  owner: Address;
+
+  /**
+   * Batch poster addresses - authorized to post batches.
+   */
+  batchPosters: Address[];
+
+  /**
+   * Validator addresses - authorized to validate state.
+   */
+  validators: Address[];
+
+  /**
+   * Stake token address for validators.
+   * Use zero address for ETH.
+   */
+  stakeToken: Address;
+
+  /**
+   * Base stake amount in wei for validators.
+   */
+  baseStake: string;
+
+  /**
+   * Number of blocks for the challenge period.
+   * Default: 45818 (~1 week on Ethereum)
+   */
+  confirmPeriodBlocks?: number;
+
+  /**
+   * Extra time for challenge resolution.
+   * Default: 0
+   */
+  extraChallengeTimeBlocks?: number;
+
+  /**
+   * Data availability type.
+   * - 'rollup': Full on-chain data (expensive, most secure)
+   * - 'anytrust': DAC-based (cheaper, requires trust assumptions)
+   * - 'celestia': External DA layer
+   */
+  dataAvailability: DataAvailabilityType;
+
+  /**
+   * Native token address for gas payments (optional).
+   * If not set, uses ETH.
+   */
+  nativeToken?: Address;
+
+  /**
+   * Whether to deploy L2 factory contracts.
+   * Default: true
+   */
+  deployFactoriesToL2?: boolean;
+
+  /**
+   * Maximum data size per sequencer batch (bytes).
+   * Default: 117964
+   */
+  maxDataSize?: number;
+
+  // POPSigner configuration
+  /**
+   * POPSigner RPC endpoint for mTLS signing.
+   */
+  popsignerEndpoint: string;
+
+  /**
+   * PEM-encoded client certificate for mTLS.
+   */
+  clientCert: string;
+
+  /**
+   * PEM-encoded client private key for mTLS.
+   */
+  clientKey: string;
+
+  /**
+   * Optional PEM-encoded CA certificate.
+   */
+  caCert?: string;
+}
+
+/**
+ * Core contract addresses returned from deployment.
+ */
+export interface CoreContracts {
+  rollup: Address;
+  inbox: Address;
+  outbox: Address;
+  bridge: Address;
+  sequencerInbox: Address;
+  rollupEventInbox: Address;
+  challengeManager: Address;
+  adminProxy: Address;
+  upgradeExecutor: Address;
+  validatorWalletCreator: Address;
+  nativeToken: Address;
+  deployedAtBlockNumber: number;
+}
+
+/**
+ * Result of a Nitro chain deployment.
+ * Output as JSON to stdout.
+ */
+export interface DeploymentResult {
+  /**
+   * Whether the deployment succeeded.
+   */
+  success: boolean;
+
+  /**
+   * Deployed contract addresses (only if success=true).
+   */
+  coreContracts?: CoreContracts;
+
+  /**
+   * Transaction hash of the deployment.
+   */
+  transactionHash?: Hex;
+
+  /**
+   * Block number where deployment was confirmed.
+   */
+  blockNumber?: number;
+
+  /**
+   * Chain configuration for node startup.
+   */
+  chainConfig?: Record<string, unknown>;
+
+  /**
+   * Error message (only if success=false).
+   */
+  error?: string;
+}
+
+/**
+ * Custom error for deployment configuration issues.
+ */
+export class DeploymentConfigError extends Error {
+  public readonly field?: string;
+
+  constructor(message: string, field?: string) {
+    super(message);
+    this.name = 'DeploymentConfigError';
+    this.field = field;
+  }
+}
+
+/**
+ * Custom error for deployment execution failures.
+ */
+export class DeploymentError extends Error {
+  public readonly transactionHash?: Hex;
+
+  constructor(message: string, transactionHash?: Hex) {
+    super(message);
+    this.name = 'DeploymentError';
+    this.transactionHash = transactionHash;
+  }
+}
+

@@ -7,6 +7,7 @@
  * @packageDocumentation
  */
 
+// POPSigner Account
 export {
   createPOPSignerAccount,
   createPOPSignerAccountFromFiles,
@@ -17,6 +18,14 @@ export type {
   TypedDataInput,
 } from './popsigner-account';
 
+// Deployment
+export {
+  deployOrbitChain,
+  parseConfig,
+  validateConfig,
+} from './deploy';
+
+// Types - POPSigner
 export type {
   POPSignerConfig,
   JSONRPCRequest,
@@ -27,4 +36,18 @@ export type {
   TypedDataDomain,
 } from './types';
 
-export { POPSignerError, MTLSConfigError } from './types';
+// Types - Deployment
+export type {
+  NitroDeploymentConfig,
+  DeploymentResult,
+  CoreContracts,
+  DataAvailabilityType,
+} from './types';
+
+// Errors
+export {
+  POPSignerError,
+  MTLSConfigError,
+  DeploymentConfigError,
+  DeploymentError,
+} from './types';

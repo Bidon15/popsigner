@@ -39,7 +39,7 @@ Each task file follows a standard format:
 | Task | Status | Agent | Description |
 |------|--------|-------|-------------|
 | [TASK-020: Viem Account (TypeScript)](./TASK-020-nitro-viem-account.md) | ✅ Done | Agent-N1 | Custom Viem account for mTLS signing |
-| [TASK-021: Deploy Script (TypeScript)](./TASK-021-nitro-deploy-script.md) | 🔲 Open | - | orbit-sdk deployment script |
+| [TASK-021: Deploy Script (TypeScript)](./TASK-021-nitro-deploy-script.md) | ✅ Done | Agent-N2 | orbit-sdk deployment script |
 | [TASK-022: Go Wrapper](./TASK-022-nitro-go-wrapper.md) | 🔲 Open | - | Subprocess execution |
 | [TASK-023: Nitro Config Builder](./TASK-023-nitro-config.md) | 🔲 Open | - | chain-info.json, node-config.json |
 
