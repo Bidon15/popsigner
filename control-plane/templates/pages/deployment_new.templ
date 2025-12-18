@@ -110,52 +110,50 @@ templ DeploymentStep1Stack(data DeploymentNewData) {
 			<p class="text-[#666600] text-sm">Choose the technology stack for your chain</p>
 		</div>
 		
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4" x-data="{ selected: '{ getSelectedStack(data.FormData.Stack) }' }">
 			<!-- OP Stack Option -->
-			<label class="cursor-pointer group">
-				<input type="radio" name="stack" value="opstack" class="hidden peer" 
+			<div class="cursor-pointer" @click="selected = 'opstack'; $refs.opstack.checked = true">
+				<input type="radio" name="stack" value="opstack" x-ref="opstack"
+					   class="hidden"
 					   checked?={ data.FormData.Stack == "opstack" || data.FormData.Stack == "" }/>
-				<div class="p-5 border border-[#333300] 
-							peer-checked:border-[#33FF00] peer-checked:bg-[#33FF00]/5 
-							hover:border-[#666600] transition-all h-full">
+				<div class="p-5 border transition-all h-full"
+					 :class="selected === 'opstack' ? 'border-[#33FF00] bg-[#33FF00]/5' : 'border-[#333300] hover:border-[#666600]'">
 					<div class="flex items-center justify-between mb-3">
 						<span class="text-2xl">⚡</span>
-						<span class="w-4 h-4 border border-[#333300] rounded-full 
-									 peer-checked:bg-[#33FF00] peer-checked:border-[#33FF00]
-									 group-[:has(input:checked)]:bg-[#33FF00] group-[:has(input:checked)]:border-[#33FF00]"></span>
+						<span class="w-4 h-4 border rounded-full transition-all"
+							  :class="selected === 'opstack' ? 'bg-[#33FF00] border-[#33FF00]' : 'border-[#333300]'"></span>
 					</div>
 					<div class="text-[#33FF00] font-bold uppercase text-lg">OP Stack</div>
-					<div class="text-[#666600] text-sm mt-2">
+					<div class="text-[#666600] text-sm mt-2 break-words">
 						Optimism's battle-tested modular architecture. Powers Base, Zora, and more.
 					</div>
-					<div class="text-[#333300] text-xs mt-3 pt-3 border-t border-[#1a1a00]">
+					<div class="text-[#333300] text-xs mt-3 pt-3 border-t border-[#1a1a00] break-words">
 						~35 deployment transactions • Celestia DA support
 					</div>
 				</div>
-			</label>
+			</div>
 
 			<!-- Nitro Option -->
-			<label class="cursor-pointer group">
-				<input type="radio" name="stack" value="nitro" class="hidden peer"
+			<div class="cursor-pointer" @click="selected = 'nitro'; $refs.nitro.checked = true">
+				<input type="radio" name="stack" value="nitro" x-ref="nitro"
+					   class="hidden"
 					   checked?={ data.FormData.Stack == "nitro" }/>
-				<div class="p-5 border border-[#333300] 
-							peer-checked:border-[#33FF00] peer-checked:bg-[#33FF00]/5 
-							hover:border-[#666600] transition-all h-full">
+				<div class="p-5 border transition-all h-full"
+					 :class="selected === 'nitro' ? 'border-[#33FF00] bg-[#33FF00]/5' : 'border-[#333300] hover:border-[#666600]'">
 					<div class="flex items-center justify-between mb-3">
 						<span class="text-2xl">🚀</span>
-						<span class="w-4 h-4 border border-[#333300] rounded-full 
-									 peer-checked:bg-[#33FF00] peer-checked:border-[#33FF00]
-									 group-[:has(input:checked)]:bg-[#33FF00] group-[:has(input:checked)]:border-[#33FF00]"></span>
+						<span class="w-4 h-4 border rounded-full transition-all"
+							  :class="selected === 'nitro' ? 'bg-[#33FF00] border-[#33FF00]' : 'border-[#333300]'"></span>
 					</div>
 					<div class="text-[#33FF00] font-bold uppercase text-lg">Arbitrum Nitro</div>
-					<div class="text-[#666600] text-sm mt-2">
+					<div class="text-[#666600] text-sm mt-2 break-words">
 						Arbitrum Orbit SDK for Nitro chains. Single atomic deployment.
 					</div>
-					<div class="text-[#333300] text-xs mt-3 pt-3 border-t border-[#1a1a00]">
+					<div class="text-[#333300] text-xs mt-3 pt-3 border-t border-[#1a1a00] break-words">
 						1 atomic transaction • AnyTrust DA option
 					</div>
 				</div>
-			</label>
+			</div>
 		</div>
 
 		<button type="submit" 
@@ -465,6 +463,13 @@ templ ReviewKeyRow(role, keyName string) {
 }
 
 // Helper functions
+
+func getSelectedStack(stack string) string {
+	if stack == "" {
+		return "opstack"
+	}
+	return stack
+}
 
 func getStackDisplayName(stack string) string {
 	switch stack {
