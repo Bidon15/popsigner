@@ -18,6 +18,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
+	"github.com/gorilla/sessions"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	bootstraphandler "github.com/Bidon15/popsigner/control-plane/internal/bootstrap/handler"
@@ -25,6 +26,7 @@ import (
 	"github.com/Bidon15/popsigner/control-plane/internal/config"
 	"github.com/Bidon15/popsigner/control-plane/internal/database"
 	"github.com/Bidon15/popsigner/control-plane/internal/handler"
+	"github.com/Bidon15/popsigner/control-plane/internal/handler/popkins"
 	"github.com/Bidon15/popsigner/control-plane/internal/middleware"
 	"github.com/Bidon15/popsigner/control-plane/internal/models"
 	"github.com/Bidon15/popsigner/control-plane/internal/openbao"
@@ -128,6 +130,21 @@ func main() {
 	bootstrapRepo := bootstraprepo.NewPostgresRepository(db.Pool())
 	deploymentHandler := bootstraphandler.NewDeploymentHandler(bootstrapRepo, nil) // orchestrator added later
 
+	// Initialize POPKins (chain deployment) handler
+	// Uses same session store as main dashboard for SSO
+	sessionStore := sessions.NewCookieStore([]byte(cfg.Auth.JWTSecret))
+	sessionStore.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   7 * 24 * 60 * 60, // 7 days
+		HttpOnly: true,
+		Secure:   cfg.Server.Environment == "production",
+		SameSite: http.SameSiteLaxMode,
+	}
+	authSvc := service.NewAuthService(userRepo, sessionRepo, service.DefaultAuthServiceConfig())
+	orgSvc := service.NewOrgService(orgRepo, userRepo, service.DefaultOrgServiceConfig())
+	popkinsHandler := popkins.NewHandler(authSvc, orgSvc, bootstrapRepo, nil, sessionStore)
+	logger.Info("POPKins handler initialized")
+
 	logger.Info("OAuth providers configured",
 		slog.Any("providers", oauthSvc.GetSupportedProviders()),
 	)
@@ -206,6 +223,11 @@ func main() {
 
 	// Team management
 	r.Get("/settings/team", settingsTeamHandler(sessionRepo, userRepo, orgRepo))
+
+	// POPKins - Chain deployment platform (separate product)
+	// Mounted at /popkins/* for development
+	// In production, this runs at popkins.popsigner.com subdomain
+	r.Mount("/popkins", popkinsHandler.Routes())
 
 	// OAuth routes - using the service
 	r.Get("/auth/github", oauthRedirectHandler(oauthSvc, "github"))

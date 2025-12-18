@@ -1,0 +1,42 @@
+package components
+
+// PopkinsHeader renders the POPKins header bar
+templ PopkinsHeader(orgName string) {
+	<header class="h-14 bg-black border-b border-[#333300] flex items-center justify-between px-6 shrink-0">
+		<div class="flex items-center gap-4">
+			<span class="text-[#666600] text-sm uppercase tracking-wider">Chain Deployment Platform</span>
+		</div>
+		
+		<div class="flex items-center gap-4">
+			<!-- Status indicator -->
+			<div class="flex items-center gap-2 text-xs text-[#666600] uppercase">
+				<span class="inline-block w-2 h-2 bg-[#33FF00] rounded-full animate-pulse"></span>
+				<span>Systems Online</span>
+			</div>
+			
+			<!-- Cloud CTA -->
+			<a href="https://cloud.popsigner.com" 
+			   target="_blank" 
+			   rel="noopener"
+			   class="px-4 py-2 bg-[#FFB000] text-black text-sm font-bold uppercase tracking-wider 
+					  hover:bg-[#FFCC00] hover:shadow-[0_0_15px_#FFB000] transition-all">
+				TRY CLOUD →
+			</a>
+		</div>
+	</header>
+}
+
+// PopkinsHeaderMinimal renders a simpler header for forms/wizards
+templ PopkinsHeaderMinimal(title string) {
+	<header class="h-14 bg-black border-b border-[#333300] flex items-center justify-between px-6 shrink-0">
+		<div class="flex items-center gap-4">
+			<h1 class="text-[#33FF00] text-lg font-bold uppercase">{ title }</h1>
+		</div>
+		
+		<a href="/popkins/deployments" 
+		   class="text-sm text-[#666600] hover:text-[#33FF00] uppercase transition-colors">
+			← BACK TO MY CHAINS
+		</a>
+	</header>
+}
+

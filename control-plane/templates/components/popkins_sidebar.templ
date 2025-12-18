@@ -1,0 +1,127 @@
+package components
+
+import "strings"
+
+// PopkinsSidebarData holds data for the POPKins sidebar
+type PopkinsSidebarData struct {
+	UserName   string
+	UserEmail  string
+	AvatarURL  string
+	OrgName    string
+	ActivePath string
+}
+
+// PopkinsSidebar renders the POPKins navigation sidebar
+templ PopkinsSidebar(data PopkinsSidebarData) {
+	<div class="flex flex-col h-full w-64 bg-black border-r border-[#333300] font-mono shrink-0">
+		<!-- Logo -->
+		<div class="flex items-center h-16 px-5 border-b border-[#333300]">
+			<a href="/popkins/deployments" class="flex items-center gap-2.5 group">
+				<span class="text-[#33FF00] text-2xl group-hover:drop-shadow-[0_0_10px_#33FF00] transition-all">🚀</span>
+				<span class="text-xl font-bold text-[#33FF00] uppercase tracking-wider
+							 group-hover:drop-shadow-[0_0_10px_#33FF00] transition-all">
+					POPKINS
+				</span>
+			</a>
+		</div>
+		
+		<!-- Org Display -->
+		<div class="px-4 py-3 border-b border-[#333300]">
+			<div class="text-sm text-[#FFB000] uppercase truncate font-bold">{ data.OrgName }</div>
+			<div class="text-xs text-[#666600] uppercase">Chain Deployer</div>
+		</div>
+		
+		<!-- Navigation -->
+		<nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+			<!-- Primary Navigation -->
+			@popkinsNavLink("/popkins/deployments", "▸ MY CHAINS", data.ActivePath, false)
+			@popkinsNavLink("/popkins/deployments/new", "▸ DEPLOY NEW", data.ActivePath, false)
+			
+			<!-- Resources Section -->
+			<div class="pt-6 mt-4 border-t border-[#333300]">
+				<p class="px-3 mb-2 text-xs text-[#666600]/60 uppercase tracking-wider">RESOURCES</p>
+				<a href="https://docs.popsigner.com/popkins" target="_blank" rel="noopener"
+				   class="block px-3 py-2 text-sm text-[#666600] hover:text-[#33FF00] uppercase transition-colors">
+					▸ DOCUMENTATION ↗
+				</a>
+				<a href="https://discord.gg/popsigner" target="_blank" rel="noopener"
+				   class="block px-3 py-2 text-sm text-[#666600] hover:text-[#33FF00] uppercase transition-colors">
+					▸ GET HELP ↗
+				</a>
+			</div>
+			
+			<!-- Back to Main Dashboard -->
+			<div class="pt-6 mt-4 border-t border-[#333300]">
+				<p class="px-3 mb-2 text-xs text-[#666600]/60 uppercase tracking-wider">POPSIGNER</p>
+				<a href="/dashboard" 
+				   class="flex items-center gap-2 px-3 py-2 text-sm text-[#FFB000] hover:bg-[#1a1500] uppercase transition-colors group">
+					<span>←</span>
+					<span class="group-hover:underline">BACK TO DASHBOARD</span>
+				</a>
+			</div>
+		</nav>
+		
+		<!-- User Menu -->
+		<div class="p-4 border-t border-[#333300]">
+			<div class="flex items-center gap-3">
+				if data.AvatarURL != "" {
+					<img src={ data.AvatarURL } alt="Avatar" class="w-9 h-9 border border-[#33FF00]"/>
+				} else {
+					<div class="w-9 h-9 bg-[#33FF00] flex items-center justify-center text-black text-sm font-bold uppercase">
+						{ getPopkinsInitial(data.UserName) }
+					</div>
+				}
+				<div class="flex-1 min-w-0">
+					<p class="text-sm font-medium text-[#33FF00] truncate uppercase">{ data.UserName }</p>
+					<p class="text-xs text-[#666600] truncate">{ data.UserEmail }</p>
+				</div>
+				<form action="/logout" method="POST">
+					<button type="submit" 
+							class="p-2 text-[#666600] hover:text-[#FF3333] transition-colors cursor-pointer" 
+							title="Logout">
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+								  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+						</svg>
+					</button>
+				</form>
+			</div>
+		</div>
+	</div>
+}
+
+// popkinsNavLink renders a navigation link with active state
+templ popkinsNavLink(href, label, activePath string, external bool) {
+	<a href={ templ.SafeURL(href) }
+	   if external {
+	   		target="_blank"
+	   		rel="noopener"
+	   }
+	   class={ popkinsLinkClasses(href, activePath) }>
+		{ label }
+	</a>
+}
+
+// popkinsLinkClasses returns CSS classes for nav links based on active state
+func popkinsLinkClasses(href, activePath string) string {
+	base := "block px-3 py-2.5 text-sm uppercase transition-all duration-200"
+	
+	// Check if this link is active
+	isActive := href == activePath || 
+		(strings.HasPrefix(activePath, href) && href != "/popkins/deployments" && len(href) > 20) ||
+		(href == "/popkins/deployments" && activePath == "/popkins/deployments")
+	
+	if isActive {
+		return base + " text-[#33FF00] bg-[#0D1A0D] border-l-2 border-[#33FF00] -ml-[2px] drop-shadow-[0_0_8px_#33FF00] font-bold"
+	}
+	return base + " text-[#666600] hover:text-[#33FF00] hover:bg-[#0D1A0D]"
+}
+
+// getPopkinsInitial returns the first character for avatar placeholder
+func getPopkinsInitial(name string) string {
+	if name == "" {
+		return "?"
+	}
+	return string([]rune(name)[0:1])
+}
+

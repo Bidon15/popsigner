@@ -57,6 +57,20 @@ Each task file follows a standard format:
 
 > **Note:** TASK-032 creates the UI that guides users through Docker Compose setup and promotes POPSigner Cloud. Actual cloud deployment is a **separate product** - see [POPCloud PRD](../../popcloud/PRD.md).
 
+### Stream 5: Web UI (User-Facing)
+
+> **Critical:** Without this stream, users cannot deploy chains through the web UI!
+
+> **⚠️ IMPORTANT:** POPKins lives at **popkins.popsigner.com** - a SEPARATE subdomain from the main dashboard (dashboard.popsigner.com). These are distinct products with separate UIs.
+
+| Task                                                                   | Status  | Agent | Description                           |
+| ---------------------------------------------------------------------- | ------- | ----- | ------------------------------------- |
+| [TASK-040: POPKins App Shell](./TASK-040-deployments-nav.md)           | ✅ Done | Agent-UI1 | Separate app layout + navigation      |
+| [TASK-041: Deployments List](./TASK-041-deployments-list.md)           | 🔲 Open | -     | List all chain deployments            |
+| [TASK-042: Create Deployment Form](./TASK-042-deployment-create.md)    | 🔲 Open | -     | Multi-step chain configuration wizard |
+| [TASK-043: Deployment Detail](./TASK-043-deployment-detail.md)         | 🔲 Open | -     | View deployment configuration         |
+| [TASK-044: Deployment Progress](./TASK-044-deployment-progress.md)     | 🔲 Open | -     | Real-time deployment status           |
+
 ---
 
 ## 🔗 Dependency Graph
@@ -128,6 +142,9 @@ Each task file follows a standard format:
 | **TASK-032** | TASK-030, TASK-031           | Needs bundles ready to show download UI          |
 | **TASK-013** | TASK-010, TASK-011, TASK-012 | OP Stack must deploy before extracting artifacts |
 | **TASK-023** | TASK-020, TASK-021, TASK-022 | Nitro must deploy before generating configs      |
+| **TASK-041** | TASK-040                     | List page needs sidebar navigation               |
+| **TASK-042** | TASK-041, TASK-003           | Create form needs list page and API handlers     |
+| **TASK-044** | TASK-042                     | Progress page needs deployments to exist         |
 
 ---
 
@@ -178,4 +195,15 @@ When creating new tasks, use [TEMPLATE.md](./TEMPLATE.md).
 
 - **Streams 2 & 3 (OP Stack & Nitro) can run in parallel** - they're independent
 - **Stream 4 requires both Stream 2 & 3 complete** - it bundles artifacts from both
+- **Stream 5 (Web UI) requires Stream 1 (API handlers)** - but can run parallel to Streams 2-4
 - **Within a stream**, tasks are sequential (follow dependency chain)
+
+### Stream 5 Priority
+
+⚠️ **Stream 5 is CRITICAL** for user-facing functionality. Without it, users cannot:
+- See their deployments in the dashboard
+- Create new chain deployments through the UI
+- Monitor deployment progress
+- Access POPKins at all from the web interface
+
+**Current workaround:** CLI only (`popctl bootstrap create`)
