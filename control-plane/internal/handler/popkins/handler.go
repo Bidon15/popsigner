@@ -12,8 +12,10 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/a-h/templ"
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 
@@ -21,6 +23,7 @@ import (
 	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/repository"
 	"github.com/Bidon15/popsigner/control-plane/internal/models"
 	"github.com/Bidon15/popsigner/control-plane/internal/service"
+	"github.com/Bidon15/popsigner/control-plane/templates/components"
 	"github.com/Bidon15/popsigner/control-plane/templates/layouts"
 	"github.com/Bidon15/popsigner/control-plane/templates/pages"
 )
@@ -34,6 +37,7 @@ const (
 type Handler struct {
 	authService  service.AuthService
 	orgService   service.OrgService
+	keyService   service.KeyService
 	deployRepo   repository.Repository
 	bundler      *bundle.Bundler
 	sessionStore sessions.Store
@@ -43,6 +47,7 @@ type Handler struct {
 func NewHandler(
 	authService service.AuthService,
 	orgService service.OrgService,
+	keyService service.KeyService,
 	deployRepo repository.Repository,
 	bundler *bundle.Bundler,
 	sessionStore sessions.Store,
@@ -50,6 +55,7 @@ func NewHandler(
 	return &Handler{
 		authService:  authService,
 		orgService:   orgService,
+		keyService:   keyService,
 		deployRepo:   deployRepo,
 		bundler:      bundler,
 		sessionStore: sessionStore,
@@ -127,7 +133,7 @@ func extractChainName(d *repository.Deployment) string {
 	return fmt.Sprintf("Chain %d", d.ChainID)
 }
 
-// DeploymentsNew renders the new deployment form (TASK-042)
+// DeploymentsNew renders the new deployment wizard form
 func (h *Handler) DeploymentsNew(w http.ResponseWriter, r *http.Request) {
 	user, org, err := h.getUserAndOrg(r)
 	if err != nil {
@@ -135,23 +141,153 @@ func (h *Handler) DeploymentsNew(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := layouts.PopkinsData{
-		UserName:   getUserName(user),
-		UserEmail:  user.Email,
-		AvatarURL:  getAvatarURL(user),
-		OrgName:    org.Name,
-		ActivePath: "/popkins/deployments/new",
+	// Determine current step (1-4)
+	step := 1
+	if s := r.URL.Query().Get("step"); s != "" {
+		if parsed, err := strconv.Atoi(s); err == nil && parsed >= 1 && parsed <= 4 {
+			step = parsed
+		}
 	}
 
-	// Render layout with placeholder content
+	// Get form data from POST request (multi-step form)
+	formData := pages.DeploymentFormData{}
+	if r.Method == http.MethodPost {
+		if err := r.ParseForm(); err == nil {
+			formData = pages.DeploymentFormData{
+				Stack:       r.FormValue("stack"),
+				ChainName:   r.FormValue("chain_name"),
+				ChainID:     r.FormValue("chain_id"),
+				L1RPC:       r.FormValue("l1_rpc"),
+				L1ChainID:   r.FormValue("l1_chain_id"),
+				DA:          r.FormValue("da"),
+				DeployerKey: r.FormValue("deployer_key"),
+				BatcherKey:  r.FormValue("batcher_key"),
+				ProposerKey: r.FormValue("proposer_key"),
+			}
+		}
+	}
+
+	// Get user's keys for role assignment
+	var keyOptions []components.KeyOption
+	if h.keyService != nil {
+		keys, err := h.keyService.List(r.Context(), org.ID, nil, nil)
+		if err != nil {
+			slog.Error("failed to list keys", "error", err)
+		} else {
+			keyOptions = make([]components.KeyOption, 0, len(keys))
+			for _, k := range keys {
+				ethAddr := k.Address
+				if k.EthAddress != nil && *k.EthAddress != "" {
+					ethAddr = *k.EthAddress
+				}
+				keyOptions = append(keyOptions, components.KeyOption{
+					ID:         k.ID.String(),
+					Name:       k.Name,
+					Address:    ethAddr,
+					CosmosAddr: k.Address,
+				})
+			}
+		}
+	}
+
+	// Get error message from query if any
+	errorMsg := r.URL.Query().Get("error")
+
+	data := pages.DeploymentNewData{
+		PopkinsData: layouts.PopkinsData{
+			UserName:   getUserName(user),
+			UserEmail:  user.Email,
+			AvatarURL:  getAvatarURL(user),
+			OrgName:    org.Name,
+			ActivePath: "/popkins/deployments/new",
+		},
+		Keys:     keyOptions,
+		Step:     step,
+		FormData: formData,
+		ErrorMsg: errorMsg,
+	}
+
+	// Render deployment wizard page
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	layouts.PopkinsWithContent("Deploy New Chain", data, placeholderDeploymentsNew()).Render(r.Context(), w)
+	pages.DeploymentNewPage(data).Render(r.Context(), w)
 }
 
-// DeploymentsCreate handles the deployment creation form submission (TASK-042)
+// DeploymentsCreate handles the final form submission and creates the deployment
 func (h *Handler) DeploymentsCreate(w http.ResponseWriter, r *http.Request) {
-	// Placeholder until TASK-042 is implemented
-	http.Redirect(w, r, "/popkins/deployments", http.StatusFound)
+	user, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		h.handleAuthError(w, r)
+		return
+	}
+	_ = user // user context available for audit logging
+
+	if err := r.ParseForm(); err != nil {
+		http.Redirect(w, r, "/popkins/deployments/new?step=4&error=Invalid+form+data", http.StatusFound)
+		return
+	}
+
+	// Parse chain ID
+	chainID, err := strconv.ParseInt(r.FormValue("chain_id"), 10, 64)
+	if err != nil || chainID <= 0 {
+		http.Redirect(w, r, "/popkins/deployments/new?step=2&error=Invalid+chain+ID", http.StatusFound)
+		return
+	}
+
+	// Validate required fields
+	chainName := r.FormValue("chain_name")
+	stack := r.FormValue("stack")
+	l1RPC := r.FormValue("l1_rpc")
+
+	if chainName == "" || stack == "" || l1RPC == "" {
+		http.Redirect(w, r, "/popkins/deployments/new?step=2&error=Missing+required+fields", http.StatusFound)
+		return
+	}
+
+	// Build deployment config
+	config := map[string]interface{}{
+		"chain_name":   chainName,
+		"chain_id":     chainID,
+		"l1_rpc":       l1RPC,
+		"l1_chain_id":  r.FormValue("l1_chain_id"),
+		"da":           r.FormValue("da"),
+		"deployer_key": r.FormValue("deployer_key"),
+		"batcher_key":  r.FormValue("batcher_key"),
+		"proposer_key": r.FormValue("proposer_key"),
+		"org_id":       org.ID.String(),
+	}
+
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		slog.Error("failed to marshal config", "error", err)
+		http.Redirect(w, r, "/popkins/deployments/new?step=4&error=Failed+to+create+deployment", http.StatusFound)
+		return
+	}
+
+	// Create deployment record
+	deployment := &repository.Deployment{
+		ID:      uuid.New(),
+		ChainID: chainID,
+		Stack:   repository.Stack(stack),
+		Status:  repository.StatusPending,
+		Config:  configJSON,
+	}
+
+	if err := h.deployRepo.CreateDeployment(r.Context(), deployment); err != nil {
+		slog.Error("failed to create deployment", "error", err)
+		http.Redirect(w, r, "/popkins/deployments/new?step=4&error=Failed+to+create+deployment", http.StatusFound)
+		return
+	}
+
+	slog.Info("deployment created",
+		"deployment_id", deployment.ID,
+		"chain_name", chainName,
+		"chain_id", chainID,
+		"stack", stack,
+		"org_id", org.ID,
+	)
+
+	// Redirect to deployment status page
+	http.Redirect(w, r, "/popkins/deployments/"+deployment.ID.String()+"/status", http.StatusFound)
 }
 
 // DeploymentDetail renders a specific deployment detail page (TASK-043)
@@ -162,17 +298,152 @@ func (h *Handler) DeploymentDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := layouts.PopkinsData{
-		UserName:   getUserName(user),
-		UserEmail:  user.Email,
-		AvatarURL:  getAvatarURL(user),
-		OrgName:    org.Name,
-		ActivePath: "/popkins/deployments",
+	// Extract deployment ID from URL
+	idStr := chi.URLParam(r, "id")
+	deploymentID, err := uuid.Parse(idStr)
+	if err != nil {
+		slog.Error("invalid deployment ID", "id", idStr, "error", err)
+		http.Error(w, "Invalid deployment ID", http.StatusBadRequest)
+		return
 	}
 
-	// Render layout with placeholder content
+	// Fetch deployment from repository
+	deployment, err := h.deployRepo.GetDeployment(r.Context(), deploymentID)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			http.Error(w, "Deployment not found", http.StatusNotFound)
+			return
+		}
+		slog.Error("failed to get deployment", "id", deploymentID, "error", err)
+		http.Error(w, "Failed to load deployment", http.StatusInternalServerError)
+		return
+	}
+
+	// Extract key addresses from config
+	deployerAddr, batcherAddr, proposerAddr, l1Chain := extractConfigAddresses(deployment.Config)
+
+	// Fetch transaction history for OP Stack deployments
+	var transactions []pages.TransactionInfo
+	if deployment.Stack == repository.StackOPStack {
+		txs, err := h.deployRepo.GetTransactionsByDeployment(r.Context(), deploymentID)
+		if err == nil {
+			for _, tx := range txs {
+				desc := ""
+				if tx.Description != nil {
+					desc = *tx.Description
+				}
+				transactions = append(transactions, pages.TransactionInfo{
+					TxHash:      tx.TxHash,
+					Stage:       tx.Stage,
+					Description: desc,
+					CreatedAt:   tx.CreatedAt.Format("Jan 2, 2006 15:04"),
+				})
+			}
+		}
+	}
+
+	// Build deployment info
+	currentStage := ""
+	if deployment.CurrentStage != nil {
+		currentStage = *deployment.CurrentStage
+	}
+	errorMsg := ""
+	if deployment.ErrorMessage != nil {
+		errorMsg = *deployment.ErrorMessage
+	}
+
+	data := pages.DeploymentDetailData{
+		PopkinsData: layouts.PopkinsData{
+			UserName:   getUserName(user),
+			UserEmail:  user.Email,
+			AvatarURL:  getAvatarURL(user),
+			OrgName:    org.Name,
+			ActivePath: "/popkins/deployments",
+		},
+		Deployment: pages.DeploymentInfo{
+			ID:           deployment.ID.String(),
+			ChainName:    extractChainName(deployment),
+			ChainID:      uint64(deployment.ChainID),
+			Stack:        string(deployment.Stack),
+			Status:       string(deployment.Status),
+			CurrentStage: currentStage,
+			ErrorMessage: errorMsg,
+			L1Chain:      l1Chain,
+			DeployerAddr: deployerAddr,
+			BatcherAddr:  batcherAddr,
+			ProposerAddr: proposerAddr,
+			CreatedAt:    deployment.CreatedAt.Format("Jan 2, 2006 15:04 MST"),
+			UpdatedAt:    deployment.UpdatedAt.Format("Jan 2, 2006 15:04 MST"),
+		},
+		Transactions: transactions,
+	}
+
+	// Render deployment detail page
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	layouts.PopkinsWithContent("Deployment Detail", data, placeholderDeploymentDetail()).Render(r.Context(), w)
+	pages.DeploymentDetailPage(data).Render(r.Context(), w)
+}
+
+// extractConfigAddresses extracts key addresses from deployment config JSON
+func extractConfigAddresses(config json.RawMessage) (deployer, batcher, proposer, l1Chain string) {
+	if config == nil {
+		return "", "", "", "Ethereum Mainnet"
+	}
+
+	var cfg struct {
+		DeployerAddress string `json:"deployer_address"`
+		BatcherAddress  string `json:"batcher_address"`
+		ProposerAddress string `json:"proposer_address"`
+		// Alternative field names
+		Deployer  string `json:"deployer"`
+		Batcher   string `json:"batcher"`
+		Proposer  string `json:"proposer"`
+		Validator string `json:"validator"`
+		// L1 chain
+		L1Chain   string `json:"l1_chain"`
+		L1ChainID int64  `json:"l1_chain_id"`
+	}
+
+	if err := json.Unmarshal(config, &cfg); err != nil {
+		return "", "", "", "Ethereum Mainnet"
+	}
+
+	// Get deployer address
+	deployer = cfg.DeployerAddress
+	if deployer == "" {
+		deployer = cfg.Deployer
+	}
+
+	// Get batcher address
+	batcher = cfg.BatcherAddress
+	if batcher == "" {
+		batcher = cfg.Batcher
+	}
+
+	// Get proposer/validator address
+	proposer = cfg.ProposerAddress
+	if proposer == "" {
+		proposer = cfg.Proposer
+	}
+	if proposer == "" {
+		proposer = cfg.Validator
+	}
+
+	// Determine L1 chain name
+	l1Chain = cfg.L1Chain
+	if l1Chain == "" {
+		switch cfg.L1ChainID {
+		case 1:
+			l1Chain = "Ethereum Mainnet"
+		case 11155111:
+			l1Chain = "Sepolia Testnet"
+		case 17000:
+			l1Chain = "Holesky Testnet"
+		default:
+			l1Chain = "Ethereum Mainnet"
+		}
+	}
+
+	return deployer, batcher, proposer, l1Chain
 }
 
 // DeploymentStatus renders the deployment status/progress page (TASK-044)
@@ -359,18 +630,6 @@ func placeholderDeploymentsNew() templ.Component {
 	})
 }
 
-func placeholderDeploymentDetail() templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		_, err := w.Write([]byte(`
-		<div class="max-w-4xl mx-auto p-8">
-			<div class="border border-dashed border-[#333300] p-8 text-center text-[#666600]">
-				<p class="text-sm uppercase">Deployment detail page - TASK-043</p>
-			</div>
-		</div>
-		`))
-		return err
-	})
-}
 
 func placeholderDeploymentProgress() templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
