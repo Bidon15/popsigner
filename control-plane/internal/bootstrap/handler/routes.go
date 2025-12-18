@@ -8,6 +8,9 @@ import (
 func (h *DeploymentHandler) Routes() chi.Router {
 	r := chi.NewRouter()
 
+	// Pre-flight checks (must be before /{id} routes to avoid conflict)
+	r.Post("/preflight", h.Preflight) // POST /api/v1/deployments/preflight
+
 	// Deployment CRUD and management
 	r.Post("/", h.Create)           // POST /api/v1/deployments
 	r.Get("/", h.List)              // GET /api/v1/deployments

@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/bundle"
+	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/preflight"
 	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/repository"
 	apierrors "github.com/Bidon15/popsigner/control-plane/internal/pkg/errors"
 	"github.com/Bidon15/popsigner/control-plane/internal/pkg/response"
@@ -376,5 +377,52 @@ func (h *DeploymentHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.OK(w, responses)
+}
+
+// PreflightRequest is the request body for pre-flight checks.
+type PreflightRequest struct {
+	L1RPC           string `json:"l1_rpc"`
+	L1ChainID       uint64 `json:"l1_chain_id"`
+	DeployerAddress string `json:"deployer_address"`
+}
+
+// Preflight handles POST /api/v1/deployments/preflight
+// It performs pre-flight checks before starting a deployment.
+func (h *DeploymentHandler) Preflight(w http.ResponseWriter, r *http.Request) {
+	var req PreflightRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, apierrors.ErrBadRequest.WithMessage("invalid request body"))
+		return
+	}
+
+	// Validate required fields
+	if req.L1RPC == "" {
+		response.Error(w, apierrors.NewValidationError("l1_rpc", "l1_rpc is required"))
+		return
+	}
+	if req.L1ChainID == 0 {
+		response.Error(w, apierrors.NewValidationError("l1_chain_id", "l1_chain_id is required"))
+		return
+	}
+	if req.DeployerAddress == "" {
+		response.Error(w, apierrors.NewValidationError("deployer_address", "deployer_address is required"))
+		return
+	}
+
+	// Run pre-flight checks
+	checker := preflight.NewChecker()
+	preflightReq := &preflight.PreflightRequest{
+		L1RPC:           req.L1RPC,
+		L1ChainID:       req.L1ChainID,
+		DeployerAddress: req.DeployerAddress,
+	}
+
+	result, err := checker.RunChecks(r.Context(), preflightReq)
+	if err != nil {
+		response.Error(w, apierrors.ErrBadRequest.WithMessage(err.Error()))
+		return
+	}
+
+	response.OK(w, result)
 }
 
