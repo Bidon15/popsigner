@@ -478,9 +478,15 @@ func oauthCallbackHandler(oauthSvc service.OAuthService, provider string, cfg *c
 		})
 
 		// Get return URL from cookie (set during OAuth redirect)
-		returnTo := "/dashboard" // default
+		returnTo := "/dashboard" // default for main dashboard
 		if cookie, err := r.Cookie("oauth_return_to"); err == nil && cookie.Value != "" {
 			returnTo = cookie.Value
+		} else {
+			// If no cookie, check Referer header for subdomain hint
+			referer := r.Header.Get("Referer")
+			if strings.Contains(referer, "popkins.") {
+				returnTo = "https://popkins.popsigner.com/deployments"
+			}
 		}
 
 		// Clear the return URL cookie (must match domain used when setting)

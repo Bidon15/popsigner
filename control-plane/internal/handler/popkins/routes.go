@@ -27,7 +27,12 @@ func (h *Handler) Routes() chi.Router {
 
 	// Root redirects to deployments list
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/popkins/deployments", http.StatusFound)
+		http.Redirect(w, r, "/deployments", http.StatusFound)
+	})
+
+	// Handle /dashboard redirect for users coming from OAuth with fallback URL
+	r.Get("/dashboard", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/deployments", http.StatusFound)
 	})
 
 	// Deployment routes
