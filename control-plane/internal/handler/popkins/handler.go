@@ -256,10 +256,27 @@ func (h *Handler) DeploymentsCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Helper to build redirect URL with preserved form data
+	buildErrorRedirect := func(step int, errorMsg string) string {
+		q := make(url.Values)
+		q.Set("step", strconv.Itoa(step))
+		q.Set("error", errorMsg)
+		q.Set("stack", r.FormValue("stack"))
+		q.Set("chain_name", r.FormValue("chain_name"))
+		q.Set("chain_id", r.FormValue("chain_id"))
+		q.Set("l1_rpc", r.FormValue("l1_rpc"))
+		q.Set("l1_chain_id", r.FormValue("l1_chain_id"))
+		q.Set("da", r.FormValue("da"))
+		q.Set("deployer_key", r.FormValue("deployer_key"))
+		q.Set("batcher_key", r.FormValue("batcher_key"))
+		q.Set("proposer_key", r.FormValue("proposer_key"))
+		return "/deployments/new?" + q.Encode()
+	}
+
 	// Parse chain ID
 	chainID, err := strconv.ParseInt(r.FormValue("chain_id"), 10, 64)
 	if err != nil || chainID <= 0 {
-		http.Redirect(w, r, "/deployments/new?step=2&error=Invalid+chain+ID", http.StatusFound)
+		http.Redirect(w, r, buildErrorRedirect(2, "Invalid chain ID - must be a positive number"), http.StatusFound)
 		return
 	}
 
@@ -268,8 +285,25 @@ func (h *Handler) DeploymentsCreate(w http.ResponseWriter, r *http.Request) {
 	stack := r.FormValue("stack")
 	l1RPC := r.FormValue("l1_rpc")
 
-	if chainName == "" || stack == "" || l1RPC == "" {
-		http.Redirect(w, r, "/deployments/new?step=2&error=Missing+required+fields", http.StatusFound)
+	if chainName == "" {
+		http.Redirect(w, r, buildErrorRedirect(2, "Chain name is required"), http.StatusFound)
+		return
+	}
+	if stack == "" {
+		http.Redirect(w, r, buildErrorRedirect(1, "Please select a rollup stack"), http.StatusFound)
+		return
+	}
+	if l1RPC == "" {
+		http.Redirect(w, r, buildErrorRedirect(2, "L1 RPC URL is required"), http.StatusFound)
+		return
+	}
+
+	// Validate keys are selected
+	deployerKey := r.FormValue("deployer_key")
+	batcherKey := r.FormValue("batcher_key")
+	proposerKey := r.FormValue("proposer_key")
+	if deployerKey == "" || batcherKey == "" || proposerKey == "" {
+		http.Redirect(w, r, buildErrorRedirect(3, "Please select keys for all roles"), http.StatusFound)
 		return
 	}
 
@@ -280,16 +314,16 @@ func (h *Handler) DeploymentsCreate(w http.ResponseWriter, r *http.Request) {
 		"l1_rpc":       l1RPC,
 		"l1_chain_id":  r.FormValue("l1_chain_id"),
 		"da":           r.FormValue("da"),
-		"deployer_key": r.FormValue("deployer_key"),
-		"batcher_key":  r.FormValue("batcher_key"),
-		"proposer_key": r.FormValue("proposer_key"),
+		"deployer_key": deployerKey,
+		"batcher_key":  batcherKey,
+		"proposer_key": proposerKey,
 		"org_id":       org.ID.String(),
 	}
 
 	configJSON, err := json.Marshal(config)
 	if err != nil {
 		slog.Error("failed to marshal config", "error", err)
-		http.Redirect(w, r, "/deployments/new?step=4&error=Failed+to+create+deployment", http.StatusFound)
+		http.Redirect(w, r, buildErrorRedirect(4, "Internal error - please try again"), http.StatusFound)
 		return
 	}
 
@@ -304,7 +338,7 @@ func (h *Handler) DeploymentsCreate(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.deployRepo.CreateDeployment(r.Context(), deployment); err != nil {
 		slog.Error("failed to create deployment", "error", err)
-		http.Redirect(w, r, "/deployments/new?step=4&error=Failed+to+create+deployment", http.StatusFound)
+		http.Redirect(w, r, buildErrorRedirect(4, "Failed to create deployment - please try again"), http.StatusFound)
 		return
 	}
 
