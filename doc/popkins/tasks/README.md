@@ -52,7 +52,7 @@ Each task file follows a standard format:
 | Task                                                                   | Status  | Agent | Description                           |
 | ---------------------------------------------------------------------- | ------- | ----- | ------------------------------------- |
 | [TASK-030: Artifact Bundler](./TASK-030-artifact-bundler.md)           | 🔲 Open | -     | Bundle generation for **both stacks** |
-| [TASK-031: Docker Compose Generator](./TASK-031-docker-compose-gen.md) | 🔲 Open | -     | Compose templates for **both stacks** |
+| [TASK-031: Docker Compose Generator](./TASK-031-docker-compose-gen.md) | ✅ Done | Agent-P1 | Compose templates for **both stacks** |
 | [TASK-032: Cloud Deploy API](./TASK-032-cloud-deploy-api.md)           | 🔲 Open | -     | One-click cloud deployment            |
 
 ---

@@ -1,0 +1,138 @@
+version: "3.8"
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  # =============================================================
+  # NITRO NODE - L2 execution & derivation
+  # =============================================================
+  nitro:
+    image: offchainlabs/nitro-node:v3.1.0
+    restart: unless-stopped
+    logging: *logging
+    ports:
+      - "8547:8547"     # JSON-RPC
+      - "8548:8548"     # WebSocket
+      - "9642:9642"     # Metrics
+    volumes:
+      - ./config/node-config.json:/config/node-config.json:ro
+      - ./config/chain-info.json:/config/chain-info.json:ro
+      - nitro-data:/data
+    command: >
+      --conf.file=/config/node-config.json
+      --chain.info-files=/config/chain-info.json
+      --persistent.chain=/data
+      --http.addr=0.0.0.0
+      --http.port=8547
+      --http.api=eth,net,web3,arb,debug
+      --ws.addr=0.0.0.0
+      --ws.port=8548
+      --parent-chain.connection.url=${L1_RPC_URL}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8547"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+{{- if .UseCelestia }}
+    depends_on:
+      celestia-server:
+        condition: service_healthy
+{{- end }}
+
+  # =============================================================
+  # BATCH POSTER - Submits L2 batches (uses POPSigner mTLS auth)
+  # =============================================================
+  batch-poster:
+    image: offchainlabs/nitro-node:v3.1.0
+    restart: unless-stopped
+    logging: *logging
+    volumes:
+      - ./config/node-config.json:/config/node-config.json:ro
+      - ./config/chain-info.json:/config/chain-info.json:ro
+      - ./certs:/certs:ro
+      - batch-poster-data:/data
+    command: >
+      --conf.file=/config/node-config.json
+      --chain.info-files=/config/chain-info.json
+      --persistent.chain=/data
+      --parent-chain.connection.url=${L1_RPC_URL}
+      --node.batch-poster.enable=true
+      --node.batch-poster.parent-chain-wallet.only-create-key=false
+      --node.batch-poster.data-poster.external-signer.url=${POPSIGNER_MTLS_URL}
+      --node.batch-poster.data-poster.external-signer.method=eth_signTransaction
+      --node.batch-poster.data-poster.external-signer.client-cert=/certs/client.crt
+      --node.batch-poster.data-poster.external-signer.client-private-key=/certs/client.key
+{{- if .UseCelestia }}
+      --node.batch-poster.data-poster.max-mempool-transactions=1
+{{- end }}
+    depends_on:
+      nitro:
+        condition: service_healthy
+{{- if .UseCelestia }}
+      celestia-server:
+        condition: service_healthy
+{{- end }}
+
+  # =============================================================
+  # VALIDATOR - Validates state & posts assertions (uses POPSigner mTLS auth)
+  # =============================================================
+  validator:
+    image: offchainlabs/nitro-node:v3.1.0
+    restart: unless-stopped
+    logging: *logging
+    volumes:
+      - ./config/node-config.json:/config/node-config.json:ro
+      - ./config/chain-info.json:/config/chain-info.json:ro
+      - ./certs:/certs:ro
+      - validator-data:/data
+    command: >
+      --conf.file=/config/node-config.json
+      --chain.info-files=/config/chain-info.json
+      --persistent.chain=/data
+      --parent-chain.connection.url=${L1_RPC_URL}
+      --node.staker.enable=true
+      --node.staker.strategy=MakeNodes
+      --node.staker.data-poster.external-signer.url=${POPSIGNER_MTLS_URL}
+      --node.staker.data-poster.external-signer.method=eth_signTransaction
+      --node.staker.data-poster.external-signer.client-cert=/certs/client.crt
+      --node.staker.data-poster.external-signer.client-private-key=/certs/client.key
+    depends_on:
+      nitro:
+        condition: service_healthy
+
+{{- if .UseCelestia }}
+
+  # =============================================================
+  # CELESTIA SERVER - DA sidecar for Nitro
+  # =============================================================
+  celestia-server:
+    image: ghcr.io/celestiaorg/nitro-das-celestia:latest
+    restart: unless-stopped
+    logging: *logging
+    ports:
+      - "9876:9876"
+    environment:
+      - CELESTIA_NODE_AUTH_TOKEN=${CELESTIA_AUTH_TOKEN}
+      - CELESTIA_NODE_RPC_URL=${CELESTIA_RPC_URL}
+      - CELESTIA_NAMESPACE=${CELESTIA_NAMESPACE}
+      - RPC_ADDR=0.0.0.0:9876
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9876/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+{{- end }}
+
+volumes:
+  nitro-data:
+  batch-poster-data:
+  validator-data:
+
+networks:
+  default:
+    name: {{ .SanitizedChainName }}-nitro-network
+
