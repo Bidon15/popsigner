@@ -18,6 +18,7 @@ func (h *DeploymentHandler) Routes() chi.Router {
 	// Artifacts
 	r.Get("/{id}/artifacts", h.GetArtifacts)        // GET /api/v1/deployments/{id}/artifacts
 	r.Get("/{id}/artifacts/{type}", h.GetArtifact)  // GET /api/v1/deployments/{id}/artifacts/{type}
+	r.Get("/{id}/bundle", h.GetBundle)              // GET /api/v1/deployments/{id}/bundle
 
 	// Transactions
 	r.Get("/{id}/transactions", h.GetTransactions)  // GET /api/v1/deployments/{id}/transactions

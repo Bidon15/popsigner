@@ -1,0 +1,84 @@
+package components
+
+// CloudCTA renders the POPSigner Cloud call-to-action panel
+// Uses amber (#FFB000) theme to differentiate from self-hosted (green)
+templ CloudCTA() {
+	<div class="bg-gradient-to-br from-[#1a1500] to-[#0a0800] border border-[#FFB000] p-6 relative overflow-hidden h-full flex flex-col">
+		<!-- Glow effects -->
+		<div class="absolute top-0 right-0 w-40 h-40 bg-[#FFB000]/10 blur-3xl pointer-events-none"></div>
+		<div class="absolute bottom-0 left-0 w-32 h-32 bg-[#FFB000]/5 blur-2xl pointer-events-none"></div>
+		
+		<h2 class="text-xl font-bold text-[#FFB000] mb-2 flex items-center gap-3 uppercase relative z-10">
+			<span class="text-2xl">☁️</span> POPSIGNER_CLOUD
+		</h2>
+		
+		<p class="text-[#999] mb-6 text-sm relative z-10">
+			Skip the infrastructure setup. One-click deployment to managed Kubernetes.
+		</p>
+		
+		<ul class="text-sm space-y-3 mb-8 flex-grow relative z-10">
+			<li class="flex items-center gap-3 text-[#ccc]">
+				<span class="text-[#FFB000] text-lg">✓</span>
+				<span>Managed Kubernetes cluster</span>
+			</li>
+			<li class="flex items-center gap-3 text-[#ccc]">
+				<span class="text-[#FFB000] text-lg">✓</span>
+				<span>99.9% infrastructure SLA</span>
+			</li>
+			<li class="flex items-center gap-3 text-[#ccc]">
+				<span class="text-[#FFB000] text-lg">✓</span>
+				<span>Pre-configured Grafana + Prometheus</span>
+			</li>
+			<li class="flex items-center gap-3 text-[#ccc]">
+				<span class="text-[#FFB000] text-lg">✓</span>
+				<span>Full kubectl access to your namespace</span>
+			</li>
+			<li class="flex items-center gap-3 text-[#ccc]">
+				<span class="text-[#FFB000] text-lg">✓</span>
+				<span>Auto-scaling & managed updates</span>
+			</li>
+		</ul>
+		
+		<div class="relative z-10">
+			<a 
+				href="https://cloud.popsigner.com" 
+				target="_blank"
+				rel="noopener noreferrer"
+				class="block w-full py-4 bg-[#FFB000] text-black font-bold text-center uppercase tracking-wider hover:bg-[#FFC000] hover:shadow-[0_0_20px_#FFB000] transition-all"
+			>
+				TRY POPSIGNER CLOUD →
+			</a>
+			
+			<p class="text-center text-[#666600] text-xs mt-4">
+				Free trial available • No credit card required
+			</p>
+		</div>
+	</div>
+}
+
+// CloudCTACompact renders a smaller version of the Cloud CTA for inline use
+templ CloudCTACompact() {
+	<div class="bg-gradient-to-r from-[#1a1500] to-[#0a0800] border border-[#FFB000]/50 p-4 relative overflow-hidden">
+		<div class="absolute top-0 right-0 w-20 h-20 bg-[#FFB000]/10 blur-2xl pointer-events-none"></div>
+		
+		<div class="flex items-center justify-between gap-4 relative z-10">
+			<div class="flex items-center gap-3">
+				<span class="text-2xl">☁️</span>
+				<div>
+					<div class="text-[#FFB000] font-bold uppercase text-sm">POPSigner Cloud</div>
+					<div class="text-[#666600] text-xs">Skip setup • 99.9% SLA • One-click deploy</div>
+				</div>
+			</div>
+			
+			<a 
+				href="https://cloud.popsigner.com" 
+				target="_blank"
+				rel="noopener noreferrer"
+				class="px-4 py-2 bg-[#FFB000] text-black font-bold text-sm uppercase whitespace-nowrap hover:bg-[#FFC000] transition-colors"
+			>
+				TRY FREE →
+			</a>
+		</div>
+	</div>
+}
+

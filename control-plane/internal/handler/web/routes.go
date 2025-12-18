@@ -38,15 +38,16 @@ const (
 
 // WebHandler handles HTTP requests for the web dashboard.
 type WebHandler struct {
-	authService   service.AuthService
-	oauthService  service.OAuthService
-	keyService    service.KeyService
-	orgService    service.OrgService
-	auditService  service.AuditService
-	apiKeyService service.APIKeyService
-	certService   service.CertificateService
-	usageRepo     repository.UsageRepository
-	sessionStore  sessions.Store
+	authService       service.AuthService
+	oauthService      service.OAuthService
+	keyService        service.KeyService
+	orgService        service.OrgService
+	auditService      service.AuditService
+	apiKeyService     service.APIKeyService
+	certService       service.CertificateService
+	usageRepo         repository.UsageRepository
+	sessionStore      sessions.Store
+	deploymentHandler *DeploymentWebHandler
 }
 
 // Config holds configuration for the web handler.
@@ -76,6 +77,11 @@ func NewWebHandler(
 		usageRepo:     usageRepo,
 		sessionStore:  sessionStore,
 	}
+}
+
+// SetDeploymentHandler sets the deployment handler (called after construction if needed).
+func (h *WebHandler) SetDeploymentHandler(handler *DeploymentWebHandler) {
+	h.deploymentHandler = handler
 }
 
 // SetOAuthService sets the OAuth service (called after construction if needed).
@@ -184,6 +190,12 @@ func (h *WebHandler) Routes() chi.Router {
 		// Audit log detail
 		r.Get("/audit/{id}", h.AuditLogDetail)
 		r.Get("/audit/export", h.AuditLogExport)
+
+		// Deployment routes (if handler is configured)
+		r.Route("/deployments", func(r chi.Router) {
+			r.Get("/{id}/complete", h.DeploymentComplete)
+			r.Get("/{id}/status", h.DeploymentStatus)
+		})
 	})
 
 	return r
@@ -834,6 +846,28 @@ func (h *WebHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 // Usage and Audit handlers are implemented in audit.go
 
 // Settings handlers are implemented in settings.go
+
+// ============================================
+// Deployment Handlers (delegate to DeploymentWebHandler)
+// ============================================
+
+// DeploymentComplete renders the deployment complete page.
+func (h *WebHandler) DeploymentComplete(w http.ResponseWriter, r *http.Request) {
+	if h.deploymentHandler == nil {
+		http.Error(w, "Deployment handler not configured", http.StatusServiceUnavailable)
+		return
+	}
+	h.deploymentHandler.DeploymentComplete(w, r)
+}
+
+// DeploymentStatus renders the deployment status page.
+func (h *WebHandler) DeploymentStatus(w http.ResponseWriter, r *http.Request) {
+	if h.deploymentHandler == nil {
+		http.Error(w, "Deployment handler not configured", http.StatusServiceUnavailable)
+		return
+	}
+	h.deploymentHandler.DeploymentStatus(w, r)
+}
 
 // ============================================
 // Helper Methods

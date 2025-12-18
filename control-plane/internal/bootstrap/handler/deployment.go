@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 
+	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/bundle"
 	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/repository"
 	apierrors "github.com/Bidon15/popsigner/control-plane/internal/pkg/errors"
 	"github.com/Bidon15/popsigner/control-plane/internal/pkg/response"
@@ -32,6 +34,7 @@ func (n *noopOrchestrator) StartDeployment(_ context.Context, _ uuid.UUID) error
 type DeploymentHandler struct {
 	repo         repository.Repository
 	orchestrator Orchestrator
+	bundler      *bundle.Bundler
 }
 
 // NewDeploymentHandler creates a new deployment handler.
@@ -43,6 +46,11 @@ func NewDeploymentHandler(repo repository.Repository, orch Orchestrator) *Deploy
 		repo:         repo,
 		orchestrator: orch,
 	}
+}
+
+// SetBundler sets the bundler for bundle generation.
+func (h *DeploymentHandler) SetBundler(b *bundle.Bundler) {
+	h.bundler = b
 }
 
 // Create handles POST /api/v1/deployments
@@ -227,6 +235,74 @@ func (h *DeploymentHandler) GetArtifact(w http.ResponseWriter, r *http.Request) 
 	}
 
 	response.OK(w, toArtifactResponse(artifact))
+}
+
+// GetBundle handles GET /api/v1/deployments/{id}/bundle
+// Returns a downloadable .tar.gz bundle containing all deployment artifacts.
+func (h *DeploymentHandler) GetBundle(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		response.Error(w, apierrors.ErrBadRequest.WithMessage("invalid deployment ID"))
+		return
+	}
+
+	// Verify deployment exists
+	deployment, err := h.repo.GetDeployment(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			response.Error(w, apierrors.NewNotFoundError("deployment"))
+			return
+		}
+		response.Error(w, apierrors.ErrInternal)
+		return
+	}
+
+	// Check if bundler is configured
+	if h.bundler == nil {
+		response.Error(w, apierrors.ErrInternal.WithMessage("bundler not configured"))
+		return
+	}
+
+	// Generate bundle
+	bundleResult, err := h.bundler.CreateBundle(r.Context(), id)
+	if err != nil {
+		response.Error(w, apierrors.ErrInternal.WithMessage(fmt.Sprintf("failed to generate bundle: %v", err)))
+		return
+	}
+
+	// Use filename from result or generate from deployment
+	filename := bundleResult.Filename
+	if filename == "" {
+		chainName := h.extractChainName(deployment)
+		filename = fmt.Sprintf("%s-%s-artifacts.tar.gz", chainName, deployment.Stack)
+	}
+
+	// Set headers for download
+	w.Header().Set("Content-Type", "application/gzip")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", filename))
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(bundleResult.Data)))
+
+	w.Write(bundleResult.Data)
+}
+
+// extractChainName gets the chain name from deployment config.
+func (h *DeploymentHandler) extractChainName(d *repository.Deployment) string {
+	if d.Config != nil {
+		type config struct {
+			ChainName string `json:"chain_name"`
+			Name      string `json:"name"`
+		}
+		var cfg config
+		if err := json.Unmarshal(d.Config, &cfg); err == nil {
+			if cfg.ChainName != "" {
+				return cfg.ChainName
+			}
+			if cfg.Name != "" {
+				return cfg.Name
+			}
+		}
+	}
+	return fmt.Sprintf("chain-%d", d.ChainID)
 }
 
 // GetTransactions handles GET /api/v1/deployments/{id}/transactions

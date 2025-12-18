@@ -1,0 +1,210 @@
+package pages
+
+import (
+	"fmt"
+	"github.com/Bidon15/popsigner/control-plane/templates/components"
+	"github.com/Bidon15/popsigner/control-plane/templates/layouts"
+)
+
+// DeploymentData holds all data needed for the deployment complete page
+type DeploymentData struct {
+	DeploymentID string
+	ChainName    string
+	ChainID      uint64
+	Stack        string // "opstack" or "nitro"
+	Status       string
+	BundleSize   string
+	CreatedAt    string
+}
+
+// ArtifactInfo represents a downloadable artifact
+type ArtifactInfo struct {
+	Name        string
+	Description string
+	Size        string
+	Type        string // artifact type for download URL
+}
+
+// DeploymentCompletePage renders the deployment complete page with Docker quickstart and Cloud CTA
+templ DeploymentCompletePage(deployment DeploymentData, artifacts []ArtifactInfo) {
+	@layouts.Base("Deployment Complete", false, false) {
+		<div class="min-h-screen bg-black font-mono">
+			<!-- Header -->
+			<header class="border-b border-[#333300] bg-black sticky top-0 z-50">
+				<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+					<div class="flex items-center justify-between h-16">
+						<a href="/dashboard" class="flex items-center gap-2 group">
+							<span class="text-[#FFB000] text-xl group-hover:drop-shadow-[0_0_10px_#FFB000] transition-all">◇</span>
+							<span class="text-lg font-bold text-[#FFB000] uppercase tracking-wider">POPSIGNER</span>
+						</a>
+						<a href="/dashboard" class="text-sm text-[#666600] hover:text-[#33FF00] transition-colors uppercase">
+							← BACK TO DASHBOARD
+						</a>
+					</div>
+				</div>
+			</header>
+
+			<main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+				<!-- Success Header -->
+				<div class="text-center mb-12">
+					<div class="text-7xl mb-6 animate-pulse">🚀</div>
+					<h1 class="text-4xl font-bold text-[#33FF00] mb-3 uppercase drop-shadow-[0_0_20px_#33FF00]">
+						DEPLOYMENT_COMPLETE
+					</h1>
+					<p class="text-[#999] text-lg">
+						Your { deployment.Stack } rollup is ready to run
+					</p>
+				</div>
+
+				<!-- Chain Info Card -->
+				<div class="bg-black border border-[#333300] p-6 mb-10">
+					<h2 class="text-sm text-[#666600] uppercase mb-4 flex items-center gap-2">
+						<span class="text-[#33FF00]">▸</span> CHAIN_INFO
+					</h2>
+					<div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
+						<div>
+							<span class="text-[#666600] block mb-1">Chain Name</span>
+							<span class="text-[#33FF00] font-bold text-lg">{ deployment.ChainName }</span>
+						</div>
+						<div>
+							<span class="text-[#666600] block mb-1">Chain ID</span>
+							<span class="text-[#33FF00] font-bold text-lg">{ fmt.Sprintf("%d", deployment.ChainID) }</span>
+						</div>
+						<div>
+							<span class="text-[#666600] block mb-1">Stack</span>
+							<span class="text-[#33FF00] font-bold text-lg uppercase">{ deployment.Stack }</span>
+						</div>
+						<div>
+							<span class="text-[#666600] block mb-1">Status</span>
+							<span class="text-[#33FF00] font-bold text-lg flex items-center gap-2">
+								<span class="inline-block w-2 h-2 bg-[#33FF00] rounded-full animate-pulse"></span>
+								READY
+							</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Two Paths: Self-Hosted vs Cloud -->
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+					<!-- Self-Hosted Path (Docker Compose) -->
+					<div class="bg-black border border-[#333300] p-6 hover:border-[#33FF00]/50 transition-colors">
+						<h2 class="text-xl font-bold text-[#33FF00] mb-2 flex items-center gap-3 uppercase">
+							<span class="text-2xl">🖥️</span> RUN_LOCALLY
+						</h2>
+						<p class="text-[#666600] mb-6 text-sm">
+							Download artifacts and run on your own infrastructure with Docker Compose.
+						</p>
+						
+						@components.DockerQuickstart(deployment.DeploymentID, deployment.ChainName, deployment.Stack)
+					</div>
+
+					<!-- Cloud Path (CTA) -->
+					@components.CloudCTA()
+				</div>
+
+				<!-- Artifact Downloads -->
+				<div class="bg-black border border-[#333300] p-6 mb-10">
+					<h2 class="text-xl font-bold text-[#33FF00] mb-6 flex items-center gap-3 uppercase">
+						<span class="text-2xl">📦</span> DOWNLOAD_ARTIFACTS
+					</h2>
+					
+					<!-- Bundle Download (Primary) -->
+					<div class="mb-6 p-4 bg-[#0a0a00] border border-[#333300] hover:border-[#33FF00] transition-colors">
+						<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+							<div>
+								<span class="text-[#33FF00] font-bold text-lg">{ deployment.ChainName }-{ deployment.Stack }-artifacts.tar.gz</span>
+								<p class="text-[#666600] text-sm mt-1">Complete bundle with Docker Compose, configs, and scripts</p>
+								if deployment.BundleSize != "" {
+									<span class="text-[#444] text-xs">Size: { deployment.BundleSize }</span>
+								}
+							</div>
+							<a 
+								href={ templ.URL("/api/v1/deployments/" + deployment.DeploymentID + "/bundle") }
+								class="px-6 py-3 bg-[#33FF00] text-black font-bold text-sm uppercase hover:bg-[#44FF11] transition-colors whitespace-nowrap"
+							>
+								DOWNLOAD BUNDLE
+							</a>
+						</div>
+					</div>
+
+					<!-- Individual Artifacts -->
+					if len(artifacts) > 0 {
+						<div class="text-sm text-[#666600] uppercase mb-3">Individual files:</div>
+						<div class="space-y-2">
+							for _, artifact := range artifacts {
+								<div class="flex items-center justify-between p-3 bg-[#111] border border-[#222] hover:border-[#333300] transition-colors">
+									<div class="flex items-center gap-3">
+										<span class="text-[#33FF00]">▸</span>
+										<div>
+											<span class="text-white">{ artifact.Name }</span>
+											if artifact.Size != "" {
+												<span class="text-[#444] text-sm ml-2">({ artifact.Size })</span>
+											}
+										</div>
+									</div>
+									<a 
+										href={ templ.URL("/api/v1/deployments/" + deployment.DeploymentID + "/artifacts/" + artifact.Type) }
+										class="px-4 py-2 border border-[#33FF00] text-[#33FF00] font-bold text-xs uppercase hover:bg-[#33FF00]/10 transition-colors"
+									>
+										DOWNLOAD
+									</a>
+								</div>
+							}
+						</div>
+					}
+				</div>
+
+				<!-- Endpoints Preview -->
+				<div class="bg-black border border-[#333300] p-6 mb-10">
+					<h2 class="text-xl font-bold text-[#33FF00] mb-6 flex items-center gap-3 uppercase">
+						<span class="text-2xl">🔗</span> ENDPOINTS (AFTER_STARTUP)
+					</h2>
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+						if deployment.Stack == "opstack" {
+							<div class="p-3 bg-[#0a0a00] border border-[#222]">
+								<span class="text-[#666600] text-xs uppercase block mb-1">L2 JSON-RPC</span>
+								<code class="text-[#33FF00] text-sm">http://localhost:8545</code>
+							</div>
+							<div class="p-3 bg-[#0a0a00] border border-[#222]">
+								<span class="text-[#666600] text-xs uppercase block mb-1">L2 WebSocket</span>
+								<code class="text-[#33FF00] text-sm">ws://localhost:8546</code>
+							</div>
+							<div class="p-3 bg-[#0a0a00] border border-[#222]">
+								<span class="text-[#666600] text-xs uppercase block mb-1">OP Node RPC</span>
+								<code class="text-[#33FF00] text-sm">http://localhost:9545</code>
+							</div>
+						} else {
+							<div class="p-3 bg-[#0a0a00] border border-[#222]">
+								<span class="text-[#666600] text-xs uppercase block mb-1">L2 JSON-RPC</span>
+								<code class="text-[#33FF00] text-sm">http://localhost:8547</code>
+							</div>
+							<div class="p-3 bg-[#0a0a00] border border-[#222]">
+								<span class="text-[#666600] text-xs uppercase block mb-1">L2 WebSocket</span>
+								<code class="text-[#33FF00] text-sm">ws://localhost:8548</code>
+							</div>
+							<div class="p-3 bg-[#0a0a00] border border-[#222]">
+								<span class="text-[#666600] text-xs uppercase block mb-1">Metrics</span>
+								<code class="text-[#33FF00] text-sm">http://localhost:9642</code>
+							</div>
+						}
+					</div>
+				</div>
+
+				<!-- Help Links -->
+				<div class="text-center text-sm text-[#666600] border-t border-[#222] pt-8">
+					<p>
+						Need help? Check our 
+						<a href="https://docs.popsigner.com/rollups" target="_blank" class="text-[#33FF00] hover:underline hover:drop-shadow-[0_0_8px_#33FF00]">
+							documentation
+						</a>
+						or 
+						<a href="https://discord.gg/popsigner" target="_blank" class="text-[#33FF00] hover:underline hover:drop-shadow-[0_0_8px_#33FF00]">
+							join Discord
+						</a>
+					</p>
+				</div>
+			</main>
+		</div>
+	}
+}
+

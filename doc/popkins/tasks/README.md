@@ -53,7 +53,9 @@ Each task file follows a standard format:
 | ---------------------------------------------------------------------- | ------- | ----- | ------------------------------------- |
 | [TASK-030: Artifact Bundler](./TASK-030-artifact-bundler.md)           | ✅ Done | Agent-P2 | Bundle generation for **both stacks** |
 | [TASK-031: Docker Compose Generator](./TASK-031-docker-compose-gen.md) | ✅ Done | Agent-P1 | Compose templates for **both stacks** |
-| [TASK-032: Cloud Deploy API](./TASK-032-cloud-deploy-api.md)           | 🔲 Open | -     | One-click cloud deployment            |
+| [TASK-032: Deployment Complete UI](./TASK-032-cloud-deploy-api.md)     | ✅ Done | Agent-UI | Self-hosted guide + Cloud CTA         |
+
+> **Note:** TASK-032 creates the UI that guides users through Docker Compose setup and promotes POPSigner Cloud. Actual cloud deployment is a **separate product** - see [POPCloud PRD](../../popcloud/PRD.md).
 
 ---
 
@@ -102,9 +104,15 @@ Each task file follows a standard format:
     │     │       │                           BOTH OP Stack & Nitro   │
     │     │       │                                                   │
     │     │       ▼                                                   │
-    │     │   TASK-032 (Cloud Deploy)                                 │
+    │     │   TASK-032 (Deployment UI) ◄── Self-hosted guide +       │
+    │     │                                Cloud CTA (links to       │
+    │     │                                cloud.popsigner.com)       │
     │     │                                                           │
     │     └───────────────────────────────────────────────────────────┘
+    │
+    │     ────────────────────────────────────────────────────────────
+    │     POPCloud (separate product) - see doc/popcloud/PRD.md
+    │     ────────────────────────────────────────────────────────────
     │
     └─────────────────────────────────────────────────────────────────
 ```
@@ -117,6 +125,7 @@ Each task file follows a standard format:
 | ------------ | ---------------------------- | ------------------------------------------------ |
 | **TASK-030** | TASK-013, TASK-023, TASK-031 | Needs artifacts from both stacks + compose files |
 | **TASK-031** | TASK-013, TASK-023           | Needs to know artifact structure for both stacks |
+| **TASK-032** | TASK-030, TASK-031           | Needs bundles ready to show download UI          |
 | **TASK-013** | TASK-010, TASK-011, TASK-012 | OP Stack must deploy before extracting artifacts |
 | **TASK-023** | TASK-020, TASK-021, TASK-022 | Nitro must deploy before generating configs      |
 
