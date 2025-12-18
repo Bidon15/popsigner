@@ -237,61 +237,20 @@ templ DeploymentStep2Config(data DeploymentNewData) {
 				</select>
 			</div>
 
-			<!-- DA Selection for Nitro -->
-			if data.FormData.Stack == "nitro" {
-				<div>
-					<label class="block text-sm text-[#666600] uppercase mb-2">Data Availability</label>
-					<div class="grid grid-cols-2 gap-3">
-						<label class="cursor-pointer">
-							<input type="radio" name="da" value="anytrust" class="hidden peer"
-								   checked?={ data.FormData.DA == "anytrust" || data.FormData.DA == "" }/>
-							<div class="p-3 border border-[#333300] text-center
-										peer-checked:border-[#33FF00] peer-checked:bg-[#33FF00]/5
-										hover:border-[#666600] transition-colors">
-								<div class="text-[#33FF00] font-bold uppercase">AnyTrust</div>
-								<div class="text-[#666600] text-xs mt-1">Lower cost, DAC</div>
-							</div>
-						</label>
-						<label class="cursor-pointer">
-							<input type="radio" name="da" value="calldata" class="hidden peer"
-								   checked?={ data.FormData.DA == "calldata" }/>
-							<div class="p-3 border border-[#333300] text-center
-										peer-checked:border-[#33FF00] peer-checked:bg-[#33FF00]/5
-										hover:border-[#666600] transition-colors">
-								<div class="text-[#33FF00] font-bold uppercase">Rollup</div>
-								<div class="text-[#666600] text-xs mt-1">Full security</div>
-							</div>
-						</label>
+			<!-- Data Availability - Celestia only -->
+			<div>
+				<label class="block text-sm text-[#666600] uppercase mb-2">Data Availability</label>
+				<input type="hidden" name="da" value="celestia"/>
+				<div class="p-4 border border-[#33FF00] bg-[#33FF00]/5">
+					<div class="flex items-center gap-3">
+						<span class="text-2xl">🟣</span>
+						<div>
+							<div class="text-[#33FF00] font-bold uppercase">Celestia</div>
+							<div class="text-[#666600] text-xs mt-1">Modular data availability layer for lower costs</div>
+						</div>
 					</div>
 				</div>
-			} else {
-				<!-- DA Selection for OP Stack -->
-				<div>
-					<label class="block text-sm text-[#666600] uppercase mb-2">Data Availability</label>
-					<div class="grid grid-cols-2 gap-3">
-						<label class="cursor-pointer">
-							<input type="radio" name="da" value="celestia" class="hidden peer"
-								   checked?={ data.FormData.DA == "celestia" || data.FormData.DA == "" }/>
-							<div class="p-3 border border-[#333300] text-center
-										peer-checked:border-[#33FF00] peer-checked:bg-[#33FF00]/5
-										hover:border-[#666600] transition-colors">
-								<div class="text-[#33FF00] font-bold uppercase">Celestia</div>
-								<div class="text-[#666600] text-xs mt-1">Lower cost DA</div>
-							</div>
-						</label>
-						<label class="cursor-pointer">
-							<input type="radio" name="da" value="calldata" class="hidden peer"
-								   checked?={ data.FormData.DA == "calldata" }/>
-							<div class="p-3 border border-[#333300] text-center
-										peer-checked:border-[#33FF00] peer-checked:bg-[#33FF00]/5
-										hover:border-[#666600] transition-colors">
-								<div class="text-[#33FF00] font-bold uppercase">Calldata</div>
-								<div class="text-[#666600] text-xs mt-1">L1 security</div>
-							</div>
-						</label>
-					</div>
-				</div>
-			}
+			</div>
 		</div>
 
 		<div class="flex gap-4 pt-4">
