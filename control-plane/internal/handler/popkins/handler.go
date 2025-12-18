@@ -311,7 +311,7 @@ func (h *Handler) DeploymentsCreate(w http.ResponseWriter, r *http.Request) {
 // CreateKeyInline handles inline key creation from the wizard (step 3)
 // Creates a key and redirects back to step 3 with preserved form state
 func (h *Handler) CreateKeyInline(w http.ResponseWriter, r *http.Request) {
-	_, org, err := h.getUserAndOrg(r)
+	user, org, err := h.getUserAndOrg(r)
 	if err != nil {
 		h.handleAuthError(w, r)
 		return
@@ -328,8 +328,8 @@ func (h *Handler) CreateKeyInline(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the default namespace for this org
-	namespaces, err := h.orgService.ListNamespaces(r.Context(), org.ID, org.ID)
+	// Get the default namespace for this org (actorID must be user.ID for permission check)
+	namespaces, err := h.orgService.ListNamespaces(r.Context(), org.ID, user.ID)
 	if err != nil || len(namespaces) == 0 {
 		slog.Error("failed to list namespaces", "org_id", org.ID, "error", err)
 		http.Redirect(w, r, "/deployments/new?step=3&error=No+namespace+available", http.StatusFound)
