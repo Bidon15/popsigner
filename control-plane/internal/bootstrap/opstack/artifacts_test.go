@@ -60,6 +60,19 @@ func (m *mockArtifactRepository) ListDeploymentsByStatus(ctx context.Context, st
 	return args.Get(0).([]*repository.Deployment), args.Error(1)
 }
 
+func (m *mockArtifactRepository) ListAllDeployments(ctx context.Context) ([]*repository.Deployment, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*repository.Deployment), args.Error(1)
+}
+
+func (m *mockArtifactRepository) UpdateDeploymentConfig(ctx context.Context, id uuid.UUID, config json.RawMessage) error {
+	args := m.Called(ctx, id, config)
+	return args.Error(0)
+}
+
 func (m *mockArtifactRepository) RecordTransaction(ctx context.Context, tx *repository.Transaction) error {
 	args := m.Called(ctx, tx)
 	return args.Error(0)

@@ -7,7 +7,9 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -35,6 +37,58 @@ func (m *MockL1Client) BalanceAt(ctx context.Context, account common.Address, bl
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*big.Int), args.Error(1)
+}
+
+func (m *MockL1Client) NonceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (uint64, error) {
+	args := m.Called(ctx, account, blockNumber)
+	return args.Get(0).(uint64), args.Error(1)
+}
+
+func (m *MockL1Client) PendingNonceAt(ctx context.Context, account common.Address) (uint64, error) {
+	args := m.Called(ctx, account)
+	return args.Get(0).(uint64), args.Error(1)
+}
+
+func (m *MockL1Client) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*big.Int), args.Error(1)
+}
+
+func (m *MockL1Client) SuggestGasTipCap(ctx context.Context) (*big.Int, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*big.Int), args.Error(1)
+}
+
+func (m *MockL1Client) EstimateGas(ctx context.Context, call ethereum.CallMsg) (uint64, error) {
+	args := m.Called(ctx, call)
+	return args.Get(0).(uint64), args.Error(1)
+}
+
+func (m *MockL1Client) SendTransaction(ctx context.Context, tx *types.Transaction) error {
+	args := m.Called(ctx, tx)
+	return args.Error(0)
+}
+
+func (m *MockL1Client) TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error) {
+	args := m.Called(ctx, txHash)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*types.Receipt), args.Error(1)
+}
+
+func (m *MockL1Client) HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error) {
+	args := m.Called(ctx, number)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*types.Header), args.Error(1)
 }
 
 func (m *MockL1Client) Close() {}
