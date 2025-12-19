@@ -322,11 +322,26 @@ func (o *Orchestrator) deployWithOPDeployer(
 		}
 	}
 
-	o.logger.Info("op-deployer pipeline completed successfully",
+	o.logger.Info("op-deployer pipeline completed, generating bundle artifacts",
 		slog.Int("chains_deployed", len(result.ChainStates)),
 	)
 
-		return nil
+	// Generate bundle artifacts (docker-compose, .env, README, etc.)
+	if onProgress != nil {
+		onProgress(StageGenesis, 0.9, "Generating deployment bundle...")
+	}
+
+	extractor := NewArtifactExtractor(o.repo)
+	if _, err := extractor.ExtractArtifacts(ctx, deploymentID, cfg); err != nil {
+		o.logger.Warn("failed to generate bundle artifacts (deployment still succeeded)",
+			slog.String("error", err.Error()),
+		)
+		// Don't fail the deployment - the raw artifacts are saved
+	}
+
+	o.logger.Info("OP Stack deployment and bundle generation completed")
+
+	return nil
 }
 
 // Resume attempts to resume a paused or failed deployment.
