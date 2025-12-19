@@ -64,10 +64,10 @@ func BuildIntent(cfg *DeploymentConfig) (*state.Intent, error) {
 		Challenger:                parseAddressOrDefault(cfg.ChallengerAddress, deployerAddr),
 	}
 
-	// Use HTTPS locators to download pre-built artifacts from Google Cloud Storage
-	// instead of embedded artifacts (which only work when building from optimism monorepo)
-	artifactURL := artifacts.CreateHttpLocator(DefaultArtifactHash)
-	httpLocator := artifacts.MustNewLocatorFromURL(artifactURL)
+	// Use custom artifacts that match v1.16.3's struct definitions (29 fields)
+	// Hosted on Scaleway S3 - these are compiled from op-node v1.16.3 source
+	const customArtifactURL = "https://op-contracts.s3.nl-ams.scw.cloud/artifacts-op-node-v1.16.3.tzst"
+	httpLocator := artifacts.MustNewLocatorFromURL(customArtifactURL)
 
 	intent := &state.Intent{
 		ConfigType:         state.IntentTypeCustom,
