@@ -3,10 +3,13 @@ package opstack
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"math/big"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -14,27 +17,12 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 
 	"github.com/ethereum-optimism/optimism/op-chain-ops/addresses"
-	"github.com/ethereum-optimism/optimism/op-chain-ops/foundry"
 	"github.com/ethereum-optimism/optimism/op-deployer/pkg/deployer/artifacts"
 	"github.com/ethereum-optimism/optimism/op-deployer/pkg/deployer/broadcaster"
-	openv "github.com/ethereum-optimism/optimism/op-deployer/pkg/env"
 	"github.com/ethereum-optimism/optimism/op-deployer/pkg/deployer/opcm"
 	"github.com/ethereum-optimism/optimism/op-deployer/pkg/deployer/pipeline"
 	"github.com/ethereum-optimism/optimism/op-deployer/pkg/deployer/state"
-)
-
-// Artifact content hashes for different OP Stack contract versions
-// These are pre-built artifacts hosted on Google Cloud Storage
-const (
-	// ArtifactHashV5 is the content hash for OP Stack contracts v5.0.0
-	ArtifactHashV5 = "b112b16f8939fbb732c0693de3d3bd1e8e3e2f0771f91d5ab300a6c9b7b1af73"
-	// ArtifactHashV4_1 is the content hash for OP Stack contracts v4.1.0
-	ArtifactHashV4_1 = "579f43b5bbb43e74216b7ed33125280567df86eaf00f7621f354e4a68c07323e"
-	// ArtifactHashV4 is the content hash for OP Stack contracts v4.0.0
-	ArtifactHashV4 = "67966a2cb9945e1d9ab40e9c61f499e73cdb31d21b8d29a5a5c909b2b13ecd70"
-
-	// DefaultArtifactHash is the default artifact hash to use (v5.0.0)
-	DefaultArtifactHash = ArtifactHashV5
+	openv "github.com/ethereum-optimism/optimism/op-deployer/pkg/env"
 )
 
 // OPDeployer wraps the op-deployer library for OP Stack contract deployment.
@@ -114,28 +102,47 @@ func (d *OPDeployer) Deploy(ctx context.Context, cfg *DeploymentConfig, signerAd
 
 	l1Client := ethclient.NewClient(rpcClient)
 
-	// 4. Download artifacts from HTTPS using the intent's locators
-	// Intent already has HTTPS locators configured (not embedded)
-	d.logger.Info("downloading contract artifacts from HTTPS",
-		slog.String("l1_locator", intent.L1ContractsLocator.URL.String()),
-		slog.String("l2_locator", intent.L2ContractsLocator.URL.String()),
+	// 4. Download and extract artifacts ourselves to avoid op-deployer's
+	// finicky directory structure expectations
+	d.logger.Info("downloading contract artifacts",
+		slog.String("url", ContractArtifactURL),
 	)
 
-	l1Artifacts, err := artifacts.Download(ctx, intent.L1ContractsLocator, nil, d.cacheDir)
-	if err != nil {
-		return nil, fmt.Errorf("download L1 artifacts: %w", err)
+	// Clean any cached artifacts from op-deployer's cache to force fresh download
+	// This ensures we always use the latest artifacts from S3
+	if err := d.cleanArtifactCache(); err != nil {
+		d.logger.Warn("failed to clean artifact cache", slog.String("error", err.Error()))
 	}
 
-	// L2 artifacts - check if same as L1 (common case)
-	var l2Artifacts foundry.StatDirFs
-	if intent.L1ContractsLocator.URL.String() == intent.L2ContractsLocator.URL.String() {
-		l2Artifacts = l1Artifacts
-	} else {
-		l2Artifacts, err = artifacts.Download(ctx, intent.L2ContractsLocator, nil, d.cacheDir)
-		if err != nil {
-			return nil, fmt.Errorf("download L2 artifacts: %w", err)
-		}
+	artifactDownloader := NewContractArtifactDownloader(d.cacheDir)
+	artifactDir, err := artifactDownloader.Download(ctx, ContractArtifactURL)
+	if err != nil {
+		return nil, fmt.Errorf("download artifacts: %w", err)
 	}
+
+	d.logger.Info("artifacts downloaded and extracted",
+		slog.String("path", artifactDir),
+	)
+
+	// Create file:// locator pointing to our extracted artifacts
+	// op-deployer's file handler correctly looks for forge-artifacts/ subdirectory
+	fileLocator, err := artifacts.NewFileLocator(artifactDir)
+	if err != nil {
+		return nil, fmt.Errorf("create file locator: %w", err)
+	}
+
+	// Update intent to use our local artifacts
+	intent.L1ContractsLocator = fileLocator
+	intent.L2ContractsLocator = fileLocator
+
+	// Now use op-deployer's Download which will just use os.DirFS for file:// locators
+	l1Artifacts, err := artifacts.Download(ctx, intent.L1ContractsLocator, nil, d.cacheDir)
+	if err != nil {
+		return nil, fmt.Errorf("load L1 artifacts: %w", err)
+	}
+
+	// L2 uses same artifacts
+	l2Artifacts := l1Artifacts
 
 	bundle := pipeline.ArtifactsBundle{
 		L1: l1Artifacts,
@@ -143,6 +150,10 @@ func (d *OPDeployer) Deploy(ctx context.Context, cfg *DeploymentConfig, signerAd
 	}
 
 	d.logger.Info("artifacts downloaded successfully")
+
+	// Debug: Log bytecode sizes from our downloaded artifacts
+	d.logger.Info("checking bytecode sizes from downloaded artifacts", slog.String("path", artifactDir))
+	d.logBytecodeSizes(artifactDir)
 
 	// 5. Create broadcaster with our signer
 	deployerAddr := common.HexToAddress(cfg.DeployerAddress)
@@ -265,4 +276,104 @@ func (f stateWriterFunc) WriteState(st *state.State) error {
 // gethLogger creates a go-ethereum compatible logger from slog.
 func (d *OPDeployer) gethLogger() log.Logger {
 	return log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelInfo, true))
+}
+
+// cleanArtifactCache removes all cached artifacts to force fresh downloads.
+// This ensures we always use the latest artifacts from S3.
+func (d *OPDeployer) cleanArtifactCache() error {
+	// Clean our custom download cache (artifacts-* directories and *.tzst files)
+	entries, err := os.ReadDir(d.cacheDir)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		name := entry.Name()
+		// Remove artifact directories and tzst files
+		if strings.HasPrefix(name, "artifacts-") || strings.HasSuffix(name, ".tzst") {
+			path := filepath.Join(d.cacheDir, name)
+			d.logger.Info("cleaning cached artifact", slog.String("path", path))
+			if err := os.RemoveAll(path); err != nil {
+				d.logger.Warn("failed to remove cached artifact",
+					slog.String("path", path),
+					slog.String("error", err.Error()))
+			}
+		}
+	}
+	return nil
+}
+
+// logBytecodeSizes logs the bytecode sizes of key contracts for debugging.
+// This helps identify which contracts might exceed the 24KB EIP-170 limit.
+func (d *OPDeployer) logBytecodeSizes(artifactDir string) {
+	contracts := []string{
+		"OPContractsManager",
+		"OPContractsManagerInterop",
+		"OPContractsManagerStandardValidator",
+		"OPContractsManagerGameTypeAdder",
+		"OPContractsManagerDeployer",
+		"OPContractsManagerUpgrader",
+		"OptimismPortal2",
+		"SystemConfig",
+		"L1CrossDomainMessenger",
+		"MIPS",
+		// FaultDisputeGame contracts - often cause issues
+		"FaultDisputeGame",
+		"PermissionedDisputeGame",
+		"FaultDisputeGameV2",
+		"PermissionedDisputeGameV2",
+		"PreimageOracle",
+	}
+
+	forgeDir := artifactDir + "/forge-artifacts"
+
+	for _, name := range contracts {
+		path := fmt.Sprintf("%s/%s.sol/%s.json", forgeDir, name, name)
+		data, err := os.ReadFile(path)
+		if err != nil {
+			continue // Skip if not found
+		}
+
+		// Parse bytecode from JSON
+		type artifact struct {
+			Bytecode struct {
+				Object string `json:"object"`
+			} `json:"bytecode"`
+			DeployedBytecode struct {
+				Object string `json:"object"`
+			} `json:"deployedBytecode"`
+		}
+
+		var a artifact
+		if err := json.Unmarshal(data, &a); err != nil {
+			continue
+		}
+
+		// Calculate sizes (hex string, so /2 for bytes, -2 for "0x" prefix)
+		initSize := 0
+		if len(a.Bytecode.Object) > 2 {
+			initSize = (len(a.Bytecode.Object) - 2) / 2
+		}
+		deployedSize := 0
+		if len(a.DeployedBytecode.Object) > 2 {
+			deployedSize = (len(a.DeployedBytecode.Object) - 2) / 2
+		}
+
+		// Flag contracts that might cause issues
+		status := "✓"
+		if initSize > 24576 {
+			status = "⚠️ INIT CODE EXCEEDS 24KB"
+		} else if deployedSize > 24576 {
+			status = "⚠️ DEPLOYED CODE EXCEEDS 24KB"
+		} else if initSize > 20000 || deployedSize > 20000 {
+			status = "⚠ CLOSE TO LIMIT"
+		}
+
+		d.logger.Info("contract bytecode size",
+			slog.String("contract", name),
+			slog.Int("init_bytes", initSize),
+			slog.Int("deployed_bytes", deployedSize),
+			slog.String("status", status),
+		)
+	}
 }

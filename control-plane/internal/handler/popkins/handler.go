@@ -755,14 +755,15 @@ func (h *Handler) buildStagesInfo(deployment *repository.Deployment) []component
 	}
 
 	if deployment.Stack == repository.StackOPStack {
-		// OP Stack stages
+		// OP Stack stages - these match the orchestrator stage names
+		// The op-deployer runs the full pipeline, so we track high-level phases
 		stages = []components.StageInfo{
-			{Name: "Initialize Configuration", Status: "pending", TxCount: 0},
-			{Name: "Validate Settings", Status: "pending", TxCount: 0},
-			{Name: "Deploy L1 Contracts", Status: "pending", TxCount: 35},
+			{Name: "Preflight Checks", Status: "pending", TxCount: 0},
+			{Name: "Deploy Superchain", Status: "pending", TxCount: 0},
+			{Name: "Deploy Implementations", Status: "pending", TxCount: 0},
+			{Name: "Deploy OP Chain", Status: "pending", TxCount: 0},
 			{Name: "Generate Genesis", Status: "pending", TxCount: 0},
-			{Name: "Configure Sequencer", Status: "pending", TxCount: 0},
-			{Name: "Finalize Deployment", Status: "pending", TxCount: 0},
+			{Name: "Create Bundle", Status: "pending", TxCount: 0},
 		}
 	} else {
 		// Nitro stages
@@ -775,6 +776,18 @@ func (h *Handler) buildStagesInfo(deployment *repository.Deployment) []component
 		}
 	}
 
+	// Map orchestrator stage names to UI stage indices for OP Stack
+	opStackStageIndex := map[string]int{
+		"init":                   0, // Preflight Checks
+		"deploy_superchain":      1, // Deploy Superchain
+		"deploy_implementations": 2, // Deploy Implementations
+		"deploy_opchain":         3, // Deploy OP Chain
+		"deploy_alt_da":          3, // Part of Deploy OP Chain (Celestia DA)
+		"generate_genesis":       4, // Generate Genesis
+		"set_start_block":        4, // Part of Generate Genesis
+		"completed":              5, // Create Bundle (all done)
+	}
+
 	// Update stages based on deployment status
 	if deployment.Status == repository.StatusCompleted {
 		// All stages complete
@@ -783,46 +796,64 @@ func (h *Handler) buildStagesInfo(deployment *repository.Deployment) []component
 			stages[i].TxComplete = stages[i].TxCount
 		}
 	} else if deployment.Status == repository.StatusFailed {
-		// Mark stages up to current as complete, current as failed
-		foundCurrent := false
-		for i := range stages {
-			if !foundCurrent {
-				if stages[i].Name == currentStage {
-					stages[i].Status = "failed"
-					foundCurrent = true
-				} else if currentStage == "" {
-					// No current stage means first stage
-					stages[0].Status = "failed"
-					foundCurrent = true
-				} else {
-					stages[i].Status = "completed"
-					stages[i].TxComplete = stages[i].TxCount
-				}
+		// Determine which stage failed based on currentStage
+		failedIndex := 0
+		if currentStage != "" {
+			if idx, ok := opStackStageIndex[currentStage]; ok {
+				failedIndex = idx
 			}
+		}
+
+		// Mark stages before failed as complete, failed stage as failed
+		for i := range stages {
+			if i < failedIndex {
+				stages[i].Status = "completed"
+				stages[i].TxComplete = stages[i].TxCount
+			} else if i == failedIndex {
+				stages[i].Status = "failed"
+			}
+			// Remaining stages stay "pending"
 		}
 	} else if deployment.Status == repository.StatusRunning {
-		// Mark stages up to current as complete, current as in_progress
-		foundCurrent := false
-		for i := range stages {
-			if !foundCurrent {
-				if stages[i].Name == currentStage {
-					stages[i].Status = "in_progress"
-					stages[i].TxComplete = stages[i].TxCount / 2 // Estimate 50% for demo
-					stages[i].Details = "Processing..."
-					foundCurrent = true
-				} else if currentStage == "" && i == 0 {
-					stages[i].Status = "in_progress"
-					foundCurrent = true
-				} else {
-					stages[i].Status = "completed"
-					stages[i].TxComplete = stages[i].TxCount
-				}
+		// Determine current stage index
+		currentIndex := 0
+		if currentStage != "" {
+			if idx, ok := opStackStageIndex[currentStage]; ok {
+				currentIndex = idx
 			}
 		}
-	} else if deployment.Status == repository.StatusPending {
-		// First stage is pending/waiting
-		stages[0].Status = "pending"
+
+		// Mark stages before current as complete, current as in_progress
+		for i := range stages {
+			if i < currentIndex {
+				stages[i].Status = "completed"
+				stages[i].TxComplete = stages[i].TxCount
+			} else if i == currentIndex {
+				stages[i].Status = "in_progress"
+				stages[i].Details = "Processing..."
+			}
+			// Remaining stages stay "pending"
+		}
+	} else if deployment.Status == repository.StatusPaused {
+		// Paused - show current stage as paused indicator
+		currentIndex := 0
+		if currentStage != "" {
+			if idx, ok := opStackStageIndex[currentStage]; ok {
+				currentIndex = idx
+			}
+		}
+
+		for i := range stages {
+			if i < currentIndex {
+				stages[i].Status = "completed"
+				stages[i].TxComplete = stages[i].TxCount
+			} else if i == currentIndex {
+				stages[i].Status = "pending" // Paused at this stage
+				stages[i].Details = "Paused"
+			}
+		}
 	}
+	// StatusPending: all stages remain "pending" (the default)
 
 	return stages
 }

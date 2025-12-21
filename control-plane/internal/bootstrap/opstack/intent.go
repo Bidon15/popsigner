@@ -9,7 +9,6 @@ import (
 
 	"github.com/ethereum-optimism/optimism/op-chain-ops/addresses"
 	"github.com/ethereum-optimism/optimism/op-chain-ops/genesis"
-	"github.com/ethereum-optimism/optimism/op-deployer/pkg/deployer/artifacts"
 	"github.com/ethereum-optimism/optimism/op-deployer/pkg/deployer/state"
 )
 
@@ -64,19 +63,15 @@ func BuildIntent(cfg *DeploymentConfig) (*state.Intent, error) {
 		Challenger:                parseAddressOrDefault(cfg.ChallengerAddress, deployerAddr),
 	}
 
-	// Use custom artifacts that match v1.16.3's struct definitions (29 fields)
-	// Hosted on Scaleway S3 - these are compiled from op-node v1.16.3 source
-	const customArtifactURL = "https://op-contracts.s3.nl-ams.scw.cloud/artifacts-op-node-v1.16.3.tzst"
-	httpLocator := artifacts.MustNewLocatorFromURL(customArtifactURL)
-
+	// Artifact locators will be set by the deployer after downloading
+	// This allows us to handle the download/extraction ourselves
 	intent := &state.Intent{
-		ConfigType:         state.IntentTypeCustom,
-		L1ChainID:          cfg.L1ChainID,
-		FundDevAccounts:    false, // Production deployments don't fund dev accounts
-		SuperchainRoles:    superchainRoles,
-		L1ContractsLocator: httpLocator,
-		L2ContractsLocator: httpLocator, // Same artifacts for L1 and L2
-		Chains:             []*state.ChainIntent{chainIntent},
+		ConfigType:      state.IntentTypeCustom,
+		L1ChainID:       cfg.L1ChainID,
+		FundDevAccounts: false, // Production deployments don't fund dev accounts
+		SuperchainRoles: superchainRoles,
+		// L1ContractsLocator and L2ContractsLocator set by deployer
+		Chains: []*state.ChainIntent{chainIntent},
 	}
 
 	return intent, nil
