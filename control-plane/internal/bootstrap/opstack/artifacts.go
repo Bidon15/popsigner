@@ -126,14 +126,10 @@ func (e *ArtifactExtractor) ExtractArtifacts(
 	}
 	artifacts.Genesis = genesis
 
-	// 2. Build rollup.json from state and config
-	rollup, err := e.buildRollupConfig(ctx, deploymentID, cfg)
+	// 2. Extract rollup.json - prefer saved artifact from op-deployer, fallback to building from config
+	rollupJSON, err := e.extractRollupConfig(ctx, deploymentID, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("build rollup config: %w", err)
-	}
-	rollupJSON, err := json.MarshalIndent(rollup, "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("marshal rollup config: %w", err)
+		return nil, fmt.Errorf("extract rollup config: %w", err)
 	}
 	artifacts.Rollup = rollupJSON
 
@@ -184,14 +180,55 @@ func (e *ArtifactExtractor) ExtractArtifacts(
 
 // extractGenesis retrieves the genesis.json from the database.
 func (e *ArtifactExtractor) extractGenesis(ctx context.Context, deploymentID uuid.UUID) (json.RawMessage, error) {
-	artifact, err := e.repo.GetArtifact(ctx, deploymentID, "genesis")
+	// Try new artifact name first (genesis.json)
+	artifact, err := e.repo.GetArtifact(ctx, deploymentID, "genesis.json")
 	if err != nil {
 		return nil, fmt.Errorf("get genesis artifact: %w", err)
+	}
+	if artifact != nil && len(artifact.Content) > 0 {
+		return artifact.Content, nil
+	}
+
+	// Fallback to old name (genesis) for backwards compatibility
+	artifact, err = e.repo.GetArtifact(ctx, deploymentID, "genesis")
+	if err != nil {
+		return nil, fmt.Errorf("get genesis artifact (legacy): %w", err)
 	}
 	if artifact == nil {
 		return nil, fmt.Errorf("genesis artifact not found")
 	}
 	return artifact.Content, nil
+}
+
+// extractRollupConfig retrieves the rollup.json from the database.
+// It prefers the saved artifact from op-deployer (which uses inspect.GenesisAndRollup)
+// and falls back to building from deployment config if not found.
+func (e *ArtifactExtractor) extractRollupConfig(ctx context.Context, deploymentID uuid.UUID, cfg *DeploymentConfig) (json.RawMessage, error) {
+	// Try new artifact name first (rollup.json)
+	artifact, err := e.repo.GetArtifact(ctx, deploymentID, "rollup.json")
+	if err != nil {
+		return nil, fmt.Errorf("get rollup config artifact: %w", err)
+	}
+	if artifact != nil && len(artifact.Content) > 0 {
+		return artifact.Content, nil
+	}
+
+	// Fallback to old name (rollup_config)
+	artifact, err = e.repo.GetArtifact(ctx, deploymentID, "rollup_config")
+	if err != nil {
+		return nil, fmt.Errorf("get rollup config artifact (legacy): %w", err)
+	}
+	if artifact != nil && len(artifact.Content) > 0 {
+		// Return the saved rollup config directly (it's already in the correct format)
+		return artifact.Content, nil
+	}
+
+	// Fallback: build from deployment config (legacy path)
+	rollup, err := e.buildRollupConfig(ctx, deploymentID, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("build rollup config: %w", err)
+	}
+	return json.MarshalIndent(rollup, "", "  ")
 }
 
 // buildRollupConfig constructs the rollup.json from deployment state and config.
@@ -220,6 +257,12 @@ func (e *ArtifactExtractor) buildRollupConfig(
 		if err := json.Unmarshal(rollupArtifact.Content, &rollup); err == nil {
 			return &rollup, nil
 		}
+	}
+
+	// Extract chain_state for contract addresses (uses camelCase from Go struct serialization)
+	chainState, _ := state["chain_state"].(map[string]interface{})
+	if chainState == nil {
+		chainState = state // Fallback to top level
 	}
 
 	// Build rollup config from deployment config
@@ -254,8 +297,8 @@ func (e *ArtifactExtractor) buildRollupConfig(
 		L1ChainID:           cfg.L1ChainID,
 		L2ChainID:           cfg.ChainID,
 		BatchInboxAddress:   calculateBatchInboxAddress(cfg.ChainID),
-		DepositContractAddr: getStringFromState(state, "optimism_portal_proxy", ""),
-		L1SystemConfigAddr:  getStringFromState(state, "system_config_proxy", ""),
+		DepositContractAddr: getAddressFromState(chainState, "OptimismPortalProxy"),
+		L1SystemConfigAddr:  getAddressFromState(chainState, "SystemConfigProxy"),
 	}
 
 	// Add hardfork timestamps (set at genesis for new chains)
@@ -269,12 +312,23 @@ func (e *ArtifactExtractor) buildRollupConfig(
 
 	// Alt-DA configuration - always enabled for Celestia DA
 	// POPKins exclusively uses Celestia as the DA layer
-		rollup.AltDAEnabled = true
+	rollup.AltDAEnabled = true
 
 	return rollup, nil
 }
 
 // extractContractAddresses retrieves deployed contract addresses from state.
+// The state structure from op-deployer is:
+//
+//	{
+//	  "chain_state": {
+//	    "OptimismPortalProxy": "0x...",      // camelCase from Go struct
+//	    "L1CrossDomainMessengerProxy": "0x...",
+//	    ...
+//	  },
+//	  "superchain_deployment": { ... },
+//	  "implementations_deployment": { ... }
+//	}
 func (e *ArtifactExtractor) extractContractAddresses(ctx context.Context, deploymentID uuid.UUID) (ContractAddresses, error) {
 	artifact, err := e.repo.GetArtifact(ctx, deploymentID, "deployment_state")
 	if err != nil {
@@ -289,19 +343,34 @@ func (e *ArtifactExtractor) extractContractAddresses(ctx context.Context, deploy
 			return addrs, fmt.Errorf("unmarshal state: %w", err)
 		}
 
-		// Extract addresses from state
-		addrs.OptimismPortalProxy = getStringFromState(state, "optimism_portal_proxy", "")
-		addrs.L1CrossDomainMessengerProxy = getStringFromState(state, "l1_cross_domain_messenger_proxy", "")
-		addrs.L1StandardBridgeProxy = getStringFromState(state, "l1_standard_bridge_proxy", "")
-		addrs.L1ERC721BridgeProxy = getStringFromState(state, "l1_erc721_bridge_proxy", "")
-		addrs.SystemConfigProxy = getStringFromState(state, "system_config_proxy", "")
-		addrs.DisputeGameFactoryProxy = getStringFromState(state, "dispute_game_factory_proxy", "")
-		addrs.AnchorStateRegistryProxy = getStringFromState(state, "anchor_state_registry_proxy", "")
-		addrs.DelayedWETHProxy = getStringFromState(state, "delayed_weth_proxy", "")
-		addrs.OptimismMintableERC20Factory = getStringFromState(state, "optimism_mintable_erc20_factory", "")
-		addrs.AddressManager = getStringFromState(state, "address_manager", "")
-		addrs.SuperchainConfig = getStringFromState(state, "superchain_config", "")
-		addrs.ProtocolVersions = getStringFromState(state, "protocol_versions", "")
+		// The addresses are nested in chain_state (from op-deployer's ChainState struct)
+		chainState, _ := state["chain_state"].(map[string]interface{})
+		if chainState == nil {
+			// Fallback: try top-level (older format)
+			chainState = state
+		}
+
+		// Extract addresses using camelCase keys (Go struct JSON serialization)
+		// OpChainCoreContracts
+		addrs.OptimismPortalProxy = getAddressFromState(chainState, "OptimismPortalProxy")
+		addrs.L1CrossDomainMessengerProxy = getAddressFromState(chainState, "L1CrossDomainMessengerProxy")
+		addrs.L1StandardBridgeProxy = getAddressFromState(chainState, "L1StandardBridgeProxy")
+		addrs.L1ERC721BridgeProxy = getAddressFromState(chainState, "L1Erc721BridgeProxy")
+		addrs.SystemConfigProxy = getAddressFromState(chainState, "SystemConfigProxy")
+		addrs.OptimismMintableERC20Factory = getAddressFromState(chainState, "OptimismMintableErc20FactoryProxy")
+		addrs.AddressManager = getAddressFromState(chainState, "AddressManagerImpl")
+
+		// OpChainFaultProofsContracts
+		addrs.DisputeGameFactoryProxy = getAddressFromState(chainState, "DisputeGameFactoryProxy")
+		addrs.AnchorStateRegistryProxy = getAddressFromState(chainState, "AnchorStateRegistryProxy")
+		addrs.DelayedWETHProxy = getAddressFromState(chainState, "DelayedWethPermissionedGameProxy")
+
+		// SuperchainContracts (from superchain_deployment)
+		superchain, _ := state["superchain_deployment"].(map[string]interface{})
+		if superchain != nil {
+			addrs.SuperchainConfig = getAddressFromState(superchain, "SuperchainConfigProxy")
+			addrs.ProtocolVersions = getAddressFromState(superchain, "ProtocolVersionsProxy")
+		}
 	}
 
 	// Get batch inbox address from chain ID
@@ -311,6 +380,18 @@ func (e *ArtifactExtractor) extractContractAddresses(ctx context.Context, deploy
 	}
 
 	return addrs, nil
+}
+
+// getAddressFromState extracts an Ethereum address from the state map.
+// It handles both string addresses and common.Address types (which serialize as hex strings).
+func getAddressFromState(state map[string]interface{}, key string) string {
+	if state == nil {
+		return ""
+	}
+	if v, ok := state[key].(string); ok {
+		return v
+	}
+	return ""
 }
 
 // saveAllArtifacts saves all artifacts to the database.
@@ -384,12 +465,28 @@ func (e *ArtifactExtractor) saveAllArtifacts(ctx context.Context, deploymentID u
 }
 
 // saveArtifact saves a single artifact to the database.
+// For non-JSON content (like docker-compose.yml, jwt.txt), wraps as JSON string.
 func (e *ArtifactExtractor) saveArtifact(ctx context.Context, deploymentID uuid.UUID, name string, content []byte) error {
+	var jsonContent json.RawMessage
+
+	// Check if content is already valid JSON
+	if json.Valid(content) {
+		jsonContent = content
+	} else {
+		// Wrap non-JSON content as a JSON string (for YAML, plain text, etc.)
+		// This allows storing docker-compose.yml, jwt.txt, README.md, etc.
+		escaped, err := json.Marshal(string(content))
+		if err != nil {
+			return fmt.Errorf("marshal non-JSON content for %s: %w", name, err)
+		}
+		jsonContent = escaped
+	}
+
 	artifact := &repository.Artifact{
 		ID:           uuid.New(),
 		DeploymentID: deploymentID,
 		ArtifactType: name,
-		Content:      content,
+		Content:      jsonContent,
 		CreatedAt:    time.Now(),
 	}
 	return e.repo.SaveArtifact(ctx, artifact)
@@ -415,6 +512,7 @@ func (e *ArtifactExtractor) CreateBundle(ctx context.Context, deploymentID uuid.
 	// Organize artifacts into the bundle
 	for _, a := range artifacts {
 		var path string
+		isPlainText := false // Non-JSON files stored as JSON strings need unwrapping
 		switch a.ArtifactType {
 		case "genesis.json":
 			path = bundlePrefix + "genesis.json"
@@ -426,20 +524,31 @@ func (e *ArtifactExtractor) CreateBundle(ctx context.Context, deploymentID uuid.
 			path = bundlePrefix + "deploy-config.json"
 		case "docker-compose.yml":
 			path = bundlePrefix + "docker-compose.yml"
+			isPlainText = true
 		case ".env.example":
 			path = bundlePrefix + ".env.example"
+			isPlainText = true
 		case "jwt.txt":
 			path = bundlePrefix + "jwt.txt"
+			isPlainText = true
 		case "config.toml":
 			path = bundlePrefix + "config.toml"
+			isPlainText = true
 		case "README.md":
 			path = bundlePrefix + "README.md"
+			isPlainText = true
 		default:
 			// Skip internal artifacts like deployment_state
 			continue
 		}
 
-		if err := addToZip(zw, path, a.Content); err != nil {
+		// Get content, unwrapping JSON string if necessary
+		content := a.Content
+		if isPlainText {
+			content = unwrapJSONString(a.Content)
+		}
+
+		if err := addToZip(zw, path, content); err != nil {
 			return nil, fmt.Errorf("add %s to zip: %w", a.ArtifactType, err)
 		}
 	}
@@ -449,6 +558,19 @@ func (e *ArtifactExtractor) CreateBundle(ctx context.Context, deploymentID uuid.
 	}
 
 	return buf.Bytes(), nil
+}
+
+// unwrapJSONString unwraps a JSON-encoded string back to plain text.
+// Used for non-JSON artifacts (docker-compose.yml, jwt.txt, etc.) that were
+// stored as JSON strings to satisfy the JSONB column requirement.
+func unwrapJSONString(data []byte) []byte {
+	// Try to unmarshal as a JSON string
+	var s string
+	if err := json.Unmarshal(data, &s); err == nil {
+		return []byte(s)
+	}
+	// If it's not a JSON string, return as-is (might be raw content)
+	return data
 }
 
 // GetArtifact retrieves a specific artifact by type.
