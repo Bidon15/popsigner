@@ -8,15 +8,16 @@ RUN apk add --no-cache git ca-certificates
 
 # Copy go mod files
 COPY go.mod go.sum ./
-RUN go mod download
+
+# Force fresh download of patched optimism fork (bypass module cache and checksum server)
+# This ensures we always get the latest version of the patched fork
+RUN GONOSUMDB=github.com/Bidon15/optimism GOPROXY=direct go mod download
 
 # Copy source code
 COPY . .
 
-# Build the binary with cache mounts for faster incremental builds
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /server ./cmd/server
+# Build the binary WITHOUT cache mounts to ensure fresh module resolution
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /server ./cmd/server
 
 # Runtime stage
 FROM alpine:3.19
