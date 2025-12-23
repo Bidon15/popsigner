@@ -155,9 +155,11 @@ func main() {
 	logger.Info("OP Stack orchestrator initialized")
 
 	// Initialize Nitro orchestrator for Orbit chain deployments
+	// Uses CertificateServiceProvider to auto-issue mTLS certs for each deployment
+	nitroCertProvider := nitro.NewCertificateServiceProvider(certSvc)
 	nitroOrch := nitro.NewOrchestrator(
 		bootstrapRepo,
-		nil, // CertificateProvider - will use certs from config
+		nitroCertProvider,
 		nitro.OrchestratorConfig{
 			Logger:                logger,
 			WorkerPath:            "internal/bootstrap/nitro/worker",
