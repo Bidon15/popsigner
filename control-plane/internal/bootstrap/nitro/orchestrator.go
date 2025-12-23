@@ -153,17 +153,18 @@ func (o *Orchestrator) Deploy(ctx context.Context, deploymentID uuid.UUID, onPro
 	reportProgress("init", 0.2, "Building deployment configuration")
 
 	// 4. Build DeployConfig for the TypeScript worker
+	// Use getter methods to handle both POPKins form names (l1_*) and explicit names (parent_chain_*)
 	deployConfig := &DeployConfig{
 		ChainID:              config.ChainID,
 		ChainName:            config.ChainName,
-		ParentChainID:        config.ParentChainID,
-		ParentChainRpc:       config.ParentChainRpc,
+		ParentChainID:        config.GetParentChainID(),
+		ParentChainRpc:       config.GetParentChainRpc(),
 		Owner:                config.DeployerAddress,
 		BatchPosters:         config.BatchPosters,
 		Validators:           config.Validators,
 		StakeToken:           config.StakeToken,
 		BaseStake:            config.BaseStake,
-		DataAvailability:     config.DataAvailability,
+		DataAvailability:     config.GetDataAvailability(),
 		NativeToken:          config.NativeToken,
 		ConfirmPeriodBlocks:  config.ConfirmPeriodBlocks,
 		ExtraChallengeTimeBlocks: config.ExtraChallengeTimeBlocks,
@@ -176,6 +177,12 @@ func (o *Orchestrator) Deploy(ctx context.Context, deploymentID uuid.UUID, onPro
 	}
 
 	// Validate required fields
+	if deployConfig.ParentChainRpc == "" {
+		return o.failDeployment(ctx, deploymentID, fmt.Errorf("parent chain RPC URL is required (l1_rpc or parent_chain_rpc)"))
+	}
+	if deployConfig.ParentChainID == 0 {
+		return o.failDeployment(ctx, deploymentID, fmt.Errorf("parent chain ID is required (l1_chain_id or parent_chain_id)"))
+	}
 	if deployConfig.Owner == "" {
 		return o.failDeployment(ctx, deploymentID, fmt.Errorf("deployer_address is required"))
 	}
@@ -248,15 +255,21 @@ func (o *Orchestrator) failDeployment(ctx context.Context, deploymentID uuid.UUI
 
 // NitroDeploymentConfigRaw is the raw config format stored in the database.
 // This maps to the API request format with key UUIDs that get resolved to addresses.
+// Supports both POPKins form field names (l1_*) and explicit Nitro names (parent_chain_*).
 type NitroDeploymentConfigRaw struct {
 	// Organization ID (for cert/key lookup)
 	OrgID string `json:"org_id"`
 
 	// Chain configuration
-	ChainID       int64  `json:"chain_id"`
-	ChainName     string `json:"chain_name"`
-	ParentChainID int64  `json:"parent_chain_id"`
-	ParentChainRpc string `json:"parent_chain_rpc"`
+	ChainID   int64  `json:"chain_id"`
+	ChainName string `json:"chain_name"`
+
+	// Parent chain configuration - supports both naming conventions
+	// POPKins form uses l1_chain_id/l1_rpc, but we also accept parent_chain_*
+	L1ChainID      int64  `json:"l1_chain_id"`      // From POPKins form
+	L1RPC          string `json:"l1_rpc"`           // From POPKins form
+	ParentChainID  int64  `json:"parent_chain_id"`  // Explicit Nitro config
+	ParentChainRpc string `json:"parent_chain_rpc"` // Explicit Nitro config
 
 	// Deployer address (resolved from deployer_key by unified orchestrator)
 	DeployerAddress string `json:"deployer_address"`
@@ -269,8 +282,9 @@ type NitroDeploymentConfigRaw struct {
 	StakeToken string `json:"stake_token"`
 	BaseStake  string `json:"base_stake"`
 
-	// Data availability (celestia, rollup, anytrust)
+	// Data availability (celestia, rollup, anytrust) - also accepts "da" from form
 	DataAvailability string `json:"data_availability"`
+	DA               string `json:"da"` // From POPKins form
 
 	// Optional custom native token
 	NativeToken string `json:"native_token,omitempty"`
@@ -285,5 +299,32 @@ type NitroDeploymentConfigRaw struct {
 	ClientCert string `json:"client_cert,omitempty"`
 	ClientKey  string `json:"client_key,omitempty"`
 	CaCert     string `json:"ca_cert,omitempty"`
+}
+
+// GetParentChainID returns the parent chain ID, preferring l1_chain_id if set.
+func (c *NitroDeploymentConfigRaw) GetParentChainID() int64 {
+	if c.L1ChainID != 0 {
+		return c.L1ChainID
+	}
+	return c.ParentChainID
+}
+
+// GetParentChainRpc returns the parent chain RPC URL, preferring l1_rpc if set.
+func (c *NitroDeploymentConfigRaw) GetParentChainRpc() string {
+	if c.L1RPC != "" {
+		return c.L1RPC
+	}
+	return c.ParentChainRpc
+}
+
+// GetDataAvailability returns the DA type, preferring da field if set.
+func (c *NitroDeploymentConfigRaw) GetDataAvailability() string {
+	if c.DA != "" {
+		return c.DA
+	}
+	if c.DataAvailability != "" {
+		return c.DataAvailability
+	}
+	return "celestia" // Default
 }
 
