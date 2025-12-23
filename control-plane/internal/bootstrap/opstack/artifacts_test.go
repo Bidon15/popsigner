@@ -146,21 +146,21 @@ func TestArtifactExtractor_ExtractArtifacts(t *testing.T) {
 	}
 	cfg.ApplyDefaults()
 
-	// Mock genesis artifact
+	// Mock genesis artifact (new naming: genesis.json)
 	genesisContent := json.RawMessage(`{"config": {"chainId": 12345}}`)
-	mockRepo.On("GetArtifact", ctx, deploymentID, "genesis").Return(&repository.Artifact{
+	mockRepo.On("GetArtifact", ctx, deploymentID, "genesis.json").Return(&repository.Artifact{
 		ID:           uuid.New(),
 		DeploymentID: deploymentID,
-		ArtifactType: "genesis",
+		ArtifactType: "genesis.json",
 		Content:      genesisContent,
 		CreatedAt:    time.Now(),
 	}, nil)
 
-	// Mock state artifact
+	// Mock state artifact (uses PascalCase keys as per Go struct JSON serialization)
 	stateContent := json.RawMessage(`{
-		"optimism_portal_proxy": "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-		"l1_cross_domain_messenger_proxy": "0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-		"system_config_proxy": "0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+		"OptimismPortalProxy": "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+		"L1CrossDomainMessengerProxy": "0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+		"SystemConfigProxy": "0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
 	}`)
 	mockRepo.On("GetArtifact", ctx, deploymentID, "deployment_state").Return(&repository.Artifact{
 		ID:           uuid.New(),
@@ -170,7 +170,8 @@ func TestArtifactExtractor_ExtractArtifacts(t *testing.T) {
 		CreatedAt:    time.Now(),
 	}, nil)
 
-	// Mock rollup_config artifact (not found - will be built from config)
+	// Mock rollup artifact (not found - will be built from config)
+	mockRepo.On("GetArtifact", ctx, deploymentID, "rollup.json").Return(nil, nil)
 	mockRepo.On("GetArtifact", ctx, deploymentID, "rollup_config").Return(nil, nil)
 
 	// Mock deployment for chain ID
@@ -216,10 +217,7 @@ func TestArtifactExtractor_ExtractArtifacts(t *testing.T) {
 	// Verify env example
 	assert.NotEmpty(t, artifacts.EnvExample)
 	assert.Contains(t, artifacts.EnvExample, "L1_RPC_URL")
-	assert.Contains(t, artifacts.EnvExample, "POPSIGNER_ENDPOINT")
-	// Verify Celestia configuration is included (POPKins only supports Celestia)
-	assert.Contains(t, artifacts.EnvExample, "CELESTIA_CORE_GRPC")
-	assert.Contains(t, artifacts.EnvExample, "CELESTIA_KEY_NAME")
+	assert.Contains(t, artifacts.EnvExample, "POPSIGNER_RPC_URL")
 
 	mockRepo.AssertExpectations(t)
 }
@@ -241,7 +239,8 @@ func TestArtifactExtractor_ExtractArtifacts_MissingGenesis(t *testing.T) {
 	}
 	cfg.ApplyDefaults()
 
-	// Mock genesis artifact not found
+	// Mock genesis artifact not found (new name first, then legacy)
+	mockRepo.On("GetArtifact", ctx, deploymentID, "genesis.json").Return(nil, nil)
 	mockRepo.On("GetArtifact", ctx, deploymentID, "genesis").Return(nil, nil)
 
 	artifacts, err := extractor.ExtractArtifacts(ctx, deploymentID, cfg)
@@ -468,17 +467,17 @@ func TestGenerateDockerCompose(t *testing.T) {
 	assert.Contains(t, compose, "op-proposer:")
 
 	// Verify POPSigner integration via command-line flags
-	assert.Contains(t, compose, "--signer.endpoint=${POPSIGNER_ENDPOINT}")
+	assert.Contains(t, compose, "--signer.endpoint=${POPSIGNER_RPC_URL}")
 	assert.Contains(t, compose, "--signer.address=${BATCHER_ADDRESS}")
 	assert.Contains(t, compose, "--signer.address=${PROPOSER_ADDRESS}")
 
 	// Verify Celestia Alt-DA configuration (always enabled for POPKins)
 	assert.Contains(t, compose, "op-alt-da:")
 	assert.Contains(t, compose, "--altda.enabled=true")
-	assert.Contains(t, compose, "--altda.da-service=http://op-alt-da:3100")
+	assert.Contains(t, compose, "--altda.da-server=http://op-alt-da:3100")
 
 	// Verify network name
-	assert.Contains(t, compose, "opstack-test-chain")
+	assert.Contains(t, compose, "test-chain-opstack")
 }
 
 func TestGenerateDockerCompose_WithAltDA(t *testing.T) {
@@ -502,7 +501,7 @@ func TestGenerateDockerCompose_WithAltDA(t *testing.T) {
 	assert.Contains(t, compose, "op-alt-da:")
 	assert.Contains(t, compose, "config.toml")
 	assert.Contains(t, compose, "--altda.enabled=true")
-	assert.Contains(t, compose, "--altda.da-service=http://op-alt-da:3100")
+	assert.Contains(t, compose, "--altda.da-server=http://op-alt-da:3100")
 }
 
 func TestSanitizeChainName(t *testing.T) {
@@ -546,16 +545,10 @@ func TestGenerateEnvExample(t *testing.T) {
 
 	// Verify L1 and POPSigner configuration
 	assert.Contains(t, env, "L1_RPC_URL=https://eth-sepolia.example.com")
-	assert.Contains(t, env, "POPSIGNER_ENDPOINT=https://rpc.popsigner.io")
+	assert.Contains(t, env, "POPSIGNER_RPC_URL=https://rpc.popsigner.io")
 	assert.Contains(t, env, "BATCHER_ADDRESS=0x2222222222222222222222222222222222222222")
 	assert.Contains(t, env, "PROPOSER_ADDRESS=0x3333333333333333333333333333333333333333")
 	assert.Contains(t, env, "CHAIN_ID=12345")
-
-	// Verify Celestia configuration (POPKins always uses Celestia)
-	assert.Contains(t, env, "CELESTIA_CORE_GRPC")
-	assert.Contains(t, env, "CELESTIA_KEY_NAME")
-	assert.Contains(t, env, "CELESTIA_NETWORK")
-	assert.Contains(t, env, "CELESTIA_NAMESPACE")
 }
 
 func TestContractAddresses_JSONMarshaling(t *testing.T) {

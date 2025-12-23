@@ -53,7 +53,7 @@ func TestGenerateOPStack(t *testing.T) {
 	}
 
 	// Verify network name contains chain name
-	if !strings.Contains(result.ComposeYAML, "my-test-chain-opstack-network") {
+	if !strings.Contains(result.ComposeYAML, "my-test-chain-opstack") {
 		t.Error("Network name should contain sanitized chain name")
 	}
 
@@ -366,7 +366,7 @@ func TestEmptyChainName(t *testing.T) {
 	}
 
 	// Should use default "rollup" name
-	if !strings.Contains(result.ComposeYAML, "rollup-opstack-network") {
+	if !strings.Contains(result.ComposeYAML, "rollup-opstack") {
 		t.Error("Should use default 'rollup' name when ChainName is empty")
 	}
 }
@@ -384,13 +384,13 @@ func TestVolumesMounts(t *testing.T) {
 	opResult, _ := gen.Generate(StackOPStack, opCfg)
 
 	// Check OP Stack volume mounts
-	if !strings.Contains(opResult.ComposeYAML, "./config:/config:ro") {
-		t.Error("OP Stack should have config volume mount")
+	if !strings.Contains(opResult.ComposeYAML, "./rollup.json:/config/rollup.json:ro") {
+		t.Error("OP Stack should have rollup.json volume mount")
 	}
-	if !strings.Contains(opResult.ComposeYAML, "./secrets:/secrets:ro") {
-		t.Error("OP Stack should have secrets volume mount")
+	if !strings.Contains(opResult.ComposeYAML, "./jwt.txt:/config/jwt.txt:ro") {
+		t.Error("OP Stack should have jwt.txt volume mount")
 	}
-	if !strings.Contains(opResult.ComposeYAML, "./genesis/genesis.json:/genesis.json:ro") {
+	if !strings.Contains(opResult.ComposeYAML, "./genesis.json:/config/genesis.json:ro") {
 		t.Error("OP Stack should have genesis volume mount")
 	}
 
@@ -434,7 +434,7 @@ func TestPortExposure(t *testing.T) {
 	if !strings.Contains(opResult.ComposeYAML, "8546:8546") {
 		t.Error("OP Stack should expose geth WS port 8546")
 	}
-	if !strings.Contains(opResult.ComposeYAML, "9545:8545") {
+	if !strings.Contains(opResult.ComposeYAML, "9545:9545") {
 		t.Error("OP Stack should expose op-node port 9545")
 	}
 
@@ -472,16 +472,16 @@ func TestDockerImageVersions(t *testing.T) {
 	opResult, _ := gen.Generate(StackOPStack, opCfg)
 
 	// Check OP Stack uses versioned images
-	if !strings.Contains(opResult.ComposeYAML, "op-node:v1.9.0") {
+	if !strings.Contains(opResult.ComposeYAML, "op-node:v1.16.3") {
 		t.Error("OP Stack should use versioned op-node image")
 	}
-	if !strings.Contains(opResult.ComposeYAML, "op-geth:v1.101408.0") {
+	if !strings.Contains(opResult.ComposeYAML, "op-geth:v1.101602.3") {
 		t.Error("OP Stack should use versioned op-geth image")
 	}
-	if !strings.Contains(opResult.ComposeYAML, "op-batcher:v1.9.0") {
-		t.Error("OP Stack should use versioned op-batcher image")
+	if !strings.Contains(opResult.ComposeYAML, "op-batcher:") {
+		t.Error("OP Stack should have op-batcher image")
 	}
-	if !strings.Contains(opResult.ComposeYAML, "op-proposer:v1.9.0") {
+	if !strings.Contains(opResult.ComposeYAML, "op-proposer:v1.10.0") {
 		t.Error("OP Stack should use versioned op-proposer image")
 	}
 

@@ -274,6 +274,8 @@ func TestOrchestrator_Resume(t *testing.T) {
 		mockL1Client.On("BalanceAt", mock.Anything, mock.Anything, mock.Anything).Return(big.NewInt(1e18), nil) // 1 ETH
 
 		mockRepo.On("UpdateDeploymentStatus", mock.Anything, deploymentID, mock.Anything, mock.Anything).Return(nil)
+		// Clear error state when resuming
+		mockRepo.On("ClearDeploymentError", mock.Anything, deploymentID).Return(nil)
 		// Expect failure to be recorded since op-deployer artifacts aren't available
 		mockRepo.On("SetDeploymentError", mock.Anything, deploymentID, mock.Anything).Return(nil)
 
