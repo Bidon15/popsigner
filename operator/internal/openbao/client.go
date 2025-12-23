@@ -168,8 +168,16 @@ func (c *Client) DeletePolicy(ctx context.Context, name string) error {
 
 // EnableSecretsEngine enables a secrets engine at a given path
 func (c *Client) EnableSecretsEngine(ctx context.Context, path, engineType string) error {
+	return c.EnableSecretsEngineWithOptions(ctx, path, engineType, nil)
+}
+
+// EnableSecretsEngineWithOptions enables a secrets engine with additional options
+func (c *Client) EnableSecretsEngineWithOptions(ctx context.Context, path, engineType string, options map[string]interface{}) error {
 	payload := map[string]interface{}{
 		"type": engineType,
+	}
+	if options != nil {
+		payload["options"] = options
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {
@@ -191,12 +199,114 @@ func (c *Client) EnableSecretsEngine(ctx context.Context, path, engineType strin
 	}
 	defer resp.Body.Close()
 
+	// 200/204 = success, 400 with "path is already in use" = already enabled
 	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNoContent {
 		return nil
 	}
 
 	respBody, _ := io.ReadAll(resp.Body)
+	
+	// Check if already enabled (not an error)
+	if resp.StatusCode == http.StatusBadRequest {
+		bodyStr := string(respBody)
+		if contains(bodyStr, "path is already in use") || contains(bodyStr, "already in use") {
+			return nil // Already enabled, not an error
+		}
+	}
+
 	return fmt.Errorf("failed to enable secrets engine (status %d): %s", resp.StatusCode, respBody)
+}
+
+// contains checks if a string contains a substring
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsHelper(s, substr))
+}
+
+func containsHelper(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}
+
+// RegisterPlugin registers a plugin with OpenBao
+func (c *Client) RegisterPlugin(ctx context.Context, pluginType, name, command, sha256 string) error {
+	payload := map[string]interface{}{
+		"sha256":  sha256,
+		"command": command,
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("marshaling payload: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST",
+		fmt.Sprintf("%s/v1/sys/plugins/catalog/%s/%s", c.addr, pluginType, name),
+		bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("creating request: %w", err)
+	}
+	c.setHeaders(req)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("executing request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNoContent {
+		return nil
+	}
+
+	respBody, _ := io.ReadAll(resp.Body)
+	return fmt.Errorf("failed to register plugin (status %d): %s", resp.StatusCode, respBody)
+}
+
+// ListSecretsEngines lists all enabled secrets engines
+func (c *Client) ListSecretsEngines(ctx context.Context) (map[string]interface{}, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET",
+		fmt.Sprintf("%s/v1/sys/mounts", c.addr), nil)
+	if err != nil {
+		return nil, fmt.Errorf("creating request: %w", err)
+	}
+	c.setHeaders(req)
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("executing request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("failed to list secrets engines (status %d): %s", resp.StatusCode, body)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("decoding response: %w", err)
+	}
+
+	return result, nil
+}
+
+// IsSecretsEngineEnabled checks if a secrets engine is enabled at a path
+func (c *Client) IsSecretsEngineEnabled(ctx context.Context, path string) (bool, error) {
+	engines, err := c.ListSecretsEngines(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	// Normalize path to have trailing slash
+	if path[len(path)-1] != '/' {
+		path = path + "/"
+	}
+
+	_, exists := engines[path]
+	return exists, nil
 }
 
 // HealthCheck checks if OpenBao is healthy and initialized

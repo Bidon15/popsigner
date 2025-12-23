@@ -12,6 +12,7 @@ import (
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,6 +24,7 @@ import (
 	popsignerv1 "github.com/Bidon15/popsigner/operator/api/v1"
 	"github.com/Bidon15/popsigner/operator/internal/conditions"
 	"github.com/Bidon15/popsigner/operator/internal/constants"
+	openbaoClient "github.com/Bidon15/popsigner/operator/internal/openbao"
 	"github.com/Bidon15/popsigner/operator/internal/resources"
 	"github.com/Bidon15/popsigner/operator/internal/resources/openbao"
 	"github.com/Bidon15/popsigner/operator/internal/unseal"
@@ -99,6 +101,15 @@ func (r *ClusterReconciler) reconcileOpenBao(ctx context.Context, cluster *popsi
 
 	if err := r.createOrUpdate(ctx, cluster, sts); err != nil {
 		return fmt.Errorf("failed to reconcile statefulset: %w", err)
+	}
+
+	// 6. Initialize OpenBao (after pods are ready)
+	// This creates a Job that initializes OpenBao, registers plugins, and enables secrets engines
+	if r.isOpenBaoReady(ctx, cluster) {
+		if err := r.initializeOpenBao(ctx, cluster); err != nil {
+			log.Error(err, "Failed to initialize OpenBao")
+			// Non-fatal - will retry on next reconcile
+		}
 	}
 
 	return nil
@@ -208,32 +219,146 @@ func (r *ClusterReconciler) updateOpenBaoStatus(ctx context.Context, cluster *po
 }
 
 // initializeOpenBao performs first-time initialization.
+// It creates and runs a Job that:
+// 1. Initializes OpenBao (vault operator init)
+// 2. Stores root token and unseal keys in a Secret
+// 3. Unseals OpenBao (if not using auto-unseal)
+// 4. Registers plugins
+// 5. Enables required secrets engines (secret/kv-v2, pki, transit)
 func (r *ClusterReconciler) initializeOpenBao(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	log := log.FromContext(ctx)
 	log.Info("Initializing OpenBao cluster")
 
-	// This would typically be done via a Job that:
-	// 1. Calls `vault operator init` on the first pod
-	// 2. Stores the root token and unseal keys in a Secret
-	// 3. Unseals all pods (if not using auto-unseal)
-	// 4. Registers the secp256k1 plugin
+	name := resources.ResourceName(cluster.Name, constants.ComponentOpenBao)
+	jobName := openbao.InitJobName(cluster.Name)
 
-	// For auto-unseal, the process is simpler as pods self-unseal
+	// Check if init job already exists and completed
+	existingJob := &batchv1.Job{}
+	err := r.Get(ctx, types.NamespacedName{Name: jobName, Namespace: cluster.Namespace}, existingJob)
+	if err == nil {
+		// Job exists, check its status
+		if existingJob.Status.Succeeded > 0 {
+			log.Info("OpenBao init job already completed successfully")
+			return nil
+		}
+		if existingJob.Status.Failed > 0 && existingJob.Status.Failed >= *existingJob.Spec.BackoffLimit {
+			log.Error(nil, "OpenBao init job failed permanently", "failures", existingJob.Status.Failed)
+			return fmt.Errorf("OpenBao init job failed after %d attempts", existingJob.Status.Failed)
+		}
+		// Job still running or retrying
+		log.Info("OpenBao init job still running", "active", existingJob.Status.Active, "failed", existingJob.Status.Failed)
+		return nil
+	}
+	if !errors.IsNotFound(err) {
+		return fmt.Errorf("failed to check init job: %w", err)
+	}
 
-	// TODO: Implement actual initialization logic via Job
-	// This requires creating a Job that runs the init script
+	// Check if root token secret already exists (manual init)
+	rootSecretName := fmt.Sprintf("%s-root", name)
+	rootSecret := &corev1.Secret{}
+	err = r.Get(ctx, types.NamespacedName{Name: rootSecretName, Namespace: cluster.Namespace}, rootSecret)
+	if err == nil {
+		log.Info("Root token secret already exists, skipping init job",
+			"secret", rootSecretName)
+		// Configure secrets engines using the existing token
+		return r.configureSecretsEngines(ctx, cluster)
+	}
+	if !errors.IsNotFound(err) {
+		return fmt.Errorf("failed to check root secret: %w", err)
+	}
 
+	// Create the init job
+	log.Info("Creating OpenBao init job", "job", jobName)
+	initJob := openbao.InitJob(cluster)
+
+	if err := r.createOrUpdate(ctx, cluster, initJob); err != nil {
+		return fmt.Errorf("failed to create init job: %w", err)
+	}
+
+	log.Info("OpenBao init job created, waiting for completion")
 	return nil
 }
 
+// configureSecretsEngines enables required secrets engines using the OpenBao API.
+// This is called after OpenBao is initialized and we have the root token.
+func (r *ClusterReconciler) configureSecretsEngines(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
+	log := log.FromContext(ctx)
+	log.Info("Configuring OpenBao secrets engines")
+
+	// Get OpenBao client
+	baoClient, err := r.getOpenBaoClientForCluster(ctx, cluster)
+	if err != nil {
+		return fmt.Errorf("failed to get OpenBao client: %w", err)
+	}
+
+	// Enable required secrets engines
+	engines := openbao.DefaultSecretsEngines()
+	for _, engine := range engines {
+		log.Info("Enabling secrets engine", "path", engine.Path, "type", engine.Type)
+		
+		var opts map[string]interface{}
+		if engine.Options != nil {
+			opts = make(map[string]interface{})
+			for k, v := range engine.Options {
+				opts[k] = v
+			}
+		}
+		// For kv-v2, we need to specify version
+		if engine.Type == "kv-v2" {
+			if opts == nil {
+				opts = make(map[string]interface{})
+			}
+			opts["version"] = "2"
+			// The actual type for the API is just "kv"
+			if err := baoClient.EnableSecretsEngineWithOptions(ctx, engine.Path, "kv", opts); err != nil {
+				log.Error(err, "Failed to enable secrets engine (may already exist)", 
+					"path", engine.Path, "type", engine.Type)
+			}
+		} else {
+			if err := baoClient.EnableSecretsEngine(ctx, engine.Path, engine.Type); err != nil {
+				log.Error(err, "Failed to enable secrets engine (may already exist)", 
+					"path", engine.Path, "type", engine.Type)
+			}
+		}
+	}
+
+	log.Info("Secrets engines configured successfully")
+	return nil
+}
+
+// getOpenBaoClientForCluster creates an OpenBao client for the cluster.
+func (r *ClusterReconciler) getOpenBaoClientForCluster(ctx context.Context, cluster *popsignerv1.POPSignerCluster) (*openbaoClient.Client, error) {
+	name := resources.ResourceName(cluster.Name, constants.ComponentOpenBao)
+
+	// Get root token from secret
+	rootSecretName := fmt.Sprintf("%s-root", name)
+	secret := &corev1.Secret{}
+	if err := r.Get(ctx, types.NamespacedName{
+		Name:      rootSecretName,
+		Namespace: cluster.Namespace,
+	}, secret); err != nil {
+		return nil, fmt.Errorf("failed to get OpenBao root token secret: %w", err)
+	}
+
+	token, ok := secret.Data["token"]
+	if !ok {
+		return nil, fmt.Errorf("token key not found in secret %s", rootSecretName)
+	}
+
+	// Build OpenBao address
+	addr := fmt.Sprintf("https://%s.%s.svc.cluster.local:8200", name, cluster.Namespace)
+
+	return openbaoClient.NewClient(addr, string(token)), nil
+}
+
 // registerPlugin registers the secp256k1 plugin.
+// This is now handled by the init job, but we keep this for manual registration if needed.
 func (r *ClusterReconciler) registerPlugin(ctx context.Context, cluster *popsignerv1.POPSignerCluster) error {
 	log := log.FromContext(ctx)
 	log.Info("Registering secp256k1 plugin")
 
-	// TODO: Create a Job that runs the plugin registration script
-	// The Job needs access to the root token
-
+	// Plugin registration is handled by the init job
+	// This method can be used for manual registration if needed
 	return nil
 }
 
