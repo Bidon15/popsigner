@@ -812,16 +812,16 @@ func curlExample(keyID string) string {
 func opStackExample(keyID, ethAddr string) string {
 	return `# Configure op-batcher with POPSigner remote signer
 op-batcher \
-  --signer.endpoint="https://your-popsigner-rpc.example.com/rpc" \
+  --signer.endpoint="https://rpc.popsigner.com" \
   --signer.address="` + ethAddr + `"
 
 # Environment variables alternative
-export OP_BATCHER_SIGNER_ENDPOINT="https://your-popsigner-rpc.example.com/rpc"
+export OP_BATCHER_SIGNER_ENDPOINT="https://rpc.popsigner.com"
 export OP_BATCHER_SIGNER_ADDRESS="` + ethAddr + `"
 
 # For op-proposer, use same pattern
 op-proposer \
-  --signer.endpoint="https://your-popsigner-rpc.example.com/rpc" \
+  --signer.endpoint="https://rpc.popsigner.com" \
   --signer.address="` + ethAddr + `"`
 }
 

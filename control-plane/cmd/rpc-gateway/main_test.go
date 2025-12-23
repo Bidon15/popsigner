@@ -245,8 +245,8 @@ func setupTestServer(t *testing.T) *httptest.Server {
 		w.Write([]byte(`{"status":"ok","service":"popsigner-rpc-gateway"}`))
 	})
 
-	// RPC endpoint with auth
-	r.Route("/rpc", func(r chi.Router) {
+	// RPC endpoint at root with auth (no /rpc path - clean API)
+	r.Group(func(r chi.Router) {
 		r.Use(middleware.APIKeyAuth(apiKeySvc))
 		r.Post("/", rpcServer.ServeHTTP)
 	})
@@ -360,8 +360,8 @@ func setupMTLSTestServer(t *testing.T, certRepo repository.CertificateRepository
 		w.Write([]byte(`{"status":"ok","service":"popsigner-rpc-gateway-mtls"}`))
 	})
 
-	// RPC endpoint with mTLS auth
-	r.Route("/rpc", func(r chi.Router) {
+	// RPC endpoint at root with mTLS auth (no /rpc path - clean API)
+	r.Group(func(r chi.Router) {
 		r.Use(auth.MTLSOnlyMiddleware(certRepo, logger))
 		r.Post("/", rpcServer.ServeHTTP)
 	})
@@ -428,7 +428,7 @@ func TestRPCGateway_RejectsUnauthenticatedRequests(t *testing.T) {
 	defer srv.Close()
 
 	reqBody := `{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}`
-	resp, err := http.Post(srv.URL+"/rpc", "application/json", bytes.NewBufferString(reqBody))
+	resp, err := http.Post(srv.URL, "application/json", bytes.NewBufferString(reqBody))
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
@@ -441,7 +441,7 @@ func TestRPCGateway_AcceptsAuthenticatedRequests(t *testing.T) {
 
 	client := &http.Client{}
 	reqBody := `{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}`
-	req, _ := http.NewRequest("POST", srv.URL+"/rpc", bytes.NewBufferString(reqBody))
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-API-Key", "test_api_key")
 
@@ -464,7 +464,7 @@ func TestRPCGateway_EthAccounts(t *testing.T) {
 
 	client := &http.Client{}
 	reqBody := `{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}`
-	req, _ := http.NewRequest("POST", srv.URL+"/rpc", bytes.NewBufferString(reqBody))
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-API-Key", "test_api_key")
 
@@ -496,7 +496,7 @@ func TestRPCGateway_MethodNotFound(t *testing.T) {
 
 	client := &http.Client{}
 	reqBody := `{"jsonrpc":"2.0","method":"eth_unknownMethod","params":[],"id":1}`
-	req, _ := http.NewRequest("POST", srv.URL+"/rpc", bytes.NewBufferString(reqBody))
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-API-Key", "test_api_key")
 
@@ -519,7 +519,7 @@ func TestRPCGateway_BatchRequests(t *testing.T) {
 
 	client := &http.Client{}
 	reqBody := `[{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1},{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":2}]`
-	req, _ := http.NewRequest("POST", srv.URL+"/rpc", bytes.NewBufferString(reqBody))
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-API-Key", "test_api_key")
 
@@ -541,7 +541,7 @@ func TestRPCGateway_InvalidJSON(t *testing.T) {
 
 	client := &http.Client{}
 	reqBody := `{invalid json}`
-	req, _ := http.NewRequest("POST", srv.URL+"/rpc", bytes.NewBufferString(reqBody))
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-API-Key", "test_api_key")
 
@@ -564,7 +564,7 @@ func TestRPCGateway_BearerToken(t *testing.T) {
 
 	client := &http.Client{}
 	reqBody := `{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}`
-	req, _ := http.NewRequest("POST", srv.URL+"/rpc", bytes.NewBufferString(reqBody))
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer test_api_key")
 
@@ -676,7 +676,7 @@ func TestMTLSRPCGateway_AcceptsValidCertificate(t *testing.T) {
 	client := createMTLSClient(t, certs)
 
 	reqBody := `{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}`
-	req, _ := http.NewRequest("POST", srv.URL+"/rpc", bytes.NewBufferString(reqBody))
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
@@ -709,7 +709,7 @@ func TestMTLSRPCGateway_RejectsUnregisteredCertificate(t *testing.T) {
 	client := createMTLSClient(t, certs)
 
 	reqBody := `{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}`
-	req, _ := http.NewRequest("POST", srv.URL+"/rpc", bytes.NewBufferString(reqBody))
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
@@ -741,7 +741,7 @@ func TestMTLSRPCGateway_RejectsExpiredCertificate(t *testing.T) {
 	client := createMTLSClient(t, certs)
 
 	reqBody := `{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}`
-	req, _ := http.NewRequest("POST", srv.URL+"/rpc", bytes.NewBufferString(reqBody))
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
@@ -775,7 +775,7 @@ func TestMTLSRPCGateway_RejectsRevokedCertificate(t *testing.T) {
 	client := createMTLSClient(t, certs)
 
 	reqBody := `{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}`
-	req, _ := http.NewRequest("POST", srv.URL+"/rpc", bytes.NewBufferString(reqBody))
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
@@ -808,7 +808,7 @@ func TestMTLSRPCGateway_EthAccounts(t *testing.T) {
 	client := createMTLSClient(t, certs)
 
 	reqBody := `{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}`
-	req, _ := http.NewRequest("POST", srv.URL+"/rpc", bytes.NewBufferString(reqBody))
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
@@ -856,7 +856,7 @@ func TestMTLSRPCGateway_BatchRequests(t *testing.T) {
 	client := createMTLSClient(t, certs)
 
 	reqBody := `[{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1},{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":2}]`
-	req, _ := http.NewRequest("POST", srv.URL+"/rpc", bytes.NewBufferString(reqBody))
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
@@ -885,7 +885,7 @@ func TestDualAuth_APIKeyOnAPIKeyPort(t *testing.T) {
 
 	client := &http.Client{}
 	reqBody := `{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}`
-	req, _ := http.NewRequest("POST", srv.URL+"/rpc", bytes.NewBufferString(reqBody))
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-API-Key", "test_api_key")
 
@@ -919,7 +919,7 @@ func TestDualAuth_MTLSOnMTLSPort(t *testing.T) {
 	client := createMTLSClient(t, certs)
 
 	reqBody := `{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}`
-	req, _ := http.NewRequest("POST", srv.URL+"/rpc", bytes.NewBufferString(reqBody))
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
@@ -936,7 +936,7 @@ func TestDualAuth_NoAuthFails(t *testing.T) {
 	defer srv.Close()
 
 	reqBody := `{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}`
-	resp, err := http.Post(srv.URL+"/rpc", "application/json", bytes.NewBufferString(reqBody))
+	resp, err := http.Post(srv.URL, "application/json", bytes.NewBufferString(reqBody))
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
@@ -949,7 +949,7 @@ func TestDualAuth_InvalidAPIKeyFails(t *testing.T) {
 
 	client := &http.Client{}
 	reqBody := `{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}`
-	req, _ := http.NewRequest("POST", srv.URL+"/rpc", bytes.NewBufferString(reqBody))
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-API-Key", "invalid_key")
 

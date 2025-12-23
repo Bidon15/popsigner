@@ -208,6 +208,8 @@ func main() {
 }
 
 // createAPIKeyRouter creates the router for API Key authentication (Port 8545).
+// Used by OP Stack components (op-batcher, op-proposer, op-node).
+// Endpoint: POST https://rpc.popsigner.com/ with X-API-Key header
 func createAPIKeyRouter(
 	apiKeySvc service.APIKeyService,
 	redis *database.Redis,
@@ -236,15 +238,8 @@ func createAPIKeyRouter(
 	// Metrics endpoint (no auth, but should be protected at ingress level)
 	r.Handle("/metrics", promhttp.Handler())
 
-	// JSON-RPC endpoint with API Key auth and rate limiting
-	r.Route("/rpc", func(r chi.Router) {
-		r.Use(middleware.APIKeyAuth(apiKeySvc))
-		r.Use(middleware.TrackAPIUsage(usageRepo))
-		r.Use(middleware.RPCRateLimit(redis, rateLimitCfg))
-		r.Post("/", rpcServer.ServeHTTP)
-	})
-
-	// Alternative endpoint at root (for compatibility with some tools)
+	// JSON-RPC endpoint at root with API Key auth and rate limiting
+	// OP Stack: --signer.endpoint="https://rpc.popsigner.com"
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.APIKeyAuth(apiKeySvc))
 		r.Use(middleware.TrackAPIUsage(usageRepo))
@@ -256,6 +251,8 @@ func createAPIKeyRouter(
 }
 
 // createMTLSRouter creates the router for mTLS authentication (Port 8546).
+// Used by Arbitrum Nitro components (batch-poster, staker).
+// Endpoint: POST https://rpc.popsigner.com:8546/ with client certificate
 func createMTLSRouter(
 	certRepo repository.CertificateRepository,
 	redis *database.Redis,
@@ -279,14 +276,8 @@ func createMTLSRouter(
 	// Ready check (verifies dependencies)
 	r.Get("/ready", readyHandler(db, redis))
 
-	// JSON-RPC endpoint with mTLS auth and rate limiting
-	r.Route("/rpc", func(r chi.Router) {
-		r.Use(auth.MTLSOnlyMiddleware(certRepo, logger))
-		r.Use(middleware.RPCRateLimit(redis, rateLimitCfg))
-		r.Post("/", rpcServer.ServeHTTP)
-	})
-
-	// Alternative endpoint at root (for Arbitrum Nitro compatibility)
+	// JSON-RPC endpoint at root with mTLS auth and rate limiting
+	// Nitro: --*.external-signer.url="https://rpc.popsigner.com:8546"
 	r.Group(func(r chi.Router) {
 		r.Use(auth.MTLSOnlyMiddleware(certRepo, logger))
 		r.Use(middleware.RPCRateLimit(redis, rateLimitCfg))

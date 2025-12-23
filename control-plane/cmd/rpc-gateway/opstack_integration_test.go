@@ -6,13 +6,13 @@
 // OP Stack Configuration Example:
 //
 //	./op-batcher \
-//	  --signer.endpoint=https://popsigner.example.com:8545/rpc \
+//	  --signer.endpoint=https://rpc.popsigner.com \
 //	  --signer.address=0x742d35Cc6634C0532925a3b844Bc454e4438f44e \
 //	  --signer.header="X-API-Key=pop_abc123..."
 //
 // Run these tests against a deployed RPC gateway:
 //
-//	POPSIGNER_RPC_URL=https://your-gateway:8545 \
+//	POPSIGNER_RPC_URL=https://rpc.popsigner.com \
 //	POPSIGNER_API_KEY=pop_... \
 //	POPSIGNER_SIGNER_ADDRESS=0x... \
 //	go test -v -tags=integration ./cmd/rpc-gateway/ -run TestOPStack
@@ -106,13 +106,14 @@ type JSONRPCError struct {
 }
 
 // sendRPCRequest sends a JSON-RPC request to the gateway.
+// POPSigner RPC gateway serves JSON-RPC at the root path (no /rpc suffix).
 func sendRPCRequest(url, apiKey string, req *JSONRPCRequest) (*JSONRPCResponse, error) {
 	body, err := json.Marshal(req)
 	if err != nil {
 		return nil, fmt.Errorf("marshal request: %w", err)
 	}
 
-	httpReq, err := http.NewRequest("POST", url+"/rpc", bytes.NewReader(body))
+	httpReq, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
 	}
@@ -427,7 +428,7 @@ func TestOPStackAuthenticationMethods(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			httpReq, _ := http.NewRequest("POST", cfg.RPCURL+"/rpc", bytes.NewReader(body))
+			httpReq, _ := http.NewRequest("POST", cfg.RPCURL, bytes.NewReader(body))
 			httpReq.Header.Set("Content-Type", "application/json")
 			tc.setHeaders(httpReq)
 

@@ -76,7 +76,7 @@ echo ""
 echo "----------------------------------------"
 echo "Test 2: eth_accounts"
 echo "----------------------------------------"
-ACCOUNTS=$(curl -s -X POST "$RPC_URL/rpc" \
+ACCOUNTS=$(curl -s -X POST "$RPC_URL" \
     -H "Content-Type: application/json" \
     -H "X-API-Key: $API_KEY" \
     -d '{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}')
@@ -95,7 +95,7 @@ echo ""
 echo "----------------------------------------"
 echo "Test 3: eth_signTransaction (Legacy)"
 echo "----------------------------------------"
-SIGN_TX=$(curl -s -X POST "$RPC_URL/rpc" \
+SIGN_TX=$(curl -s -X POST "$RPC_URL" \
     -H "Content-Type: application/json" \
     -H "X-API-Key: $API_KEY" \
     -d "{
@@ -129,7 +129,7 @@ echo ""
 echo "----------------------------------------"
 echo "Test 4: eth_signTransaction (EIP-1559)"
 echo "----------------------------------------"
-SIGN_EIP1559=$(curl -s -X POST "$RPC_URL/rpc" \
+SIGN_EIP1559=$(curl -s -X POST "$RPC_URL" \
     -H "Content-Type: application/json" \
     -H "X-API-Key: $API_KEY" \
     -d "{
@@ -163,7 +163,7 @@ echo ""
 echo "----------------------------------------"
 echo "Test 5: Authorization Bearer Token"
 echo "----------------------------------------"
-BEARER=$(curl -s -X POST "$RPC_URL/rpc" \
+BEARER=$(curl -s -X POST "$RPC_URL" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $API_KEY" \
     -d '{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}')
@@ -179,7 +179,7 @@ echo ""
 echo "----------------------------------------"
 echo "Test 6: Auth Required (should fail)"
 echo "----------------------------------------"
-NO_AUTH=$(curl -s -X POST "$RPC_URL/rpc" \
+NO_AUTH=$(curl -s -X POST "$RPC_URL" \
     -H "Content-Type: application/json" \
     -d '{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}')
 
@@ -197,7 +197,7 @@ echo ""
 echo "OP Stack Configuration Example:"
 echo ""
 echo "  op-batcher \\"
-echo "    --signer.endpoint=$RPC_URL/rpc \\"
+echo "    --signer.endpoint=$RPC_URL \\"
 echo "    --signer.address=$SIGNER_ADDRESS \\"
 echo '    --signer.header="X-API-Key='$API_KEY'"'
 echo ""

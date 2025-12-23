@@ -162,8 +162,8 @@ func (s *certificateService) Issue(ctx context.Context, req *models.CreateCertif
 	s.auditLog(ctx, req.OrgID, models.AuditEventKeyCreated, "certificate")
 
 	// Build configuration hint for Nitro
-	nitroTip := `# Arbitrum Nitro configuration
---node.batch-poster.data-poster.external-signer.url=https://YOUR_POPSIGNER_HOST:8545/rpc
+	nitroTip := `# Arbitrum Nitro configuration (mTLS on port 8546)
+--node.batch-poster.data-poster.external-signer.url=https://rpc.popsigner.com:8546
 --node.batch-poster.data-poster.external-signer.address=YOUR_ETH_ADDRESS
 --node.batch-poster.data-poster.external-signer.method=eth_signTransaction
 --node.batch-poster.data-poster.external-signer.root-ca=/path/to/popsigner-ca.crt
