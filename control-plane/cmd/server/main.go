@@ -22,6 +22,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	bootstraphandler "github.com/Bidon15/popsigner/control-plane/internal/bootstrap/handler"
+	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/nitro"
 	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/opstack"
 	bootstraporchestrator "github.com/Bidon15/popsigner/control-plane/internal/bootstrap/orchestrator"
 	bootstraprepo "github.com/Bidon15/popsigner/control-plane/internal/bootstrap/repository"
@@ -153,6 +154,18 @@ func main() {
 	)
 	logger.Info("OP Stack orchestrator initialized")
 
+	// Initialize Nitro orchestrator for Orbit chain deployments
+	nitroOrch := nitro.NewOrchestrator(
+		bootstrapRepo,
+		nil, // CertificateProvider - will use certs from config
+		nitro.OrchestratorConfig{
+			Logger:                logger,
+			WorkerPath:            "internal/bootstrap/nitro/worker",
+			POPSignerMTLSEndpoint: "https://rpc.popsigner.com:8546",
+		},
+	)
+	logger.Info("Nitro orchestrator initialized")
+
 	// Initialize key resolver and API key manager for orchestrator
 	keyResolver := bootstraporchestrator.NewKeyServiceResolver(keySvc)
 	apiKeyManager := bootstraporchestrator.NewDefaultAPIKeyManager(apiKeySvc)
@@ -173,6 +186,7 @@ func main() {
 	unifiedOrch := bootstraporchestrator.New(
 		bootstrapRepo,
 		opstackOrch,
+		nitroOrch,
 		keyResolver,
 		apiKeyManager,
 		bootstraporchestrator.Config{
