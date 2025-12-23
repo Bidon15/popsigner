@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -465,7 +466,8 @@ func (e *ArtifactExtractor) saveAllArtifacts(ctx context.Context, deploymentID u
 }
 
 // saveArtifact saves a single artifact to the database.
-// For non-JSON content (like docker-compose.yml, jwt.txt), wraps as JSON string.
+// For non-JSON content (like docker-compose.yml, jwt.txt), wraps as base64 in a JSON object.
+// This avoids PostgreSQL JSONB normalization issues with escape sequences.
 func (e *ArtifactExtractor) saveArtifact(ctx context.Context, deploymentID uuid.UUID, name string, content []byte) error {
 	var jsonContent json.RawMessage
 
@@ -473,13 +475,20 @@ func (e *ArtifactExtractor) saveArtifact(ctx context.Context, deploymentID uuid.
 	if json.Valid(content) {
 		jsonContent = content
 	} else {
-		// Wrap non-JSON content as a JSON string (for YAML, plain text, etc.)
-		// This allows storing docker-compose.yml, jwt.txt, README.md, etc.
-		escaped, err := json.Marshal(string(content))
+		// Wrap non-JSON content as base64 in a JSON object.
+		// This avoids PostgreSQL JSONB escape sequence normalization issues.
+		wrapper := struct {
+			Type string `json:"_type"`
+			Data string `json:"data"`
+		}{
+			Type: "base64",
+			Data: base64.StdEncoding.EncodeToString(content),
+		}
+		encoded, err := json.Marshal(wrapper)
 		if err != nil {
 			return fmt.Errorf("marshal non-JSON content for %s: %w", name, err)
 		}
-		jsonContent = escaped
+		jsonContent = encoded
 	}
 
 	artifact := &repository.Artifact{
@@ -560,39 +569,40 @@ func (e *ArtifactExtractor) CreateBundle(ctx context.Context, deploymentID uuid.
 	return buf.Bytes(), nil
 }
 
-// unwrapJSONString unwraps a JSON-encoded string back to plain text.
-// Used for non-JSON artifacts (docker-compose.yml, jwt.txt, etc.) that were
-// stored as JSON strings to satisfy the JSONB column requirement.
-//
-// IMPORTANT: PostgreSQL JSONB normalizes \n escape sequences to actual newline
-// bytes (0x0a), but keeps other escapes (\", \\) intact. This creates malformed
-// JSON that json.Unmarshal can't parse. We handle this by manually unescaping
-// when json.Unmarshal fails.
+// unwrapJSONString unwraps content that was stored for JSONB column.
+// Supports two formats:
+// 1. NEW: base64 wrapper {"_type":"base64","data":"..."}
+// 2. LEGACY: JSON string "content..." (with PostgreSQL normalization issues)
 func unwrapJSONString(data []byte) []byte {
-	// Try to unmarshal as a JSON string (works if PostgreSQL didn't normalize)
+	// Try new base64 wrapper format first
+	var wrapper struct {
+		Type string `json:"_type"`
+		Data string `json:"data"`
+	}
+	if err := json.Unmarshal(data, &wrapper); err == nil && wrapper.Type == "base64" {
+		decoded, err := base64.StdEncoding.DecodeString(wrapper.Data)
+		if err == nil {
+			return decoded
+		}
+	}
+
+	// Try legacy JSON string format
 	var s string
 	if err := json.Unmarshal(data, &s); err == nil {
 		return []byte(s)
 	}
 
-	// PostgreSQL JSONB normalized \n to real newlines, breaking JSON parsing.
+	// Legacy fallback: PostgreSQL JSONB normalized \n to real newlines, breaking JSON.
 	// Manually unwrap: check for outer quotes and unescape remaining sequences.
 	if len(data) >= 2 && data[0] == '"' && data[len(data)-1] == '"' {
-		// Strip outer quotes
 		inner := data[1 : len(data)-1]
-
-		// Unescape remaining JSON escape sequences that PostgreSQL didn't normalize:
-		// - \" -> "
-		// - \\ -> \
-		// - \t -> tab (in case)
-		// - \r -> carriage return (in case)
 		result := make([]byte, 0, len(inner))
 		for i := 0; i < len(inner); i++ {
 			if inner[i] == '\\' && i+1 < len(inner) {
 				switch inner[i+1] {
 				case '"':
 					result = append(result, '"')
-					i++ // skip the next char
+					i++
 				case '\\':
 					result = append(result, '\\')
 					i++
@@ -603,11 +613,9 @@ func unwrapJSONString(data []byte) []byte {
 					result = append(result, '\r')
 					i++
 				case 'n':
-					// Shouldn't happen (PostgreSQL already normalized), but handle it
 					result = append(result, '\n')
 					i++
 				default:
-					// Unknown escape, keep as-is
 					result = append(result, inner[i])
 				}
 			} else {
@@ -617,7 +625,7 @@ func unwrapJSONString(data []byte) []byte {
 		return result
 	}
 
-	// Not a JSON string, return as-is
+	// Not a recognized format, return as-is
 	return data
 }
 

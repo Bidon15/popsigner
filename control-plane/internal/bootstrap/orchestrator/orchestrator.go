@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/nitro"
 	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/opstack"
 	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/repository"
 	"github.com/Bidon15/popsigner/control-plane/internal/models"
@@ -33,6 +34,7 @@ type APIKeyManager interface {
 type Orchestrator struct {
 	repo           repository.Repository
 	opstackOrch    *opstack.Orchestrator
+	nitroOrch      *nitro.Orchestrator
 	keyResolver    KeyResolver
 	apiKeyManager  APIKeyManager
 	signerEndpoint string
@@ -50,6 +52,7 @@ type Config struct {
 func New(
 	repo repository.Repository,
 	opstackOrch *opstack.Orchestrator,
+	nitroOrch *nitro.Orchestrator,
 	keyResolver KeyResolver,
 	apiKeyManager APIKeyManager,
 	cfg Config,
@@ -68,6 +71,7 @@ func New(
 	return &Orchestrator{
 		repo:           repo,
 		opstackOrch:    opstackOrch,
+		nitroOrch:      nitroOrch,
 		keyResolver:    keyResolver,
 		apiKeyManager:  apiKeyManager,
 		signerEndpoint: signerEndpoint,
@@ -147,8 +151,18 @@ func (o *Orchestrator) StartDeployment(ctx context.Context, deploymentID uuid.UU
 			}
 
 		case repository.StackNitro:
-			// TODO: Wire up Nitro orchestrator
-			deployErr = fmt.Errorf("Nitro orchestrator not yet implemented")
+			if o.nitroOrch != nil {
+				deployErr = o.nitroOrch.Deploy(deployCtx, deploymentID, func(stage string, progress float64, message string) {
+					o.logger.Info("deployment progress",
+						slog.String("deployment_id", deploymentID.String()),
+						slog.String("stage", stage),
+						slog.Float64("progress", progress),
+						slog.String("message", message),
+					)
+				})
+			} else {
+				deployErr = fmt.Errorf("Nitro orchestrator not configured")
+			}
 
 		default:
 			deployErr = fmt.Errorf("unsupported stack: %s", deployment.Stack)
