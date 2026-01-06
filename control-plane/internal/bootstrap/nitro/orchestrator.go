@@ -6,11 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/google/uuid"
 
-	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/repository"
+	boostrepo "github.com/Bidon15/popsigner/control-plane/internal/bootstrap/repository"
+	"github.com/Bidon15/popsigner/control-plane/internal/repository"
 )
 
 // CertificateProvider provides mTLS certificates for POPSigner authentication.
@@ -36,22 +39,34 @@ type OrchestratorConfig struct {
 
 	// RetryDelay between retry attempts
 	RetryDelay time.Duration
+
+	// UseGoDeployer enables the Go-based deployer instead of TypeScript worker.
+	// Default is false (uses TypeScript worker for backward compatibility).
+	UseGoDeployer bool
+
+	// ArtifactCacheDir is the directory to cache downloaded contract artifacts.
+	// Only used when UseGoDeployer is true.
+	ArtifactCacheDir string
+
+	// NitroInfraRepo is the repository for Nitro infrastructure (RollupCreator addresses).
+	// Only used when UseGoDeployer is true.
+	NitroInfraRepo repository.NitroInfrastructureRepository
 }
 
 // Orchestrator coordinates Nitro/Orbit chain deployments.
 // It manages the deployment lifecycle, integrating with POPSigner for
 // transaction signing via mTLS and generating proper Nitro node config files.
 type Orchestrator struct {
-	repo            repository.Repository
-	certProvider    CertificateProvider
-	deployer        *Deployer
-	config          OrchestratorConfig
-	logger          *slog.Logger
+	repo               boostrepo.Repository
+	certProvider       CertificateProvider
+	config             OrchestratorConfig
+	logger             *slog.Logger
+	artifactDownloader *ContractArtifactDownloader
 }
 
 // NewOrchestrator creates a new Nitro deployment orchestrator.
 func NewOrchestrator(
-	repo repository.Repository,
+	repo boostrepo.Repository,
 	certProvider CertificateProvider,
 	config OrchestratorConfig,
 ) *Orchestrator {
@@ -70,20 +85,23 @@ func NewOrchestrator(
 		config.POPSignerMTLSEndpoint = "https://rpc-mtls.popsigner.com"
 	}
 
-	// Initialize the deployer wrapper
-	deployer := NewDeployer(
-		config.WorkerPath,
-		WithRepository(repo),
-		WithLogger(logger),
-	)
+	// Force Go deployer as TypeScript worker has been removed
+	config.UseGoDeployer = true
 
-	return &Orchestrator{
+	o := &Orchestrator{
 		repo:         repo,
 		certProvider: certProvider,
-		deployer:     deployer,
 		config:       config,
 		logger:       logger,
 	}
+
+	// Initialize Go-based deployment components
+	o.artifactDownloader = NewContractArtifactDownloader(config.ArtifactCacheDir)
+	logger.Info("using Go-based Nitro deployer",
+		slog.String("artifact_cache_dir", config.ArtifactCacheDir),
+	)
+
+	return o
 }
 
 // Deploy executes a Nitro/Orbit chain deployment.
@@ -233,30 +251,232 @@ func (o *Orchestrator) Deploy(ctx context.Context, deploymentID uuid.UUID, onPro
 
 	reportProgress("deploying", 0.3, "Executing Nitro chain deployment")
 
-	// 5. Execute deployment with progress reporting
-	result, err := o.deployer.DeployWithPersistenceAndProgress(ctx, deploymentID, deployConfig, func(stage string, progress float64, message string) {
-		// Map internal progress (0-1) to overall progress (0.3-1.0)
-		overallProgress := 0.3 + (progress * 0.7)
-		reportProgress(stage, overallProgress, message)
-	})
+	// Execute deployment using Go-based deployer
+	return o.deployWithGo(ctx, deploymentID, deployConfig, certs, reportProgress)
+}
 
+// deployWithGo executes deployment using the Go-based deployer.
+func (o *Orchestrator) deployWithGo(
+	ctx context.Context,
+	deploymentID uuid.UUID,
+	config *DeployConfig,
+	certs *CertificateBundle,
+	reportProgress func(stage string, progress float64, message string),
+) error {
+	reportProgress("artifacts", 0.35, "Downloading contract artifacts...")
+
+	// 1. Download artifacts
+	artifacts, err := o.artifactDownloader.DownloadDefault(ctx)
 	if err != nil {
-		return o.failDeployment(ctx, deploymentID, fmt.Errorf("deployment failed: %w", err))
+		return o.failDeployment(ctx, deploymentID, fmt.Errorf("download artifacts: %w", err))
+	}
+
+	o.logger.Info("contract artifacts downloaded",
+		slog.String("version", artifacts.Version),
+	)
+
+	reportProgress("signer", 0.40, "Initializing POPSigner...")
+
+	// 2. Create signer
+	signer, err := NewNitroSigner(SignerConfig{
+		Endpoint:   o.config.POPSignerMTLSEndpoint,
+		ClientCert: certs.ClientCert,
+		ClientKey:  certs.ClientKey,
+		CACert:     certs.CaCert,
+		ChainID:    big.NewInt(config.ParentChainID),
+		Address:    common.HexToAddress(config.Owner),
+	})
+	if err != nil {
+		return o.failDeployment(ctx, deploymentID, fmt.Errorf("create signer: %w", err))
+	}
+
+	reportProgress("infrastructure", 0.45, "Checking infrastructure...")
+
+	// 3. Get or deploy RollupCreator
+	var rollupCreatorAddr common.Address
+
+	// First check if there's well-known infrastructure
+	if addr, ok := GetWellKnownRollupCreator(config.ParentChainID); ok {
+		rollupCreatorAddr = addr
+		o.logger.Info("using well-known RollupCreator",
+			slog.String("address", addr.Hex()),
+			slog.Int64("chain_id", config.ParentChainID),
+		)
+	} else if o.config.NitroInfraRepo != nil {
+		// Check database for deployed infrastructure
+		infra, err := o.config.NitroInfraRepo.Get(ctx, config.ParentChainID)
+		if err != nil {
+			o.logger.Warn("failed to check infrastructure registry",
+				slog.String("error", err.Error()),
+			)
+		}
+		if infra != nil {
+			rollupCreatorAddr = common.HexToAddress(infra.RollupCreatorAddress)
+			o.logger.Info("using registered RollupCreator",
+				slog.String("address", rollupCreatorAddr.Hex()),
+				slog.String("version", infra.Version),
+			)
+		}
+	}
+
+	// If no RollupCreator found, we need to deploy infrastructure
+	if rollupCreatorAddr == (common.Address{}) {
+		reportProgress("infrastructure", 0.50, "Deploying Nitro infrastructure...")
+
+		infraDeployer := NewInfrastructureDeployer(
+			artifacts,
+			signer,
+			o.config.NitroInfraRepo,
+			o.logger,
+		)
+
+		infraResult, err := infraDeployer.EnsureInfrastructure(ctx, &InfrastructureConfig{
+			ParentChainID: config.ParentChainID,
+			ParentRPC:     config.ParentChainRpc,
+		})
+		if err != nil {
+			return o.failDeployment(ctx, deploymentID, fmt.Errorf("deploy infrastructure: %w", err))
+		}
+
+		rollupCreatorAddr = infraResult.RollupCreatorAddress
+	}
+
+	reportProgress("deploying", 0.60, "Deploying rollup contracts...")
+
+	// 4. Create RollupDeployer and deploy
+	rollupDeployer, err := NewRollupDeployer(artifacts, signer, o.logger)
+	if err != nil {
+		return o.failDeployment(ctx, deploymentID, fmt.Errorf("create rollup deployer: %w", err))
+	}
+
+	// Convert DeployConfig to GoDeployConfig
+	goConfig := o.convertToGoConfig(config)
+
+	result, err := rollupDeployer.Deploy(ctx, goConfig, rollupCreatorAddr)
+	if err != nil {
+		return o.failDeployment(ctx, deploymentID, fmt.Errorf("deploy rollup: %w", err))
 	}
 
 	if !result.Success {
 		return o.failDeployment(ctx, deploymentID, fmt.Errorf("deployment failed: %s", result.Error))
 	}
 
-	reportProgress("completed", 1.0, fmt.Sprintf("Deployment successful! Rollup: %s", result.CoreContracts.Rollup))
+	reportProgress("artifacts", 0.90, "Generating deployment artifacts...")
 
-	o.logger.Info("Nitro deployment completed successfully",
+	// 5. Save deployment result
+	// Convert GoCoreContracts to CoreContracts for persistence
+	coreContracts := &CoreContracts{
+		Rollup:                 result.CoreContracts.Rollup.Hex(),
+		Inbox:                  result.CoreContracts.Inbox.Hex(),
+		Outbox:                 result.CoreContracts.Outbox.Hex(),
+		Bridge:                 result.CoreContracts.Bridge.Hex(),
+		SequencerInbox:         result.CoreContracts.SequencerInbox.Hex(),
+		RollupEventInbox:       result.CoreContracts.RollupEventInbox.Hex(),
+		ChallengeManager:       result.CoreContracts.ChallengeManager.Hex(),
+		AdminProxy:             result.CoreContracts.AdminProxy.Hex(),
+		UpgradeExecutor:        result.CoreContracts.UpgradeExecutor.Hex(),
+		ValidatorWalletCreator: result.CoreContracts.ValidatorWalletCreator.Hex(),
+		NativeToken:            result.CoreContracts.NativeToken.Hex(),
+		DeployedAtBlockNumber:  int64(result.CoreContracts.DeployedAtBlockNumber),
+	}
+
+	// Persist to database
+	tsResult := &DeployResult{
+		Success:         true,
+		CoreContracts:   coreContracts,
+		TransactionHash: result.TransactionHash.Hex(),
+		BlockNumber:     int64(result.BlockNumber),
+		ChainConfig:     result.ChainConfig,
+	}
+
+	if err := o.saveDeploymentResult(ctx, deploymentID, config, tsResult, certs); err != nil {
+		o.logger.Warn("failed to save deployment result",
+			slog.String("error", err.Error()),
+		)
+	}
+
+	reportProgress("completed", 1.0, fmt.Sprintf("Deployment successful! Rollup: %s", coreContracts.Rollup))
+
+	o.logger.Info("Nitro deployment completed successfully (Go deployer)",
 		slog.String("deployment_id", deploymentID.String()),
-		slog.String("rollup", result.CoreContracts.Rollup),
-		slog.String("tx_hash", result.TransactionHash),
+		slog.String("rollup", coreContracts.Rollup),
+		slog.String("tx_hash", result.TransactionHash.Hex()),
 	)
 
 	return nil
+}
+
+// convertToGoConfig converts the TypeScript-style DeployConfig to GoDeployConfig.
+func (o *Orchestrator) convertToGoConfig(config *DeployConfig) *GoDeployConfig {
+	goConfig := &GoDeployConfig{
+		ChainID:                  config.ChainID,
+		ChainName:                config.ChainName,
+		ParentChainID:            config.ParentChainID,
+		ParentChainRPC:           config.ParentChainRpc,
+		Owner:                    common.HexToAddress(config.Owner),
+		StakeToken:               common.HexToAddress(config.StakeToken),
+		ConfirmPeriodBlocks:      int64(config.ConfirmPeriodBlocks),
+		ExtraChallengeTimeBlocks: int64(config.ExtraChallengeTimeBlocks),
+		MaxDataSize:              int64(config.MaxDataSize),
+		DeployFactoriesToL2:      config.DeployFactoriesToL2,
+	}
+
+	// Convert base stake
+	if config.BaseStake != "" {
+		baseStake, ok := new(big.Int).SetString(config.BaseStake, 10)
+		if ok {
+			goConfig.BaseStake = baseStake
+		}
+	}
+	if goConfig.BaseStake == nil {
+		goConfig.BaseStake = big.NewInt(100000000000000000) // 0.1 ETH default
+	}
+
+	// Convert batch posters
+	for _, addr := range config.BatchPosters {
+		goConfig.BatchPosters = append(goConfig.BatchPosters, common.HexToAddress(addr))
+	}
+
+	// Convert validators
+	for _, addr := range config.Validators {
+		goConfig.Validators = append(goConfig.Validators, common.HexToAddress(addr))
+	}
+
+	// Convert native token
+	if config.NativeToken != "" {
+		goConfig.NativeToken = common.HexToAddress(config.NativeToken)
+	}
+
+	// Convert DA type
+	switch config.DataAvailability {
+	case "anytrust":
+		goConfig.DataAvailability = GoDATypeAnytrust
+	case "rollup":
+		goConfig.DataAvailability = GoDATypeRollup
+	default:
+		goConfig.DataAvailability = GoDATypeCelestia
+	}
+
+	return goConfig
+}
+
+// saveDeploymentResult saves the deployment result to the database.
+func (o *Orchestrator) saveDeploymentResult(
+	ctx context.Context,
+	deploymentID uuid.UUID,
+	config *DeployConfig,
+	result *DeployResult,
+	certs *CertificateBundle,
+) error {
+	// Populate certificates in config for artifact generation
+	configWithCerts := *config
+	configWithCerts.ClientCert = certs.ClientCert
+	configWithCerts.ClientKey = certs.ClientKey
+	configWithCerts.CaCert = certs.CaCert
+
+	// Use the artifact generator to save results
+	generator := NewArtifactGenerator(o.repo)
+	return generator.GenerateArtifacts(ctx, deploymentID, &configWithCerts, result)
 }
 
 // failDeployment marks a deployment as failed and returns the error.
@@ -270,7 +490,7 @@ func (o *Orchestrator) failDeployment(ctx context.Context, deploymentID uuid.UUI
 		o.logger.Warn("failed to set deployment error", slog.String("error", setErr.Error()))
 	}
 
-	if updateErr := o.repo.UpdateDeploymentStatus(ctx, deploymentID, repository.StatusFailed, nil); updateErr != nil {
+	if updateErr := o.repo.UpdateDeploymentStatus(ctx, deploymentID, boostrepo.StatusFailed, nil); updateErr != nil {
 		o.logger.Warn("failed to update deployment status", slog.String("error", updateErr.Error()))
 	}
 
