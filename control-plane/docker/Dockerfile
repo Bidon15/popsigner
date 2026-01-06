@@ -1,20 +1,3 @@
-# Build stage for TypeScript Nitro worker
-FROM node:20-alpine AS node-builder
-
-WORKDIR /app/internal/bootstrap/nitro/worker
-
-# Copy package files
-COPY internal/bootstrap/nitro/worker/package*.json ./
-
-# Install dependencies
-RUN npm ci --ignore-scripts
-
-# Copy TypeScript source
-COPY internal/bootstrap/nitro/worker/ ./
-
-# Build TypeScript
-RUN npm run build
-
 # Build stage for Go
 FROM golang:1.25-alpine AS builder
 
@@ -36,8 +19,8 @@ COPY . .
 # Build the binary WITHOUT cache mounts to ensure fresh module resolution
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /server ./cmd/server
 
-# Runtime stage
-FROM node:20-alpine
+# Runtime stage - now using minimal Alpine (no Node.js needed)
+FROM alpine:3.21
 
 LABEL org.opencontainers.image.title="POPSigner Control Plane"
 LABEL org.opencontainers.image.description="POPSigner - Point-of-Presence signing infrastructure"
@@ -54,11 +37,6 @@ COPY --from=builder /server /app/server
 # Copy static files for web dashboard
 COPY --from=builder /app/static /app/static
 
-# Copy Nitro TypeScript worker (built files + node_modules for runtime)
-COPY --from=node-builder /app/internal/bootstrap/nitro/worker/dist /app/internal/bootstrap/nitro/worker/dist
-COPY --from=node-builder /app/internal/bootstrap/nitro/worker/node_modules /app/internal/bootstrap/nitro/worker/node_modules
-COPY --from=node-builder /app/internal/bootstrap/nitro/worker/package.json /app/internal/bootstrap/nitro/worker/package.json
-
 # Create non-root user
 RUN adduser -D -g '' appuser
 USER appuser
@@ -72,4 +50,3 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Run the server
 ENTRYPOINT ["/app/server"]
-
