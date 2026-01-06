@@ -9,6 +9,7 @@ popsigner
 
 # Test binaries
 *.test
+control-plane/test-anvil-deploy
 
 # Coverage files
 *.out
