@@ -12,6 +12,7 @@ import {
   createWalletClient,
   http,
   defineChain,
+  encodeFunctionData,
   type Address,
   type Hex,
   type PublicClient,
@@ -40,6 +41,47 @@ import {
  * Zero address constant.
  */
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address;
+
+/**
+ * SequencerInbox ABI for batch poster management.
+ * We only need setIsBatchPoster and isBatchPoster functions.
+ */
+const SEQUENCER_INBOX_ABI = [
+  {
+    inputs: [
+      { name: 'addr', type: 'address' },
+      { name: 'isBatchPoster_', type: 'bool' },
+    ],
+    name: 'setIsBatchPoster',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: '', type: 'address' }],
+    name: 'isBatchPoster',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
+/**
+ * UpgradeExecutor ABI for executing privileged calls.
+ * setIsBatchPoster must be called through UpgradeExecutor as it's the rollup owner.
+ */
+const UPGRADE_EXECUTOR_ABI = [
+  {
+    inputs: [
+      { name: 'upgrade', type: 'address' },
+      { name: 'upgradeCallData', type: 'bytes' },
+    ],
+    name: 'executeCall',
+    outputs: [],
+    stateMutability: 'payable',
+    type: 'function',
+  },
+] as const;
 
 /**
  * Default deployment parameters.
@@ -196,15 +238,29 @@ export async function deployOrbitChain(
       transport: http(config.parentChainRpc),
     });
 
+    // Check deployer balance
+    const balance = await publicClient.getBalance({ address: config.owner });
+    const balanceEth = Number(balance) / 1e18;
+    log(`Deployer balance: ${balanceEth.toFixed(6)} ETH`);
+    
+    if (balance === 0n) {
+      throw new DeploymentConfigError('Deployer address has no ETH balance', 'owner');
+    }
+    if (balance < 100000000000000000n) { // 0.1 ETH minimum
+      log(`WARNING: Low balance. Nitro deployment typically requires 0.5-1 ETH`);
+    }
+
     // Prepare chain configuration
-    // DataAvailabilityCommittee is true for external DA (Celestia/AnyTrust)
-    // POPSigner deployments always use Celestia DA
+    // DataAvailabilityCommittee:
+    //   false = Rollup mode OR External DA provider (Celestia)
+    //   true  = AnyTrust DAC mode
+    // For Celestia, we use external-provider flags with DAC=false
     const dataAvailability = config.dataAvailability || 'celestia';
     const chainConfig = prepareChainConfig({
       chainId: config.chainId,
       arbitrum: {
         InitialChainOwner: config.owner,
-        DataAvailabilityCommittee: dataAvailability !== 'rollup',
+        DataAvailabilityCommittee: dataAvailability === 'anytrust',
       },
     });
 
@@ -234,6 +290,28 @@ export async function deployOrbitChain(
     });
 
     log('Transaction request prepared');
+    
+    // Get current gas prices and add buffer for faster inclusion
+    // This is critical for good UX - transactions with low gas get stuck
+    const feeData = await publicClient.estimateFeesPerGas();
+    const baseFee = feeData.maxFeePerGas ?? 0n;
+    const priorityFee = feeData.maxPriorityFeePerGas ?? 0n;
+    
+    // Add 50% buffer to base fee and use at least 2 Gwei priority fee
+    const minPriorityFee = 2000000000n; // 2 Gwei minimum
+    const boostedPriorityFee = priorityFee > minPriorityFee ? priorityFee : minPriorityFee;
+    
+    // Calculate max fee: at least 1.5x base fee, but MUST be >= priority fee
+    // EIP-1559 requires maxFeePerGas >= maxPriorityFeePerGas
+    const calculatedMaxFee = (baseFee * 150n) / 100n; // 1.5x base fee
+    const boostedMaxFee = calculatedMaxFee > boostedPriorityFee 
+      ? calculatedMaxFee 
+      : boostedPriorityFee + (baseFee / 2n); // priority + some headroom for base fee
+    
+    log(`Current base fee: ${Number(baseFee) / 1e9} Gwei`);
+    log(`Boosted max fee: ${Number(boostedMaxFee) / 1e9} Gwei`);
+    log(`Priority fee: ${Number(boostedPriorityFee) / 1e9} Gwei`);
+    
     log('Sending deployment transaction...');
 
     // Create wallet client for sending transactions
@@ -246,10 +324,15 @@ export async function deployOrbitChain(
 
     // Send the deployment transaction using the POPSigner account
     // We manually sign and send since our account type doesn't match viem's exactly
-    const signedTx = await account.signTransaction({
+    // Override gas prices with boosted values for faster inclusion
+    const txWithGas = {
       ...txRequest,
       chainId: parentChain.id,
-    });
+      maxFeePerGas: boostedMaxFee,
+      maxPriorityFeePerGas: boostedPriorityFee,
+      type: 'eip1559' as const,
+    };
+    const signedTx = await account.signTransaction(txWithGas);
 
     // Broadcast the signed transaction
     const txHash = await publicClient.sendRawTransaction({
@@ -259,26 +342,192 @@ export async function deployOrbitChain(
     log(`Transaction submitted: ${txHash}`);
     log('Waiting for confirmation...');
 
-    // Wait for transaction receipt
-    const receipt = await publicClient.waitForTransactionReceipt({
-      hash: txHash,
-      confirmations: 2,
-      timeout: 300_000, // 5 minute timeout
-    });
+    // Wait for transaction receipt with retry logic
+    // Some RPC providers have latency in returning receipts
+    let receipt;
+    let attempts = 0;
+    const maxAttempts = 30; // 30 attempts * 10 seconds = 5 minutes max
+    
+    while (attempts < maxAttempts) {
+      try {
+        receipt = await publicClient.waitForTransactionReceipt({
+          hash: txHash,
+          confirmations: 1, // Wait for 1 confirmation first
+          timeout: 60_000, // 1 minute per attempt
+          pollingInterval: 2_000, // Poll every 2 seconds
+        });
+        break; // Success, exit loop
+      } catch (receiptError: unknown) {
+        attempts++;
+        const errorMessage = receiptError instanceof Error ? receiptError.message : String(receiptError);
+        
+        // If it's not a "receipt not found" error, rethrow
+        if (!errorMessage.includes('could not be found')) {
+          throw receiptError;
+        }
+        
+        log(`Receipt not yet available (attempt ${attempts}/${maxAttempts}), retrying...`);
+        
+        if (attempts >= maxAttempts) {
+          // Final attempt - provide helpful message with tx hash
+          throw new DeploymentError(
+            `Transaction submitted but receipt not found after ${maxAttempts} attempts. ` +
+            `Check transaction status on block explorer: https://sepolia.etherscan.io/tx/${txHash}`,
+            txHash
+          );
+        }
+        
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 10_000));
+      }
+    }
+    
+    if (!receipt) {
+      throw new DeploymentError('Failed to get transaction receipt', txHash);
+    }
 
     log(`Transaction confirmed in block ${receipt.blockNumber}`);
 
     // Check transaction status
     if (receipt.status !== 'success') {
-      throw new DeploymentError('Transaction reverted', txHash);
+      // Try to get revert reason by simulating the transaction
+      let revertReason = 'Unknown reason';
+      try {
+        // Attempt to call the transaction to get revert reason
+        await publicClient.call({
+          to: txRequest.to,
+          data: txRequest.data,
+          account: txRequest.from,
+          gas: txRequest.gas,
+          value: txRequest.value,
+        });
+      } catch (callError: unknown) {
+        if (callError instanceof Error) {
+          revertReason = callError.message;
+        }
+      }
+      log(`Transaction reverted. Reason: ${revertReason}`);
+      log(`Gas used: ${receipt.gasUsed}`);
+      throw new DeploymentError(`Transaction reverted: ${revertReason}`, txHash);
     }
 
     // Parse contract addresses from receipt using orbit-sdk helper
     const txReceipt = createRollupPrepareTransactionReceipt(receipt);
     const coreContracts = txReceipt.getCoreContracts();
 
-    log('Deployment successful!');
+    log('Core contracts deployed!');
     log(`Rollup address: ${coreContracts.rollup}`);
+    log(`SequencerInbox address: ${coreContracts.sequencerInbox}`);
+
+    // =========================================================================
+    // CRITICAL: Whitelist batch posters on SequencerInbox via UpgradeExecutor
+    // The RollupCreator does NOT automatically whitelist batch posters!
+    // Without this, batch poster will fail with NotBatchPoster() error
+    // 
+    // The SequencerInbox is owned by the UpgradeExecutor, so we must call
+    // setIsBatchPoster through the UpgradeExecutor.executeCall() function.
+    // The deployer address has EXECUTOR_ROLE on the UpgradeExecutor.
+    // =========================================================================
+    if (config.batchPosters && config.batchPosters.length > 0) {
+      log(`Whitelisting ${config.batchPosters.length} batch poster(s) via UpgradeExecutor...`);
+      log(`  UpgradeExecutor: ${coreContracts.upgradeExecutor}`);
+      log(`  SequencerInbox: ${coreContracts.sequencerInbox}`);
+      
+      for (const batchPoster of config.batchPosters) {
+        log(`  Whitelisting batch poster: ${batchPoster}`);
+        
+        // Check if already whitelisted (shouldn't be, but check anyway)
+        const isAlreadyWhitelisted = await publicClient.readContract({
+          address: coreContracts.sequencerInbox,
+          abi: SEQUENCER_INBOX_ABI,
+          functionName: 'isBatchPoster',
+          args: [batchPoster],
+        });
+        
+        if (isAlreadyWhitelisted) {
+          log(`  Already whitelisted: ${batchPoster}`);
+          continue;
+        }
+        
+        // Encode the inner call: SequencerInbox.setIsBatchPoster(batchPoster, true)
+        const innerCallData = encodeFunctionData({
+          abi: SEQUENCER_INBOX_ABI,
+          functionName: 'setIsBatchPoster',
+          args: [batchPoster, true],
+        });
+        
+        // Encode the outer call: UpgradeExecutor.executeCall(sequencerInbox, innerCallData)
+        const outerCallData = encodeFunctionData({
+          abi: UPGRADE_EXECUTOR_ABI,
+          functionName: 'executeCall',
+          args: [coreContracts.sequencerInbox, innerCallData],
+        });
+        
+        // Prepare the transaction to UpgradeExecutor
+        const setBatchPosterData = {
+          to: coreContracts.upgradeExecutor,
+          data: outerCallData,
+          chainId: parentChain.id,
+          maxFeePerGas: boostedMaxFee,
+          maxPriorityFeePerGas: boostedPriorityFee,
+          type: 'eip1559' as const,
+        };
+        
+        // Estimate gas for the transaction
+        const gasEstimate = await publicClient.estimateGas({
+          ...setBatchPosterData,
+          account: account.address,
+        });
+        
+        const setBatchPosterTx = {
+          ...setBatchPosterData,
+          gas: (gasEstimate * 120n) / 100n, // 20% buffer
+          nonce: await publicClient.getTransactionCount({ address: account.address }),
+        };
+        
+        const signedSetBatchPosterTx = await account.signTransaction(setBatchPosterTx);
+        const setBatchPosterHash = await publicClient.sendRawTransaction({
+          serializedTransaction: signedSetBatchPosterTx,
+        });
+        
+        log(`  UpgradeExecutor.executeCall tx submitted: ${setBatchPosterHash}`);
+        
+        // Wait for confirmation
+        const setBatchPosterReceipt = await publicClient.waitForTransactionReceipt({
+          hash: setBatchPosterHash,
+          confirmations: 1,
+          timeout: 60_000,
+        });
+        
+        if (setBatchPosterReceipt.status !== 'success') {
+          throw new DeploymentError(
+            `Failed to whitelist batch poster ${batchPoster} via UpgradeExecutor`,
+            setBatchPosterHash
+          );
+        }
+        
+        // Verify it worked
+        const isNowWhitelisted = await publicClient.readContract({
+          address: coreContracts.sequencerInbox,
+          abi: SEQUENCER_INBOX_ABI,
+          functionName: 'isBatchPoster',
+          args: [batchPoster],
+        });
+        
+        if (!isNowWhitelisted) {
+          throw new DeploymentError(
+            `Batch poster ${batchPoster} not whitelisted after transaction - check UpgradeExecutor permissions`,
+            setBatchPosterHash
+          );
+        }
+        
+        log(`  Batch poster whitelisted successfully: ${batchPoster}`);
+      }
+      
+      log('All batch posters whitelisted!');
+    }
+
+    log('Deployment successful!');
     log(`Inbox address: ${coreContracts.inbox}`);
 
     return {

@@ -364,9 +364,10 @@ func (d *Deployer) executeWorker(ctx context.Context, config *DeployConfig) (*De
 	duration := time.Since(startTime)
 
 	// Log stderr output (contains worker logs)
+	// Log at INFO level during deployment for visibility
 	if stderr.Len() > 0 {
-		d.logger.Debug("TypeScript worker stderr",
-			slog.String("output", stderr.String()),
+		d.logger.Info("TypeScript worker output",
+			slog.String("stderr", stderr.String()),
 		)
 	}
 

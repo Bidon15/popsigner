@@ -969,8 +969,9 @@ func (h *Handler) DownloadBundle(w http.ResponseWriter, r *http.Request) {
 	var buf bytes.Buffer
 	zw := zip.NewWriter(&buf)
 
-	// Bundle directory prefix
-	bundlePrefix := fmt.Sprintf("%s-opstack-bundle/", safeName)
+	// Bundle directory prefix - use stack-specific naming
+	stackName := string(deployment.Stack)
+	bundlePrefix := fmt.Sprintf("%s-%s-bundle/", safeName, stackName)
 
 	// Map artifact types to file paths in the ZIP
 	for _, artifact := range artifacts {
@@ -1002,6 +1003,34 @@ func (h *Handler) DownloadBundle(w http.ResponseWriter, r *http.Request) {
 		case "README.md":
 			path = bundlePrefix + "README.md"
 			isPlainText = true
+		// Nitro-specific artifacts
+		case "chain_info":
+			path = bundlePrefix + "config/chain-info.json"
+		case "node_config":
+			path = bundlePrefix + "config/node-config.json"
+		case "core_contracts":
+			path = bundlePrefix + "config/core-contracts.json"
+		case "docker_compose":
+			path = bundlePrefix + "docker-compose.yaml"
+			isPlainText = true
+		case "celestia_config":
+			path = bundlePrefix + "config/celestia-config.toml"
+			isPlainText = true
+		case "env_example":
+			path = bundlePrefix + ".env.example"
+			isPlainText = true
+		case "readme":
+			path = bundlePrefix + "README.md"
+			isPlainText = true
+		case "client_cert":
+			path = bundlePrefix + "certs/client.crt"
+			isPlainText = true
+		case "client_key":
+			path = bundlePrefix + "certs/client.key"
+			isPlainText = true
+		case "ca_cert":
+			path = bundlePrefix + "certs/ca.crt"
+			isPlainText = true
 		default:
 			// Skip internal artifacts like deployment_state
 			continue
@@ -1025,6 +1054,46 @@ func (h *Handler) DownloadBundle(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// For Nitro deployments, add a README to the certs directory
+	if stackName == "nitro" {
+		certReadme := `# PopSigner mTLS Certificates
+
+These certificates are used by the Nitro sequencer for L1 transaction signing.
+
+## Files Included
+
+- client.crt  - Client certificate (PEM format)
+- client.key  - Client private key (PEM format)
+- ca.crt      - CA certificate (PEM format, if applicable)
+
+## Security Notes
+
+- Keep your private key (client.key) secure!
+- Do not commit these files to public version control
+- These certificates are used by Nitro for batch poster and staker transactions
+- Certificates were automatically generated during deployment
+
+## Usage
+
+The docker-compose.yaml is already configured to mount these certificates:
+
+    volumes:
+      - ./certs:/certs:ro
+
+Nitro uses them via:
+
+    --node.batch-poster.data-poster.external-signer.client-cert=/certs/client.crt
+    --node.batch-poster.data-poster.external-signer.client-private-key=/certs/client.key
+`
+		certReadmePath := bundlePrefix + "certs/README.md"
+		fw, err := zw.Create(certReadmePath)
+		if err != nil {
+			slog.Error("failed to create cert readme", "path", certReadmePath, "error", err)
+		} else if _, err := fw.Write([]byte(certReadme)); err != nil {
+			slog.Error("failed to write cert readme", "path", certReadmePath, "error", err)
+		}
+	}
+
 	if err := zw.Close(); err != nil {
 		slog.Error("failed to close zip writer", "error", err)
 		http.Error(w, "Failed to generate bundle", http.StatusInternalServerError)
@@ -1032,7 +1101,7 @@ func (h *Handler) DownloadBundle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set headers for ZIP download
-	filename := fmt.Sprintf("%s-opstack-bundle.zip", safeName)
+	filename := fmt.Sprintf("%s-%s-bundle.zip", safeName, stackName)
 	w.Header().Set("Content-Type", "application/zip")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
 	w.Header().Set("Content-Length", strconv.Itoa(buf.Len()))
