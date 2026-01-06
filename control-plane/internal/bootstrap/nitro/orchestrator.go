@@ -197,25 +197,25 @@ func (o *Orchestrator) Deploy(ctx context.Context, deploymentID uuid.UUID, onPro
 	// 4. Build DeployConfig for the TypeScript worker
 	// Use getter methods to handle both POPKins form names (l1_*) and explicit names (parent_chain_*)
 	deployConfig := &DeployConfig{
-		ChainID:              config.ChainID,
-		ChainName:            config.ChainName,
-		ParentChainID:        config.GetParentChainID(),
-		ParentChainRpc:       config.GetParentChainRpc(),
-		Owner:                config.DeployerAddress,
-		BatchPosters:         config.BatchPosters,
-		Validators:           config.Validators,
-		StakeToken:           config.StakeToken,
-		BaseStake:            config.BaseStake,
-		DataAvailability:     config.GetDataAvailability(),
-		NativeToken:          config.NativeToken,
-		ConfirmPeriodBlocks:  config.ConfirmPeriodBlocks,
+		ChainID:                  config.ChainID,
+		ChainName:                config.ChainName,
+		ParentChainID:            config.GetParentChainID(),
+		ParentChainRpc:           config.GetParentChainRpc(),
+		Owner:                    config.DeployerAddress,
+		BatchPosters:             config.BatchPosters,
+		Validators:               config.Validators,
+		StakeToken:               config.StakeToken,
+		BaseStake:                config.BaseStake,
+		DataAvailability:         config.GetDataAvailability(),
+		NativeToken:              config.NativeToken,
+		ConfirmPeriodBlocks:      config.ConfirmPeriodBlocks,
 		ExtraChallengeTimeBlocks: config.ExtraChallengeTimeBlocks,
-		MaxDataSize:          config.MaxDataSize,
-		DeployFactoriesToL2:  config.DeployFactoriesToL2,
-		PopsignerEndpoint:    o.config.POPSignerMTLSEndpoint,
-		ClientCert:           certs.ClientCert,
-		ClientKey:            certs.ClientKey,
-		CaCert:               certs.CaCert,
+		MaxDataSize:              config.MaxDataSize,
+		DeployFactoriesToL2:      config.DeployFactoriesToL2,
+		PopsignerEndpoint:        o.config.POPSignerMTLSEndpoint,
+		ClientCert:               certs.ClientCert,
+		ClientKey:                certs.ClientKey,
+		CaCert:                   certs.CaCert,
 	}
 
 	// Validate required fields
@@ -592,4 +592,3 @@ func (c *NitroDeploymentConfigRaw) GetDataAvailability() string {
 	}
 	return "celestia" // Default
 }
-

@@ -31,16 +31,51 @@ type ContractArtifact struct {
 	ABI              json.RawMessage `json:"abi"`
 	Bytecode         Bytecode        `json:"bytecode"`
 	DeployedBytecode Bytecode        `json:"deployedBytecode,omitempty"`
+	ContractName     string          `json:"contractName,omitempty"`
 }
 
 // Bytecode contains the contract bytecode.
+// It handles both formats:
+// - Simple string: "0x608060..."
+// - Object with "object" field: {"object": "0x608060..."}
 type Bytecode struct {
-	Object string `json:"object"`
+	hex string
+}
+
+// UnmarshalJSON handles both string and object bytecode formats.
+func (b *Bytecode) UnmarshalJSON(data []byte) error {
+	// Try as plain string first (Foundry/Hardhat output format)
+	var s string
+	if err := json.Unmarshal(data, &s); err == nil {
+		b.hex = s
+		return nil
+	}
+
+	// Try as object with "object" field (older formats)
+	var obj struct {
+		Object string `json:"object"`
+	}
+	if err := json.Unmarshal(data, &obj); err == nil {
+		b.hex = obj.Object
+		return nil
+	}
+
+	return fmt.Errorf("bytecode must be a string or object with 'object' field")
+}
+
+// MarshalJSON marshals the bytecode as a string.
+func (b Bytecode) MarshalJSON() ([]byte, error) {
+	return json.Marshal(b.hex)
+}
+
+// String returns the bytecode hex string.
+func (b Bytecode) String() string {
+	return b.hex
 }
 
 // GetBytecode returns the bytecode as a hex string (with 0x prefix).
 func (a *ContractArtifact) GetBytecode() string {
-	return a.Bytecode.Object
+	return a.Bytecode.hex
 }
 
 // NitroArtifacts contains all compiled Nitro contract artifacts needed for deployment.
@@ -364,7 +399,7 @@ func (a *abiEncoder) Pack(method string, args ...interface{}) ([]byte, error) {
 
 // GetBytecodeBytes returns the bytecode as a byte slice.
 func (a *ContractArtifact) GetBytecodeBytes() ([]byte, error) {
-	bytecode := a.Bytecode.Object
+	bytecode := a.Bytecode.hex
 	if len(bytecode) == 0 {
 		return nil, fmt.Errorf("empty bytecode")
 	}
