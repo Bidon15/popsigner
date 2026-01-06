@@ -349,10 +349,10 @@ func (o *Orchestrator) deployWithGo(
 		return o.failDeployment(ctx, deploymentID, fmt.Errorf("create rollup deployer: %w", err))
 	}
 
-	// Convert DeployConfig to GoDeployConfig
-	goConfig := o.convertToGoConfig(config)
+	// Convert DeployConfig to RollupConfig
+	rollupConfig := o.convertToRollupConfig(config)
 
-	result, err := rollupDeployer.Deploy(ctx, goConfig, rollupCreatorAddr)
+	result, err := rollupDeployer.Deploy(ctx, rollupConfig, rollupCreatorAddr)
 	if err != nil {
 		return o.failDeployment(ctx, deploymentID, fmt.Errorf("deploy rollup: %w", err))
 	}
@@ -364,20 +364,20 @@ func (o *Orchestrator) deployWithGo(
 	reportProgress("artifacts", 0.90, "Generating deployment artifacts...")
 
 	// 5. Save deployment result
-	// Convert GoCoreContracts to CoreContracts for persistence
+	// Convert RollupContracts to CoreContracts for persistence
 	coreContracts := &CoreContracts{
-		Rollup:                 result.CoreContracts.Rollup.Hex(),
-		Inbox:                  result.CoreContracts.Inbox.Hex(),
-		Outbox:                 result.CoreContracts.Outbox.Hex(),
-		Bridge:                 result.CoreContracts.Bridge.Hex(),
-		SequencerInbox:         result.CoreContracts.SequencerInbox.Hex(),
-		RollupEventInbox:       result.CoreContracts.RollupEventInbox.Hex(),
-		ChallengeManager:       result.CoreContracts.ChallengeManager.Hex(),
-		AdminProxy:             result.CoreContracts.AdminProxy.Hex(),
-		UpgradeExecutor:        result.CoreContracts.UpgradeExecutor.Hex(),
-		ValidatorWalletCreator: result.CoreContracts.ValidatorWalletCreator.Hex(),
-		NativeToken:            result.CoreContracts.NativeToken.Hex(),
-		DeployedAtBlockNumber:  int64(result.CoreContracts.DeployedAtBlockNumber),
+		Rollup:                 result.Contracts.Rollup.Hex(),
+		Inbox:                  result.Contracts.Inbox.Hex(),
+		Outbox:                 result.Contracts.Outbox.Hex(),
+		Bridge:                 result.Contracts.Bridge.Hex(),
+		SequencerInbox:         result.Contracts.SequencerInbox.Hex(),
+		RollupEventInbox:       result.Contracts.RollupEventInbox.Hex(),
+		ChallengeManager:       result.Contracts.ChallengeManager.Hex(),
+		AdminProxy:             result.Contracts.AdminProxy.Hex(),
+		UpgradeExecutor:        result.Contracts.UpgradeExecutor.Hex(),
+		ValidatorWalletCreator: result.Contracts.ValidatorWalletCreator.Hex(),
+		NativeToken:            result.Contracts.NativeToken.Hex(),
+		DeployedAtBlockNumber:  int64(result.Contracts.DeployedAtBlockNumber),
 	}
 
 	// Persist to database
@@ -406,9 +406,9 @@ func (o *Orchestrator) deployWithGo(
 	return nil
 }
 
-// convertToGoConfig converts the TypeScript-style DeployConfig to GoDeployConfig.
-func (o *Orchestrator) convertToGoConfig(config *DeployConfig) *GoDeployConfig {
-	goConfig := &GoDeployConfig{
+// convertToRollupConfig converts the wrapper DeployConfig to RollupConfig.
+func (o *Orchestrator) convertToRollupConfig(config *DeployConfig) *RollupConfig {
+	rollupCfg := &RollupConfig{
 		ChainID:                  config.ChainID,
 		ChainName:                config.ChainName,
 		ParentChainID:            config.ParentChainID,
@@ -425,39 +425,39 @@ func (o *Orchestrator) convertToGoConfig(config *DeployConfig) *GoDeployConfig {
 	if config.BaseStake != "" {
 		baseStake, ok := new(big.Int).SetString(config.BaseStake, 10)
 		if ok {
-			goConfig.BaseStake = baseStake
+			rollupCfg.BaseStake = baseStake
 		}
 	}
-	if goConfig.BaseStake == nil {
-		goConfig.BaseStake = big.NewInt(100000000000000000) // 0.1 ETH default
+	if rollupCfg.BaseStake == nil {
+		rollupCfg.BaseStake = big.NewInt(100000000000000000) // 0.1 ETH default
 	}
 
 	// Convert batch posters
 	for _, addr := range config.BatchPosters {
-		goConfig.BatchPosters = append(goConfig.BatchPosters, common.HexToAddress(addr))
+		rollupCfg.BatchPosters = append(rollupCfg.BatchPosters, common.HexToAddress(addr))
 	}
 
 	// Convert validators
 	for _, addr := range config.Validators {
-		goConfig.Validators = append(goConfig.Validators, common.HexToAddress(addr))
+		rollupCfg.Validators = append(rollupCfg.Validators, common.HexToAddress(addr))
 	}
 
 	// Convert native token
 	if config.NativeToken != "" {
-		goConfig.NativeToken = common.HexToAddress(config.NativeToken)
+		rollupCfg.NativeToken = common.HexToAddress(config.NativeToken)
 	}
 
 	// Convert DA type
 	switch config.DataAvailability {
 	case "anytrust":
-		goConfig.DataAvailability = GoDATypeAnytrust
+		rollupCfg.DataAvailability = DAModeAnytrust
 	case "rollup":
-		goConfig.DataAvailability = GoDATypeRollup
+		rollupCfg.DataAvailability = DAModeRollup
 	default:
-		goConfig.DataAvailability = GoDATypeCelestia
+		rollupCfg.DataAvailability = DAModeCelestia
 	}
 
-	return goConfig
+	return rollupCfg
 }
 
 // saveDeploymentResult saves the deployment result to the database.

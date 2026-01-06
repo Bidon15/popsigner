@@ -25,17 +25,17 @@ const (
 	DefaultMaxDataSize              = 117964
 )
 
-// GoDataAvailabilityType represents the data availability mode for the chain.
-type GoDataAvailabilityType string
+// DataAvailabilityMode represents the data availability mode for the chain.
+type DataAvailabilityMode string
 
 const (
-	GoDATypeCelestia GoDataAvailabilityType = "celestia"
-	GoDATypeRollup   GoDataAvailabilityType = "rollup"
-	GoDATypeAnytrust GoDataAvailabilityType = "anytrust"
+	DAModeCelestia DataAvailabilityMode = "celestia"
+	DAModeRollup   DataAvailabilityMode = "rollup"
+	DAModeAnytrust DataAvailabilityMode = "anytrust"
 )
 
-// GoDeployConfig contains all configuration for deploying a Nitro rollup using Go.
-type GoDeployConfig struct {
+// RollupConfig contains all configuration for deploying a Nitro rollup.
+type RollupConfig struct {
 	// Chain configuration
 	ChainID        int64  `json:"chainId"`
 	ChainName      string `json:"chainName"`
@@ -52,16 +52,16 @@ type GoDeployConfig struct {
 	BaseStake  *big.Int       `json:"baseStake"`
 
 	// Optional parameters with defaults
-	ConfirmPeriodBlocks      int64                  `json:"confirmPeriodBlocks,omitempty"`
-	ExtraChallengeTimeBlocks int64                  `json:"extraChallengeTimeBlocks,omitempty"`
-	MaxDataSize              int64                  `json:"maxDataSize,omitempty"`
-	DataAvailability         GoDataAvailabilityType `json:"dataAvailability,omitempty"`
-	NativeToken              common.Address         `json:"nativeToken,omitempty"`
-	DeployFactoriesToL2      bool                   `json:"deployFactoriesToL2,omitempty"`
+	ConfirmPeriodBlocks      int64                `json:"confirmPeriodBlocks,omitempty"`
+	ExtraChallengeTimeBlocks int64                `json:"extraChallengeTimeBlocks,omitempty"`
+	MaxDataSize              int64                `json:"maxDataSize,omitempty"`
+	DataAvailability         DataAvailabilityMode `json:"dataAvailability,omitempty"`
+	NativeToken              common.Address       `json:"nativeToken,omitempty"`
+	DeployFactoriesToL2      bool                 `json:"deployFactoriesToL2,omitempty"`
 }
 
-// GoCoreContracts contains addresses of all deployed core contracts (Go version).
-type GoCoreContracts struct {
+// RollupContracts contains addresses of all deployed core contracts.
+type RollupContracts struct {
 	Rollup                 common.Address `json:"rollup"`
 	Inbox                  common.Address `json:"inbox"`
 	Outbox                 common.Address `json:"outbox"`
@@ -76,10 +76,10 @@ type GoCoreContracts struct {
 	DeployedAtBlockNumber  uint64         `json:"deployedAtBlockNumber"`
 }
 
-// GoDeployResult contains the result of a deployment operation (Go version).
-type GoDeployResult struct {
+// RollupDeployResult contains the result of a deployment operation.
+type RollupDeployResult struct {
 	Success         bool                   `json:"success"`
-	CoreContracts   *GoCoreContracts       `json:"coreContracts,omitempty"`
+	Contracts       *RollupContracts       `json:"contracts,omitempty"`
 	TransactionHash common.Hash            `json:"transactionHash,omitempty"`
 	BlockNumber     uint64                 `json:"blockNumber,omitempty"`
 	ChainConfig     map[string]interface{} `json:"chainConfig,omitempty"`
@@ -143,9 +143,9 @@ func NewRollupDeployer(
 // Deploy deploys a new Nitro rollup using the RollupCreator contract.
 func (d *RollupDeployer) Deploy(
 	ctx context.Context,
-	cfg *GoDeployConfig,
+	cfg *RollupConfig,
 	rollupCreatorAddr common.Address,
-) (*GoDeployResult, error) {
+) (*RollupDeployResult, error) {
 	d.logger.Info("starting Nitro rollup deployment",
 		slog.Int64("chain_id", cfg.ChainID),
 		slog.String("chain_name", cfg.ChainName),
@@ -260,7 +260,7 @@ func (d *RollupDeployer) Deploy(
 	// Wait for receipt
 	receipt, err := bind.WaitMined(ctx, client, signedTx)
 	if err != nil {
-		return &GoDeployResult{
+		return &RollupDeployResult{
 			Success:         false,
 			TransactionHash: signedTx.Hash(),
 			Error:           fmt.Sprintf("wait for receipt: %v", err),
@@ -268,7 +268,7 @@ func (d *RollupDeployer) Deploy(
 	}
 
 	if receipt.Status != types.ReceiptStatusSuccessful {
-		return &GoDeployResult{
+		return &RollupDeployResult{
 			Success:         false,
 			TransactionHash: signedTx.Hash(),
 			BlockNumber:     receipt.BlockNumber.Uint64(),
@@ -302,9 +302,9 @@ func (d *RollupDeployer) Deploy(
 		}
 	}
 
-	return &GoDeployResult{
+	return &RollupDeployResult{
 		Success:         true,
-		CoreContracts:   coreContracts,
+		Contracts:       coreContracts,
 		TransactionHash: signedTx.Hash(),
 		BlockNumber:     receipt.BlockNumber.Uint64(),
 		ChainConfig:     chainConfig,
@@ -312,7 +312,7 @@ func (d *RollupDeployer) Deploy(
 }
 
 // applyDefaults applies default values to config.
-func (d *RollupDeployer) applyDefaults(cfg *GoDeployConfig) {
+func (d *RollupDeployer) applyDefaults(cfg *RollupConfig) {
 	if cfg.ConfirmPeriodBlocks == 0 {
 		cfg.ConfirmPeriodBlocks = DefaultConfirmPeriodBlocks
 	}
@@ -320,12 +320,12 @@ func (d *RollupDeployer) applyDefaults(cfg *GoDeployConfig) {
 		cfg.MaxDataSize = DefaultMaxDataSize
 	}
 	if cfg.DataAvailability == "" {
-		cfg.DataAvailability = GoDATypeCelestia
+		cfg.DataAvailability = DAModeCelestia
 	}
 }
 
 // prepareChainConfig prepares the chain configuration JSON.
-func (d *RollupDeployer) prepareChainConfig(cfg *GoDeployConfig) map[string]interface{} {
+func (d *RollupDeployer) prepareChainConfig(cfg *RollupConfig) map[string]interface{} {
 	// Standard Ethereum hardfork configuration
 	return map[string]interface{}{
 		"homesteadBlock":       0,
@@ -349,7 +349,7 @@ func (d *RollupDeployer) prepareChainConfig(cfg *GoDeployConfig) map[string]inte
 		"arbitrum": map[string]interface{}{
 			"EnableArbOS":               true,
 			"AllowDebugPrecompiles":     false,
-			"DataAvailabilityCommittee": cfg.DataAvailability == GoDATypeAnytrust,
+			"DataAvailabilityCommittee": cfg.DataAvailability == DAModeAnytrust,
 			"InitialArbOSVersion":       32,
 			"GenesisBlockNum":           0,
 			"MaxCodeSize":               24576,
@@ -361,7 +361,7 @@ func (d *RollupDeployer) prepareChainConfig(cfg *GoDeployConfig) map[string]inte
 }
 
 // encodeCreateRollup encodes the createRollup function call.
-func (d *RollupDeployer) encodeCreateRollup(cfg *GoDeployConfig, chainConfig map[string]interface{}) ([]byte, error) {
+func (d *RollupDeployer) encodeCreateRollup(cfg *RollupConfig, chainConfig map[string]interface{}) ([]byte, error) {
 	// Encode chain config as JSON
 	chainConfigJSON, err := json.Marshal(chainConfig)
 	if err != nil {
@@ -444,7 +444,7 @@ func (d *RollupDeployer) getGasPrice(ctx context.Context, client *ethclient.Clie
 }
 
 // parseDeploymentLogs parses the RollupCreated event from transaction logs.
-func (d *RollupDeployer) parseDeploymentLogs(receipt *types.Receipt) (*GoCoreContracts, error) {
+func (d *RollupDeployer) parseDeploymentLogs(receipt *types.Receipt) (*RollupContracts, error) {
 	// RollupCreated event signature
 	// event RollupCreated(
 	//   address indexed rollupAddress,
@@ -472,7 +472,7 @@ func (d *RollupDeployer) parseDeploymentLogs(receipt *types.Receipt) (*GoCoreCon
 		// This is a simplified implementation - in production, we'd properly
 		// decode the event using the ABI
 		if len(log.Data) >= 32*9 { // 9 non-indexed address parameters
-			contracts := &GoCoreContracts{}
+			contracts := &RollupContracts{}
 			
 			// First two topics are indexed addresses
 			if len(log.Topics) >= 2 {
@@ -513,7 +513,7 @@ func (d *RollupDeployer) parseDeploymentLogs(receipt *types.Receipt) (*GoCoreCon
 func (d *RollupDeployer) whitelistBatchPosters(
 	ctx context.Context,
 	client *ethclient.Client,
-	contracts *GoCoreContracts,
+	contracts *RollupContracts,
 	batchPosters []common.Address,
 ) error {
 	d.logger.Info("whitelisting batch posters via UpgradeExecutor",
@@ -663,8 +663,8 @@ func (d *RollupDeployer) isBatchPoster(
 }
 
 // errorResult creates an error result.
-func (d *RollupDeployer) errorResult(err error) (*GoDeployResult, error) {
-	return &GoDeployResult{
+func (d *RollupDeployer) errorResult(err error) (*RollupDeployResult, error) {
+	return &RollupDeployResult{
 		Success: false,
 		Error:   err.Error(),
 	}, nil
