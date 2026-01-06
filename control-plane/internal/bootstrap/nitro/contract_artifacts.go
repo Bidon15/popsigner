@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/ethereum/go-ethereum/accounts/abi"
 )
 
 // ArtifactVersion is the current version of the nitro-contracts artifacts.
@@ -84,14 +86,19 @@ type NitroArtifacts struct {
 	RollupCreator *ContractArtifact
 	BridgeCreator *ContractArtifact
 
-	// Rollup infrastructure
-	SequencerInbox   *ContractArtifact
-	Bridge           *ContractArtifact
-	Inbox            *ContractArtifact
-	Outbox           *ContractArtifact
-	RollupCore       *ContractArtifact
-	RollupAdminLogic *ContractArtifact
-	RollupUserLogic  *ContractArtifact
+	// Rollup infrastructure (ETH native token)
+	SequencerInbox     *ContractArtifact
+	Bridge             *ContractArtifact
+	Inbox              *ContractArtifact
+	Outbox             *ContractArtifact
+	RollupEventInbox   *ContractArtifact // NEW: for BridgeCreator templates
+	RollupCore         *ContractArtifact
+	RollupAdminLogic   *ContractArtifact
+	RollupUserLogic    *ContractArtifact
+
+	// ERC20 native token variants (for custom gas tokens)
+	ERC20Bridge *ContractArtifact
+	ERC20Inbox  *ContractArtifact
 
 	// Challenge/Fraud proof contracts (BOLD protocol in v3.2+)
 	// Note: EdgeChallengeManager replaces the old ChallengeManager in BOLD
@@ -104,6 +111,12 @@ type NitroArtifacts struct {
 
 	// Upgrade infrastructure
 	UpgradeExecutor *ContractArtifact
+
+	// Validator infrastructure
+	ValidatorWalletCreator *ContractArtifact
+
+	// L2 Factory deployer
+	DeployHelper *ContractArtifact
 
 	// Version metadata
 	Version   string
@@ -216,22 +229,32 @@ func (d *ContractArtifactDownloader) parseZip(zipPath string) (*NitroArtifacts, 
 
 	// List of contracts we need (BOLD protocol for v3.2+)
 	requiredContracts := []string{
+		// Core deployment
 		"RollupCreator",
 		"BridgeCreator",
+		// Rollup infrastructure (ETH native)
 		"SequencerInbox",
 		"Bridge",
 		"Inbox",
 		"Outbox",
+		"RollupEventInbox",
 		"RollupCore",
 		"RollupAdminLogic",
 		"RollupUserLogic",
-		"EdgeChallengeManager", // BOLD protocol (replaces old ChallengeManager)
+		// ERC20 native token variants
+		"ERC20Bridge",
+		"ERC20Inbox",
+		// Challenge/Fraud proofs (BOLD)
+		"EdgeChallengeManager",
 		"OneStepProofEntry",
 		"OneStepProver0",
 		"OneStepProverMemory",
 		"OneStepProverMath",
 		"OneStepProverHostIo",
+		// Upgrade/Validator infrastructure
 		"UpgradeExecutor",
+		"ValidatorWalletCreator",
+		"DeployHelper",
 	}
 
 	// Build a set for quick lookup
@@ -294,22 +317,32 @@ func (d *ContractArtifactDownloader) parseZip(zipPath string) (*NitroArtifacts, 
 
 	// Build the NitroArtifacts struct
 	return &NitroArtifacts{
-		RollupCreator:        loaded["RollupCreator"],
-		BridgeCreator:        loaded["BridgeCreator"],
-		SequencerInbox:       loaded["SequencerInbox"],
-		Bridge:               loaded["Bridge"],
-		Inbox:                loaded["Inbox"],
-		Outbox:               loaded["Outbox"],
-		RollupCore:           loaded["RollupCore"],
-		RollupAdminLogic:     loaded["RollupAdminLogic"],
-		RollupUserLogic:      loaded["RollupUserLogic"],
+		// Core deployment
+		RollupCreator: loaded["RollupCreator"],
+		BridgeCreator: loaded["BridgeCreator"],
+		// Rollup infrastructure (ETH native)
+		SequencerInbox:   loaded["SequencerInbox"],
+		Bridge:           loaded["Bridge"],
+		Inbox:            loaded["Inbox"],
+		Outbox:           loaded["Outbox"],
+		RollupEventInbox: loaded["RollupEventInbox"],
+		RollupCore:       loaded["RollupCore"],
+		RollupAdminLogic: loaded["RollupAdminLogic"],
+		RollupUserLogic:  loaded["RollupUserLogic"],
+		// ERC20 native token variants
+		ERC20Bridge: loaded["ERC20Bridge"],
+		ERC20Inbox:  loaded["ERC20Inbox"],
+		// Challenge/Fraud proofs (BOLD)
 		EdgeChallengeManager: loaded["EdgeChallengeManager"],
 		OneStepProofEntry:    loaded["OneStepProofEntry"],
 		OneStepProver0:       loaded["OneStepProver0"],
 		OneStepProverMemory:  loaded["OneStepProverMemory"],
 		OneStepProverMath:    loaded["OneStepProverMath"],
 		OneStepProverHostIo:  loaded["OneStepProverHostIo"],
-		UpgradeExecutor:      loaded["UpgradeExecutor"],
+		// Upgrade/Validator infrastructure
+		UpgradeExecutor:        loaded["UpgradeExecutor"],
+		ValidatorWalletCreator: loaded["ValidatorWalletCreator"],
+		DeployHelper:           loaded["DeployHelper"],
 	}, nil
 }
 
@@ -319,22 +352,32 @@ func LoadFromDirectory(dir string) (*NitroArtifacts, error) {
 	contracts := map[string]**ContractArtifact{}
 
 	artifacts := &NitroArtifacts{}
+	// Core deployment
 	contracts["RollupCreator"] = &artifacts.RollupCreator
 	contracts["BridgeCreator"] = &artifacts.BridgeCreator
+	// Rollup infrastructure (ETH native)
 	contracts["SequencerInbox"] = &artifacts.SequencerInbox
 	contracts["Bridge"] = &artifacts.Bridge
 	contracts["Inbox"] = &artifacts.Inbox
 	contracts["Outbox"] = &artifacts.Outbox
+	contracts["RollupEventInbox"] = &artifacts.RollupEventInbox
 	contracts["RollupCore"] = &artifacts.RollupCore
 	contracts["RollupAdminLogic"] = &artifacts.RollupAdminLogic
 	contracts["RollupUserLogic"] = &artifacts.RollupUserLogic
+	// ERC20 native token variants
+	contracts["ERC20Bridge"] = &artifacts.ERC20Bridge
+	contracts["ERC20Inbox"] = &artifacts.ERC20Inbox
+	// Challenge/Fraud proofs (BOLD)
 	contracts["EdgeChallengeManager"] = &artifacts.EdgeChallengeManager
 	contracts["OneStepProofEntry"] = &artifacts.OneStepProofEntry
 	contracts["OneStepProver0"] = &artifacts.OneStepProver0
 	contracts["OneStepProverMemory"] = &artifacts.OneStepProverMemory
 	contracts["OneStepProverMath"] = &artifacts.OneStepProverMath
 	contracts["OneStepProverHostIo"] = &artifacts.OneStepProverHostIo
+	// Upgrade/Validator infrastructure
 	contracts["UpgradeExecutor"] = &artifacts.UpgradeExecutor
+	contracts["ValidatorWalletCreator"] = &artifacts.ValidatorWalletCreator
+	contracts["DeployHelper"] = &artifacts.DeployHelper
 
 	var missing []string
 	for name, ptr := range contracts {
@@ -363,38 +406,53 @@ func LoadFromDirectory(dir string) (*NitroArtifacts, error) {
 	return artifacts, nil
 }
 
-// EncodeABI encodes a function call using the contract's ABI.
-// This is a helper for encoding constructor arguments or function calls.
-func EncodeABI(artifact *ContractArtifact, method string, args ...interface{}) ([]byte, error) {
-	// Parse ABI
-	abiInterface, err := parseABI(artifact.ABI)
+// EncodeConstructorArgs encodes constructor arguments using the contract's ABI.
+// Returns the encoded args (without bytecode prefix) ready to append to bytecode.
+func (a *ContractArtifact) EncodeConstructorArgs(args ...interface{}) ([]byte, error) {
+	if len(args) == 0 {
+		return nil, nil
+	}
+
+	// Parse the ABI
+	parsedABI, err := abi.JSON(bytes.NewReader(a.ABI))
 	if err != nil {
 		return nil, fmt.Errorf("parse ABI: %w", err)
 	}
 
-	// Find the method
-	if method == "" {
-		// Constructor
-		return abiInterface.Pack("", args...)
+	// Check if constructor exists
+	if parsedABI.Constructor.Inputs == nil {
+		return nil, fmt.Errorf("contract has no constructor")
 	}
 
-	return abiInterface.Pack(method, args...)
+	// Pack the arguments
+	packed, err := parsedABI.Constructor.Inputs.Pack(args...)
+	if err != nil {
+		return nil, fmt.Errorf("pack constructor args: %w", err)
+	}
+
+	return packed, nil
 }
 
-// parseABI is a placeholder - we'll use go-ethereum's ABI package
-func parseABI(abiJSON json.RawMessage) (*abiEncoder, error) {
-	return &abiEncoder{raw: abiJSON}, nil
+// EncodeFunctionCall encodes a function call using the contract's ABI.
+func (a *ContractArtifact) EncodeFunctionCall(method string, args ...interface{}) ([]byte, error) {
+	// Parse the ABI
+	parsedABI, err := abi.JSON(bytes.NewReader(a.ABI))
+	if err != nil {
+		return nil, fmt.Errorf("parse ABI: %w", err)
+	}
+
+	// Pack the function call
+	packed, err := parsedABI.Pack(method, args...)
+	if err != nil {
+		return nil, fmt.Errorf("pack function call: %w", err)
+	}
+
+	return packed, nil
 }
 
-// abiEncoder is a placeholder for go-ethereum ABI encoding
-type abiEncoder struct {
-	raw json.RawMessage
-}
-
-func (a *abiEncoder) Pack(method string, args ...interface{}) ([]byte, error) {
-	// This will be replaced with go-ethereum ABI encoding in signer.go
-	// For now, just return nil - actual implementation uses go-ethereum
-	return nil, fmt.Errorf("ABI encoding requires go-ethereum import")
+// GetParsedABI returns the parsed ABI for direct access.
+func (a *ContractArtifact) GetParsedABI() (abi.ABI, error) {
+	return abi.JSON(bytes.NewReader(a.ABI))
 }
 
 // GetBytecodeBytes returns the bytecode as a byte slice.
@@ -430,5 +488,3 @@ func hexDecode(s string) ([]byte, error) {
 	return result, nil
 }
 
-// Ensure unused imports are used
-var _ = bytes.Buffer{}

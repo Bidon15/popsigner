@@ -44,6 +44,9 @@ type InfrastructureResult struct {
 	Version                string
 	DeploymentTxHash       common.Hash
 	AlreadyDeployed        bool
+
+	// All deployed infrastructure addresses (for transparency)
+	DeployedContracts map[string]common.Address
 }
 
 // NewInfrastructureDeployer creates a new infrastructure deployer.
@@ -158,67 +161,231 @@ func (d *InfrastructureDeployer) EnsureInfrastructure(
 }
 
 // deployInfrastructure deploys all required infrastructure contracts.
-// This is a complex multi-step process:
-// 1. Deploy OneStepProvers (OSP0, OSPMemory, OSPMath, OSPHostIo)
-// 2. Deploy OneStepProofEntry (references provers)
-// 3. Deploy ChallengeManager template
-// 4. Deploy Rollup contracts (Bridge, Inbox, Outbox, SequencerInbox)
-// 5. Deploy BridgeCreator
-// 6. Deploy RollupCreator (the main entry point)
+// This is a complex multi-step process following the dependency graph:
+//
+// Phase 1: Simple contracts (no constructor args)
+//   - OneStepProver0, OneStepProverMemory, OneStepProverMath, OneStepProverHostIo
+//   - Bridge, SequencerInbox, Inbox, Outbox, RollupEventInbox
+//   - ERC20Bridge, ERC20Inbox (for custom gas tokens)
+//   - EdgeChallengeManager, RollupAdminLogic, RollupUserLogic, UpgradeExecutor
+//   - ValidatorWalletCreator, DeployHelper
+//
+// Phase 2: Contracts with dependencies
+//   - OneStepProofEntry (needs 4 provers)
+//   - BridgeCreator (needs bridge template addresses)
+//
+// Phase 3: Main entry point
+//   - RollupCreator (needs all above)
 func (d *InfrastructureDeployer) deployInfrastructure(
 	ctx context.Context,
 	client *ethclient.Client,
 ) (*InfrastructureResult, error) {
-	// For now, we use a simplified deployment that assumes:
-	// 1. Official Arbitrum RollupCreator is already deployed on testnets/mainnet
-	// 2. For local Anvil, we need to deploy everything
-	//
-	// In production, we'd check for existing deployments first.
+	deployed := make(map[string]common.Address)
 
-	// Get the deployer's nonce
-	nonce, err := client.PendingNonceAt(ctx, d.signer.Address())
-	if err != nil {
-		return nil, fmt.Errorf("get nonce: %w", err)
-	}
-
-	// Get gas price
+	// Get gas price (boosted 50%)
 	gasPrice, err := client.SuggestGasPrice(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get gas price: %w", err)
 	}
-	// Boost gas price by 50%
 	gasPrice = new(big.Int).Mul(gasPrice, big.NewInt(150))
 	gasPrice = new(big.Int).Div(gasPrice, big.NewInt(100))
 
 	chainID := d.signer.ChainID()
 
-	// Deploy RollupCreator
-	// Note: In a full implementation, we'd deploy all dependencies first.
-	// For now, we deploy RollupCreator which is the main entry point.
-	
+	// Helper to deploy a contract and track it
+	deploy := func(name string, artifact *ContractArtifact, constructorArgs []byte) error {
+		nonce, err := client.PendingNonceAt(ctx, d.signer.Address())
+		if err != nil {
+			return fmt.Errorf("get nonce for %s: %w", name, err)
+		}
+
+		addr, txHash, err := d.deployContract(ctx, client, artifact, nonce, gasPrice, chainID, constructorArgs)
+		if err != nil {
+			return fmt.Errorf("deploy %s: %w", name, err)
+		}
+
+		deployed[name] = addr
+		d.logger.Info("deployed contract",
+			slog.String("name", name),
+			slog.String("address", addr.Hex()),
+			slog.String("tx_hash", txHash.Hex()),
+		)
+		return nil
+	}
+
+	// ============================================
+	// Phase 1: Simple contracts (no constructor args)
+	// ============================================
+	d.logger.Info("Phase 1: Deploying simple contracts...")
+
+	// OneStepProvers
+	simpleContracts := []struct {
+		name     string
+		artifact *ContractArtifact
+	}{
+		{"OneStepProver0", d.artifacts.OneStepProver0},
+		{"OneStepProverMemory", d.artifacts.OneStepProverMemory},
+		{"OneStepProverMath", d.artifacts.OneStepProverMath},
+		{"OneStepProverHostIo", d.artifacts.OneStepProverHostIo},
+		// Bridge templates (ETH)
+		{"Bridge", d.artifacts.Bridge},
+		{"SequencerInbox", d.artifacts.SequencerInbox},
+		{"Inbox", d.artifacts.Inbox},
+		{"Outbox", d.artifacts.Outbox},
+		{"RollupEventInbox", d.artifacts.RollupEventInbox},
+		// ERC20 variants
+		{"ERC20Bridge", d.artifacts.ERC20Bridge},
+		// Rollup logic
+		{"EdgeChallengeManager", d.artifacts.EdgeChallengeManager},
+		{"RollupAdminLogic", d.artifacts.RollupAdminLogic},
+		{"RollupUserLogic", d.artifacts.RollupUserLogic},
+		{"UpgradeExecutor", d.artifacts.UpgradeExecutor},
+		// Validator/Deploy helpers
+		{"ValidatorWalletCreator", d.artifacts.ValidatorWalletCreator},
+		{"DeployHelper", d.artifacts.DeployHelper},
+	}
+
+	for _, c := range simpleContracts {
+		if err := deploy(c.name, c.artifact, nil); err != nil {
+			return nil, err
+		}
+	}
+
+	// ERC20Inbox needs maxDataSize constructor arg
+	d.logger.Info("Deploying ERC20Inbox with maxDataSize...")
+	erc20InboxArgs, err := d.artifacts.ERC20Inbox.EncodeConstructorArgs(
+		big.NewInt(117964), // MAX_DATA_SIZE from Arbitrum
+	)
+	if err != nil {
+		return nil, fmt.Errorf("encode ERC20Inbox args: %w", err)
+	}
+	if err := deploy("ERC20Inbox", d.artifacts.ERC20Inbox, erc20InboxArgs); err != nil {
+		return nil, err
+	}
+
+	// ============================================
+	// Phase 2: Contracts with dependencies
+	// ============================================
+	d.logger.Info("Phase 2: Deploying contracts with dependencies...")
+
+	// OneStepProofEntry(prover0, proverMem, proverMath, proverHostIo)
+	ospArgs, err := d.artifacts.OneStepProofEntry.EncodeConstructorArgs(
+		deployed["OneStepProver0"],
+		deployed["OneStepProverMemory"],
+		deployed["OneStepProverMath"],
+		deployed["OneStepProverHostIo"],
+	)
+	if err != nil {
+		return nil, fmt.Errorf("encode OneStepProofEntry args: %w", err)
+	}
+	if err := deploy("OneStepProofEntry", d.artifacts.OneStepProofEntry, ospArgs); err != nil {
+		return nil, err
+	}
+
+	// BridgeCreator(ethTemplates, erc20Templates)
+	// BridgeTemplates struct: (bridge, sequencerInbox, delayBufferableSequencerInbox, inbox, rollupEventInbox, outbox)
+	ethTemplates := struct {
+		Bridge                        common.Address
+		SequencerInbox                common.Address
+		DelayBufferableSequencerInbox common.Address
+		Inbox                         common.Address
+		RollupEventInbox              common.Address
+		Outbox                        common.Address
+	}{
+		Bridge:                        deployed["Bridge"],
+		SequencerInbox:                deployed["SequencerInbox"],
+		DelayBufferableSequencerInbox: deployed["SequencerInbox"], // Same as SequencerInbox for now
+		Inbox:                         deployed["Inbox"],
+		RollupEventInbox:              deployed["RollupEventInbox"],
+		Outbox:                        deployed["Outbox"],
+	}
+
+	erc20Templates := struct {
+		Bridge                        common.Address
+		SequencerInbox                common.Address
+		DelayBufferableSequencerInbox common.Address
+		Inbox                         common.Address
+		RollupEventInbox              common.Address
+		Outbox                        common.Address
+	}{
+		Bridge:                        deployed["ERC20Bridge"],
+		SequencerInbox:                deployed["SequencerInbox"], // Same SequencerInbox
+		DelayBufferableSequencerInbox: deployed["SequencerInbox"],
+		Inbox:                         deployed["ERC20Inbox"],
+		RollupEventInbox:              deployed["RollupEventInbox"],
+		Outbox:                        deployed["Outbox"],
+	}
+
+	bridgeCreatorArgs, err := d.artifacts.BridgeCreator.EncodeConstructorArgs(
+		ethTemplates,
+		erc20Templates,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("encode BridgeCreator args: %w", err)
+	}
+	if err := deploy("BridgeCreator", d.artifacts.BridgeCreator, bridgeCreatorArgs); err != nil {
+		return nil, err
+	}
+
+	// ============================================
+	// Phase 3: RollupCreator (main entry point)
+	// ============================================
+	d.logger.Info("Phase 3: Deploying RollupCreator...")
+
+	// RollupCreator(
+	//   initialOwner,
+	//   bridgeCreator,
+	//   osp (OneStepProofEntry),
+	//   challengeManagerLogic,
+	//   rollupAdminLogic,
+	//   rollupUserLogic,
+	//   upgradeExecutorLogic,
+	//   validatorWalletCreator,
+	//   l2FactoriesDeployer (DeployHelper)
+	// )
+	rollupCreatorArgs, err := d.artifacts.RollupCreator.EncodeConstructorArgs(
+		d.signer.Address(),                  // initialOwner (deployer)
+		deployed["BridgeCreator"],           // bridgeCreator
+		deployed["OneStepProofEntry"],       // osp
+		deployed["EdgeChallengeManager"],    // challengeManagerLogic
+		deployed["RollupAdminLogic"],        // rollupAdminLogic
+		deployed["RollupUserLogic"],         // rollupUserLogic
+		deployed["UpgradeExecutor"],         // upgradeExecutorLogic
+		deployed["ValidatorWalletCreator"],  // validatorWalletCreator
+		deployed["DeployHelper"],            // l2FactoriesDeployer
+	)
+	if err != nil {
+		return nil, fmt.Errorf("encode RollupCreator args: %w", err)
+	}
+
+	nonce, err := client.PendingNonceAt(ctx, d.signer.Address())
+	if err != nil {
+		return nil, fmt.Errorf("get nonce for RollupCreator: %w", err)
+	}
 	rollupCreatorAddr, txHash, err := d.deployContract(
-		ctx,
-		client,
+		ctx, client,
 		d.artifacts.RollupCreator,
-		nonce,
-		gasPrice,
-		chainID,
-		nil, // No constructor args for now
+		nonce, gasPrice, chainID,
+		rollupCreatorArgs,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("deploy RollupCreator: %w", err)
 	}
 
-	d.logger.Info("RollupCreator deployed",
-		slog.String("address", rollupCreatorAddr.Hex()),
-		slog.String("tx_hash", txHash.Hex()),
+	deployed["RollupCreator"] = rollupCreatorAddr
+
+	d.logger.Info("Infrastructure deployment complete!",
+		slog.String("rollup_creator", rollupCreatorAddr.Hex()),
+		slog.Int("total_contracts", len(deployed)),
 	)
 
 	return &InfrastructureResult{
 		RollupCreatorAddress: rollupCreatorAddr,
+		BridgeCreatorAddress: deployed["BridgeCreator"],
 		Version:              d.artifacts.Version,
 		DeploymentTxHash:     txHash,
 		AlreadyDeployed:      false,
+		DeployedContracts:    deployed,
 	}, nil
 }
 
