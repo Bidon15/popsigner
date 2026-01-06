@@ -309,21 +309,100 @@ func ptrToString(s *string) string {
 	return *s
 }
 
-// WellKnownRollupCreators contains addresses of official Arbitrum RollupCreator contracts.
-// These are used on public testnets/mainnet where Arbitrum has already deployed infrastructure.
-var WellKnownRollupCreators = map[int64]common.Address{
-	// Ethereum Mainnet
-	1: common.HexToAddress("0x90D68B056c411015eaE3EC0b98AD94E2C91419F1"),
-	// Sepolia
-	11155111: common.HexToAddress("0xfb774ea8A92ae528A596c8D90CBCF1BdBc4Cee79"),
-	// Arbitrum One
-	42161: common.HexToAddress("0x79607f00e61E6d7C0E6330bd7451f73136042a5C"),
-	// Arbitrum Sepolia
-	421614: common.HexToAddress("0xd2Ec8376B1dF436fAb18120E416d3F2BeC61275b"),
+// WellKnownInfrastructure contains information about official/known RollupCreator deployments.
+type WellKnownInfrastructure struct {
+	Address common.Address
+	Version string // Semantic version (e.g., "v3.1.0", "v3.2.0")
 }
 
-// GetWellKnownRollupCreator returns the official RollupCreator for a chain, if it exists.
-func GetWellKnownRollupCreator(chainID int64) (common.Address, bool) {
-	addr, ok := WellKnownRollupCreators[chainID]
-	return addr, ok
+// WellKnownRollupCreators contains addresses of official Arbitrum RollupCreator contracts
+// along with their version information. This allows version-aware infrastructure selection.
+var WellKnownRollupCreators = map[int64]WellKnownInfrastructure{
+	// Ethereum Mainnet - Official Arbitrum deployment
+	1: {
+		Address: common.HexToAddress("0x90D68B056c411015eaE3EC0b98AD94E2C91419F1"),
+		Version: "v3.1.0", // Does NOT support External DA (0x01 header)
+	},
+	// Sepolia - Official Arbitrum deployment
+	11155111: {
+		Address: common.HexToAddress("0xfb774ea8A92ae528A596c8D90CBCF1BdBc4Cee79"),
+		Version: "v3.1.0", // Does NOT support External DA (0x01 header)
+	},
+	// Arbitrum One
+	42161: {
+		Address: common.HexToAddress("0x79607f00e61E6d7C0E6330bd7451f73136042a5C"),
+		Version: "v3.1.0",
+	},
+	// Arbitrum Sepolia
+	421614: {
+		Address: common.HexToAddress("0xd2Ec8376B1dF436fAb18120E416d3F2BeC61275b"),
+		Version: "v3.1.0",
+	},
+}
+
+// TargetContractVersion is the version we require for full feature support.
+// Features like External DA Provider (Celestia) require v3.2.0+.
+const TargetContractVersion = "v3.2.0"
+
+// GetWellKnownRollupCreator returns the official RollupCreator for a chain, if it exists
+// and matches the target version. Returns false if version doesn't match our requirements.
+func GetWellKnownRollupCreator(chainID int64, targetVersion string) (common.Address, bool) {
+	infra, ok := WellKnownRollupCreators[chainID]
+	if !ok {
+		return common.Address{}, false
+	}
+
+	// Check if the well-known version meets our requirements
+	if !isVersionCompatible(infra.Version, targetVersion) {
+		return common.Address{}, false
+	}
+
+	return infra.Address, true
+}
+
+// GetWellKnownRollupCreatorAnyVersion returns the official RollupCreator regardless of version.
+// Use this when version compatibility is not required.
+func GetWellKnownRollupCreatorAnyVersion(chainID int64) (common.Address, string, bool) {
+	infra, ok := WellKnownRollupCreators[chainID]
+	if !ok {
+		return common.Address{}, "", false
+	}
+	return infra.Address, infra.Version, true
+}
+
+// isVersionCompatible checks if the available version meets the target version requirements.
+// Uses semantic versioning comparison (major.minor.patch).
+func isVersionCompatible(available, target string) bool {
+	// Parse versions (strip "v" prefix if present)
+	availMajor, availMinor, availPatch := parseVersion(available)
+	targMajor, targMinor, targPatch := parseVersion(target)
+
+	// Compare major.minor.patch
+	if availMajor > targMajor {
+		return true
+	}
+	if availMajor < targMajor {
+		return false
+	}
+	// Major versions equal
+	if availMinor > targMinor {
+		return true
+	}
+	if availMinor < targMinor {
+		return false
+	}
+	// Minor versions equal
+	return availPatch >= targPatch
+}
+
+// parseVersion extracts major, minor, patch from a version string like "v3.2.0" or "3.2.0".
+func parseVersion(v string) (major, minor, patch int) {
+	// Strip "v" prefix
+	if len(v) > 0 && v[0] == 'v' {
+		v = v[1:]
+	}
+	// Parse major.minor.patch (ignore -beta, -rc suffixes)
+	var suffix string
+	fmt.Sscanf(v, "%d.%d.%d%s", &major, &minor, &patch, &suffix)
+	return
 }

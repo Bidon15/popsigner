@@ -295,15 +295,28 @@ func (o *Orchestrator) deployWithGo(
 	// 3. Get or deploy RollupCreator
 	var rollupCreatorAddr common.Address
 
-	// First check if there's well-known infrastructure
-	if addr, ok := GetWellKnownRollupCreator(config.ParentChainID); ok {
+	// First check if there's well-known infrastructure with compatible version
+	// We require TargetContractVersion (v3.2.0+) for External DA support (Celestia)
+	if addr, ok := GetWellKnownRollupCreator(config.ParentChainID, TargetContractVersion); ok {
 		rollupCreatorAddr = addr
-		o.logger.Info("using well-known RollupCreator",
+		o.logger.Info("using well-known RollupCreator (version compatible)",
 			slog.String("address", addr.Hex()),
 			slog.Int64("chain_id", config.ParentChainID),
+			slog.String("target_version", TargetContractVersion),
 		)
-	} else if o.config.NitroInfraRepo != nil {
-		// Check database for deployed infrastructure
+	} else if addr, version, exists := GetWellKnownRollupCreatorAnyVersion(config.ParentChainID); exists {
+		// Well-known exists but version doesn't match - log this for visibility
+		o.logger.Info("well-known RollupCreator exists but version incompatible, will deploy our own",
+			slog.String("well_known_address", addr.Hex()),
+			slog.String("well_known_version", version),
+			slog.String("required_version", TargetContractVersion),
+			slog.Int64("chain_id", config.ParentChainID),
+		)
+		// Fall through to check database or deploy
+	}
+
+	// Check database for our previously deployed infrastructure (if not already found)
+	if rollupCreatorAddr == (common.Address{}) && o.config.NitroInfraRepo != nil {
 		infra, err := o.config.NitroInfraRepo.Get(ctx, config.ParentChainID)
 		if err != nil {
 			o.logger.Warn("failed to check infrastructure registry",
@@ -311,11 +324,19 @@ func (o *Orchestrator) deployWithGo(
 			)
 		}
 		if infra != nil {
-			rollupCreatorAddr = common.HexToAddress(infra.RollupCreatorAddress)
-			o.logger.Info("using registered RollupCreator",
-				slog.String("address", rollupCreatorAddr.Hex()),
-				slog.String("version", infra.Version),
-			)
+			// Check if our deployed version is compatible
+			if isVersionCompatible(infra.Version, TargetContractVersion) {
+				rollupCreatorAddr = common.HexToAddress(infra.RollupCreatorAddress)
+				o.logger.Info("using registered RollupCreator",
+					slog.String("address", rollupCreatorAddr.Hex()),
+					slog.String("version", infra.Version),
+				)
+			} else {
+				o.logger.Info("registered RollupCreator version incompatible, will deploy new",
+					slog.String("registered_version", infra.Version),
+					slog.String("required_version", TargetContractVersion),
+				)
+			}
 		}
 	}
 
