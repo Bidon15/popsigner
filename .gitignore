@@ -57,3 +57,8 @@ temp/
 # Internal docs
 doc/
 v18-verify.tar
+
+# Rust build artifacts
+**/target/
+Cargo.lock
+*.rs.bk
