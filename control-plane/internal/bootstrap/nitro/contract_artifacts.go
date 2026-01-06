@@ -58,8 +58,8 @@ type NitroArtifacts struct {
 	RollupAdminLogic *ContractArtifact
 	RollupUserLogic  *ContractArtifact
 
-	// Challenge/Fraud proof contracts
-	ChallengeManager     *ContractArtifact
+	// Challenge/Fraud proof contracts (BOLD protocol in v3.2+)
+	// Note: EdgeChallengeManager replaces the old ChallengeManager in BOLD
 	EdgeChallengeManager *ContractArtifact
 	OneStepProofEntry    *ContractArtifact
 	OneStepProver0       *ContractArtifact
@@ -179,7 +179,7 @@ func (d *ContractArtifactDownloader) parseZip(zipPath string) (*NitroArtifacts, 
 	// Map to store loaded artifacts by contract name
 	loaded := make(map[string]*ContractArtifact)
 
-	// List of contracts we need
+	// List of contracts we need (BOLD protocol for v3.2+)
 	requiredContracts := []string{
 		"RollupCreator",
 		"BridgeCreator",
@@ -190,8 +190,7 @@ func (d *ContractArtifactDownloader) parseZip(zipPath string) (*NitroArtifacts, 
 		"RollupCore",
 		"RollupAdminLogic",
 		"RollupUserLogic",
-		"ChallengeManager",
-		"EdgeChallengeManager",
+		"EdgeChallengeManager", // BOLD protocol (replaces old ChallengeManager)
 		"OneStepProofEntry",
 		"OneStepProver0",
 		"OneStepProverMemory",
@@ -269,7 +268,6 @@ func (d *ContractArtifactDownloader) parseZip(zipPath string) (*NitroArtifacts, 
 		RollupCore:           loaded["RollupCore"],
 		RollupAdminLogic:     loaded["RollupAdminLogic"],
 		RollupUserLogic:      loaded["RollupUserLogic"],
-		ChallengeManager:     loaded["ChallengeManager"],
 		EdgeChallengeManager: loaded["EdgeChallengeManager"],
 		OneStepProofEntry:    loaded["OneStepProofEntry"],
 		OneStepProver0:       loaded["OneStepProver0"],
@@ -295,7 +293,6 @@ func LoadFromDirectory(dir string) (*NitroArtifacts, error) {
 	contracts["RollupCore"] = &artifacts.RollupCore
 	contracts["RollupAdminLogic"] = &artifacts.RollupAdminLogic
 	contracts["RollupUserLogic"] = &artifacts.RollupUserLogic
-	contracts["ChallengeManager"] = &artifacts.ChallengeManager
 	contracts["EdgeChallengeManager"] = &artifacts.EdgeChallengeManager
 	contracts["OneStepProofEntry"] = &artifacts.OneStepProofEntry
 	contracts["OneStepProver0"] = &artifacts.OneStepProver0
