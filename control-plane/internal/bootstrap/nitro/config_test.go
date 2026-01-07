@@ -520,9 +520,10 @@ func TestArtifactGenerator(t *testing.T) {
 
 		// Expect SaveArtifact to be called 10 times:
 		// 3 core (chain_info, node_config, core_contracts)
-		// 4 runtime (docker_compose, celestia_config, env_example, readme)
+		// 3 json (chain_info, node_config, core_contracts)
+		// 5 runtime (docker_compose, celestia_config, env_example, env_file, readme)
 		// 3 certs (client_cert, client_key, ca_cert)
-		mockRepo.On("SaveArtifact", ctx, mock.AnythingOfType("*repository.Artifact")).Return(nil).Times(10)
+		mockRepo.On("SaveArtifact", ctx, mock.AnythingOfType("*repository.Artifact")).Return(nil).Times(11)
 
 		err := generator.GenerateArtifacts(ctx, deploymentID, config, result)
 		assert.NoError(t, err)

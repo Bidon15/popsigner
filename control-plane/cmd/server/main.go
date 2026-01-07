@@ -215,13 +215,13 @@ func main() {
 	)
 	logger.Info("Unified orchestrator initialized", slog.String("signer_endpoint", signerEndpoint))
 
-	// Initialize bootstrap (deployment) handler with the orchestrator
-	deploymentHandler := bootstraphandler.NewDeploymentHandler(bootstrapRepo, unifiedOrch)
-
 	// Initialize POPKins (chain deployment) handler
 	// Uses same session store as main dashboard for SSO
 	authSvc := service.NewAuthService(userRepo, sessionRepo, service.DefaultAuthServiceConfig())
 	orgSvc := service.NewOrgService(orgRepo, userRepo, service.DefaultOrgServiceConfig())
+
+	// Initialize bootstrap (deployment) handler with the orchestrator
+	deploymentHandler := bootstraphandler.NewDeploymentHandler(bootstrapRepo, unifiedOrch, orgSvc)
 	// POPKins uses same session mechanism as main dashboard (cookie + DB lookup)
 	// Pass the unified orchestrator so deployments are started automatically
 	popkinsHandler := popkins.NewHandler(authSvc, orgSvc, keySvc, bootstrapRepo, unifiedOrch, sessionRepo, userRepo)

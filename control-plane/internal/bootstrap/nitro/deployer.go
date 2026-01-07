@@ -2,9 +2,7 @@
 package nitro
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"math/big"
@@ -23,10 +21,6 @@ const (
 	DefaultConfirmPeriodBlocks = 45818  // ~1 week on Ethereum
 	DefaultMaxDataSize         = 117964 // ~115KB max batch size
 )
-
-// DefaultWasmModuleRoot is the WASM module root hash for Nitro consensus-v51 (ArbOS 51)
-// Source: https://github.com/OffchainLabs/nitro/releases/tag/consensus-v51
-var DefaultWasmModuleRoot = common.HexToHash("0x8a7513bf7bb3e3db04b0d982d0e973bcf57bf8b88aef7c6d03dba3a81a56a499")
 
 // DataAvailabilityMode represents the data availability mode for the chain.
 type DataAvailabilityMode string
@@ -88,84 +82,12 @@ type RollupDeployResult struct {
 	Error           string                 `json:"error,omitempty"`
 }
 
-// BOLD protocol ABI types for createRollup encoding
-// These must match the exact structure expected by nitro-contracts v3.2.0
-
-// GlobalState represents the global state in an assertion.
-type GlobalState struct {
-	Bytes32Vals [2][32]byte `abi:"bytes32Vals"`
-	U64Vals     [2]uint64   `abi:"u64Vals"`
-}
-
-// AssertionState represents the state of an assertion.
-type AssertionState struct {
-	GlobalState    GlobalState `abi:"globalState"`
-	MachineStatus  uint8       `abi:"machineStatus"`
-	EndHistoryRoot [32]byte    `abi:"endHistoryRoot"`
-}
-
-// MaxTimeVariation represents sequencer inbox time bounds.
-type MaxTimeVariation struct {
-	DelayBlocks   *big.Int `abi:"delayBlocks"`
-	FutureBlocks  *big.Int `abi:"futureBlocks"`
-	DelaySeconds  *big.Int `abi:"delaySeconds"`
-	FutureSeconds *big.Int `abi:"futureSeconds"`
-}
-
-// BufferConfig represents delay buffer configuration.
-type BufferConfig struct {
-	Threshold            uint64 `abi:"threshold"`
-	Max                  uint64 `abi:"max"`
-	ReplenishRateInBasis uint64 `abi:"replenishRateInBasis"`
-}
-
-// BOLDConfig represents the BOLD protocol chain configuration.
-// Note: abi tags must match the Solidity struct field names exactly (camelCase).
-type BOLDConfig struct {
-	ConfirmPeriodBlocks            uint64         `abi:"confirmPeriodBlocks"`
-	StakeToken                     common.Address `abi:"stakeToken"`
-	BaseStake                      *big.Int       `abi:"baseStake"`
-	WasmModuleRoot                 [32]byte       `abi:"wasmModuleRoot"`
-	Owner                          common.Address `abi:"owner"`
-	LoserStakeEscrow               common.Address `abi:"loserStakeEscrow"`
-	ChainId                        *big.Int       `abi:"chainId"`
-	ChainConfig                    string         `abi:"chainConfig"`
-	MinimumAssertionPeriod         *big.Int       `abi:"minimumAssertionPeriod"`
-	ValidatorAfkBlocks             uint64         `abi:"validatorAfkBlocks"`
-	MiniStakeValues                []*big.Int     `abi:"miniStakeValues"`
-	SequencerInboxMaxTimeVariation MaxTimeVariation `abi:"sequencerInboxMaxTimeVariation"`
-	LayerZeroBlockEdgeHeight       *big.Int       `abi:"layerZeroBlockEdgeHeight"`
-	LayerZeroBigStepEdgeHeight     *big.Int       `abi:"layerZeroBigStepEdgeHeight"`
-	LayerZeroSmallStepEdgeHeight   *big.Int       `abi:"layerZeroSmallStepEdgeHeight"`
-	GenesisAssertionState          AssertionState `abi:"genesisAssertionState"`
-	GenesisInboxCount              *big.Int       `abi:"genesisInboxCount"`
-	AnyTrustFastConfirmer          common.Address `abi:"anyTrustFastConfirmer"`
-	NumBigStepLevel                uint8          `abi:"numBigStepLevel"`
-	ChallengeGracePeriodBlocks     uint64         `abi:"challengeGracePeriodBlocks"`
-	BufferConfig                   BufferConfig   `abi:"bufferConfig"`
-	DataCostEstimate               *big.Int       `abi:"dataCostEstimate"`
-}
-
-// RollupDeploymentParams represents the full createRollup parameters.
-// Note: abi tags must match the Solidity struct field names exactly (camelCase).
-type RollupDeploymentParams struct {
-	Config                    BOLDConfig       `abi:"config"`
-	Validators                []common.Address `abi:"validators"`
-	MaxDataSize               *big.Int         `abi:"maxDataSize"`
-	NativeToken               common.Address   `abi:"nativeToken"`
-	DeployFactoriesToL2       bool             `abi:"deployFactoriesToL2"`
-	MaxFeePerGasForRetryables *big.Int         `abi:"maxFeePerGasForRetryables"`
-	BatchPosters              []common.Address `abi:"batchPosters"`
-	BatchPosterManager        common.Address   `abi:"batchPosterManager"`
-	FeeTokenPricer            common.Address   `abi:"feeTokenPricer"`
-	CustomOsp                 common.Address   `abi:"customOsp"`
-}
-
 // RollupDeployer handles deployment of Nitro rollups using RollupCreator.
 type RollupDeployer struct {
 	artifacts *NitroArtifacts
 	signer    *NitroSigner
 	logger    *slog.Logger
+	encoder   *RollupEncoder
 
 	// Cached ABIs
 	rollupCreatorABI   abi.ABI
@@ -209,6 +131,7 @@ func NewRollupDeployer(
 		artifacts:          artifacts,
 		signer:             signer,
 		logger:             logger,
+		encoder:            NewRollupEncoder(rollupCreatorABI, logger),
 		rollupCreatorABI:   rollupCreatorABI,
 		sequencerInboxABI:  sequencerInboxABI,
 		upgradeExecutorABI: upgradeExecutorABI,
@@ -261,11 +184,11 @@ func (d *RollupDeployer) Deploy(
 	}
 
 	// Prepare chain config
-	chainConfig := d.prepareChainConfig(cfg)
+	chainConfig := PrepareChainConfig(cfg)
 	d.logger.Info("chain config prepared", slog.Any("config", chainConfig))
 
 	// Encode createRollup call data
-	callData, err := d.encodeCreateRollup(cfg, chainConfig)
+	callData, err := d.encoder.EncodeCreateRollup(cfg, chainConfig)
 	if err != nil {
 		return d.errorResult(fmt.Errorf("encode createRollup: %w", err))
 	}
@@ -419,151 +342,6 @@ func (d *RollupDeployer) applyDefaults(cfg *RollupConfig) {
 	if cfg.DataAvailability == "" {
 		cfg.DataAvailability = DAModeCelestia
 	}
-}
-
-// prepareChainConfig prepares the chain configuration JSON.
-func (d *RollupDeployer) prepareChainConfig(cfg *RollupConfig) map[string]interface{} {
-	// Standard Ethereum hardfork configuration
-	return map[string]interface{}{
-		"homesteadBlock":       0,
-		"daoForkBlock":         nil,
-		"daoForkSupport":       true,
-		"eip150Block":          0,
-		"eip150Hash":           "0x0000000000000000000000000000000000000000000000000000000000000000",
-		"eip155Block":          0,
-		"eip158Block":          0,
-		"byzantiumBlock":       0,
-		"constantinopleBlock":  0,
-		"petersburgBlock":      0,
-		"istanbulBlock":        0,
-		"muirGlacierBlock":     0,
-		"berlinBlock":          0,
-		"londonBlock":          0,
-		"clique": map[string]interface{}{
-			"period": 0,
-			"epoch":  0,
-		},
-		"arbitrum": map[string]interface{}{
-			"EnableArbOS":               true,
-			"AllowDebugPrecompiles":     false,
-			"DataAvailabilityCommittee": cfg.DataAvailability == DAModeAnytrust,
-			"InitialArbOSVersion":       51, // ArbOS 51 - Nitro consensus-v51
-			"GenesisBlockNum":           0,
-			"MaxCodeSize":               24576,
-			"MaxInitCodeSize":           49152,
-			"InitialChainOwner":         cfg.Owner.Hex(),
-		},
-		"chainId": cfg.ChainID,
-	}
-}
-
-// BOLD protocol default values (from nitro-contracts v3.2)
-const (
-	// Default ArbOS version - ArbOS 51 from Nitro consensus-v51
-	// Source: https://github.com/OffchainLabs/nitro/releases/tag/consensus-v51
-	DefaultArbOSVersion = 51
-
-	// Minimum assertion period in blocks (75 blocks ~= 15 minutes on Ethereum)
-	DefaultMinimumAssertionPeriod = 75
-	// Validator AFK timeout in blocks (201600 ~= 28 days)
-	DefaultValidatorAfkBlocks = 201600
-	// Layer zero heights for dispute game
-	DefaultLayerZeroBlockEdgeHeight     = 1 << 25 // 2^25
-	DefaultLayerZeroBigStepEdgeHeight   = 1 << 19 // 2^19
-	DefaultLayerZeroSmallStepEdgeHeight = 1 << 23 // 2^23
-	// Number of big step levels in dispute game
-	DefaultNumBigStepLevel = 3
-	// Challenge grace period in blocks (14400 ~= 2 days)
-	DefaultChallengeGracePeriodBlocks = 14400
-	// Data cost estimate (0 = no estimate)
-	DefaultDataCostEstimate = 0
-)
-
-// encodeCreateRollup encodes the createRollup function call for BOLD protocol.
-func (d *RollupDeployer) encodeCreateRollup(cfg *RollupConfig, chainConfig map[string]interface{}) ([]byte, error) {
-	// Encode chain config as JSON
-	chainConfigJSON, err := json.Marshal(chainConfig)
-	if err != nil {
-		return nil, fmt.Errorf("marshal chain config: %w", err)
-	}
-
-	baseStake := cfg.BaseStake
-	if baseStake == nil {
-		baseStake = big.NewInt(100000000000000000) // 0.1 ETH default
-	}
-
-	// Mini stake values (stake required at each challenge level)
-	// EdgeChallengeManager requires numBigStepLevel + 2 stake amounts
-	// For numBigStepLevel=3, we need 5 stake amounts
-	miniStake := new(big.Int).Div(baseStake, big.NewInt(10))
-	miniStakeValues := []*big.Int{miniStake, miniStake, miniStake, miniStake, miniStake}
-
-	// BOLD protocol requires a stake token (ERC20), zero address is not allowed
-	// Use WETH on Sepolia if no stake token is provided
-	stakeToken := cfg.StakeToken
-	if stakeToken == (common.Address{}) {
-		// Default to WETH on Sepolia: 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9
-		stakeToken = common.HexToAddress("0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9")
-		d.logger.Info("stake token was zero, defaulted to Sepolia WETH",
-			slog.String("stake_token", stakeToken.Hex()),
-		)
-	}
-
-	d.logger.Info("createRollup config",
-		slog.String("stake_token", stakeToken.Hex()),
-		slog.String("owner", cfg.Owner.Hex()),
-		slog.Int64("chain_id", cfg.ChainID),
-		slog.String("base_stake", baseStake.String()),
-	)
-
-	// Build the entire RollupDeploymentParams as a single struct
-	// The go-ethereum ABI encoder requires all nested structs to be concrete types
-	deployParams := RollupDeploymentParams{
-		Config: BOLDConfig{
-			ConfirmPeriodBlocks: uint64(cfg.ConfirmPeriodBlocks),
-			StakeToken:          stakeToken,
-			BaseStake:           baseStake,
-			WasmModuleRoot:      DefaultWasmModuleRoot, // Latest Nitro WASM root
-			Owner:               cfg.Owner,
-			LoserStakeEscrow:    cfg.Owner,
-			ChainId:             big.NewInt(cfg.ChainID),
-			ChainConfig:         string(chainConfigJSON),
-			MinimumAssertionPeriod: big.NewInt(DefaultMinimumAssertionPeriod),
-			ValidatorAfkBlocks:    DefaultValidatorAfkBlocks,
-			MiniStakeValues:       miniStakeValues,
-			SequencerInboxMaxTimeVariation: MaxTimeVariation{
-				DelayBlocks:   big.NewInt(5760),
-				FutureBlocks:  big.NewInt(64),
-				DelaySeconds:  big.NewInt(86400),
-				FutureSeconds: big.NewInt(3600),
-			},
-			LayerZeroBlockEdgeHeight:     big.NewInt(DefaultLayerZeroBlockEdgeHeight),
-			LayerZeroBigStepEdgeHeight:   big.NewInt(DefaultLayerZeroBigStepEdgeHeight),
-			LayerZeroSmallStepEdgeHeight: big.NewInt(DefaultLayerZeroSmallStepEdgeHeight),
-			GenesisAssertionState: AssertionState{
-				GlobalState:    GlobalState{},
-				MachineStatus:  1, // FINISHED
-				EndHistoryRoot: [32]byte{},
-			},
-			GenesisInboxCount:          big.NewInt(1),
-			AnyTrustFastConfirmer:      common.Address{},
-			NumBigStepLevel:            DefaultNumBigStepLevel,
-			ChallengeGracePeriodBlocks: DefaultChallengeGracePeriodBlocks,
-			BufferConfig:               BufferConfig{},
-			DataCostEstimate:           big.NewInt(DefaultDataCostEstimate),
-		},
-		Validators:                cfg.Validators,
-		MaxDataSize:               big.NewInt(cfg.MaxDataSize),
-		NativeToken:               cfg.NativeToken,
-		DeployFactoriesToL2:       cfg.DeployFactoriesToL2,
-		MaxFeePerGasForRetryables: big.NewInt(100000000), // 0.1 gwei
-		BatchPosters:              cfg.BatchPosters,
-		BatchPosterManager:        cfg.Owner,
-		FeeTokenPricer:            common.Address{},
-		CustomOsp:                 common.Address{},
-	}
-
-	return d.rollupCreatorABI.Pack("createRollup", deployParams)
 }
 
 // getGasPrice returns a boosted gas price for faster inclusion.
@@ -851,148 +629,6 @@ func (d *RollupDeployer) isBatchPoster(
 	return isWhitelisted, nil
 }
 
-// ensureWETHBalance wraps ETH to WETH if the signer doesn't have enough WETH.
-// This automates the WETH wrapping so users don't have to do it manually.
-func (d *RollupDeployer) ensureWETHBalance(
-	ctx context.Context,
-	client *ethclient.Client,
-	wethAddress common.Address,
-	requiredAmount *big.Int,
-) error {
-	signerAddr := d.signer.Address()
-
-	// Check current WETH balance
-	// WETH.balanceOf(address) -> uint256
-	wethABI, err := abi.JSON(strings.NewReader(`[{
-		"inputs": [{"name": "account", "type": "address"}],
-		"name": "balanceOf",
-		"outputs": [{"name": "", "type": "uint256"}],
-		"stateMutability": "view",
-		"type": "function"
-	}, {
-		"inputs": [],
-		"name": "deposit",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	}]`))
-	if err != nil {
-		return fmt.Errorf("parse WETH ABI: %w", err)
-	}
-
-	balanceData, err := wethABI.Pack("balanceOf", signerAddr)
-	if err != nil {
-		return fmt.Errorf("pack balanceOf: %w", err)
-	}
-
-	result, err := client.CallContract(ctx, ethereum.CallMsg{
-		To:   &wethAddress,
-		Data: balanceData,
-	}, nil)
-	if err != nil {
-		return fmt.Errorf("call balanceOf: %w", err)
-	}
-
-	var currentBalance *big.Int
-	if err := wethABI.UnpackIntoInterface(&currentBalance, "balanceOf", result); err != nil {
-		return fmt.Errorf("unpack balanceOf: %w", err)
-	}
-
-	d.logger.Info("checked WETH balance",
-		slog.String("address", signerAddr.Hex()),
-		slog.String("current_weth", currentBalance.String()),
-		slog.String("required_weth", requiredAmount.String()),
-	)
-
-	// If we have enough WETH, we're done
-	if currentBalance.Cmp(requiredAmount) >= 0 {
-		d.logger.Info("sufficient WETH balance, no wrapping needed")
-		return nil
-	}
-
-	// Calculate how much more we need (with some buffer)
-	needed := new(big.Int).Sub(requiredAmount, currentBalance)
-	// Add 50% buffer to avoid running out
-	wrapAmount := new(big.Int).Mul(needed, big.NewInt(150))
-	wrapAmount = wrapAmount.Div(wrapAmount, big.NewInt(100))
-
-	// Check ETH balance
-	ethBalance, err := client.BalanceAt(ctx, signerAddr, nil)
-	if err != nil {
-		return fmt.Errorf("get ETH balance: %w", err)
-	}
-
-	// Need at least wrapAmount + gas costs
-	gasBuffer := big.NewInt(100000000000000) // 0.0001 ETH for gas
-	minRequired := new(big.Int).Add(wrapAmount, gasBuffer)
-
-	if ethBalance.Cmp(minRequired) < 0 {
-		return fmt.Errorf("insufficient ETH to wrap: have %s, need %s",
-			ethBalance.String(), minRequired.String())
-	}
-
-	d.logger.Info("wrapping ETH to WETH for BOLD staking",
-		slog.String("amount", wrapAmount.String()),
-		slog.String("weth_contract", wethAddress.Hex()),
-	)
-
-	// Create deposit() transaction
-	depositData, err := wethABI.Pack("deposit")
-	if err != nil {
-		return fmt.Errorf("pack deposit: %w", err)
-	}
-
-	nonce, err := client.PendingNonceAt(ctx, signerAddr)
-	if err != nil {
-		return fmt.Errorf("get nonce: %w", err)
-	}
-
-	gasPrice, err := client.SuggestGasPrice(ctx)
-	if err != nil {
-		return fmt.Errorf("get gas price: %w", err)
-	}
-
-	tx := types.NewTransaction(
-		nonce,
-		wethAddress,
-		wrapAmount, // Send ETH with the transaction
-		100000,     // Gas limit for deposit is low
-		gasPrice,
-		depositData,
-	)
-
-	signedTx, err := d.signer.SignTransaction(ctx, tx)
-	if err != nil {
-		return fmt.Errorf("sign deposit transaction: %w", err)
-	}
-
-	if err := client.SendTransaction(ctx, signedTx); err != nil {
-		return fmt.Errorf("send deposit transaction: %w", err)
-	}
-
-	d.logger.Info("WETH deposit transaction submitted",
-		slog.String("tx_hash", signedTx.Hash().Hex()),
-		slog.String("amount", wrapAmount.String()),
-	)
-
-	// Wait for confirmation
-	receipt, err := bind.WaitMined(ctx, client, signedTx)
-	if err != nil {
-		return fmt.Errorf("wait for deposit receipt: %w", err)
-	}
-
-	if receipt.Status != types.ReceiptStatusSuccessful {
-		return fmt.Errorf("WETH deposit transaction reverted")
-	}
-
-	d.logger.Info("ETH wrapped to WETH successfully",
-		slog.String("tx_hash", signedTx.Hash().Hex()),
-		slog.String("amount_wrapped", wrapAmount.String()),
-	)
-
-	return nil
-}
-
 // errorResult creates an error result.
 func (d *RollupDeployer) errorResult(err error) (*RollupDeployResult, error) {
 	return &RollupDeployResult{
@@ -1000,6 +636,3 @@ func (d *RollupDeployer) errorResult(err error) (*RollupDeployResult, error) {
 		Error:   err.Error(),
 	}, nil
 }
-
-// Suppress unused warning for bytes package
-var _ = bytes.Buffer{}

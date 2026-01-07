@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/repository"
+	"github.com/Bidon15/popsigner/control-plane/internal/middleware"
 )
 
 // MockRepository is a mock implementation of repository.Repository for testing.
@@ -41,6 +42,14 @@ func (m *MockRepository) GetDeployment(ctx context.Context, id uuid.UUID) (*repo
 
 func (m *MockRepository) GetDeploymentByChainID(ctx context.Context, chainID int64) (*repository.Deployment, error) {
 	args := m.Called(ctx, chainID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*repository.Deployment), args.Error(1)
+}
+
+func (m *MockRepository) GetDeploymentByChainIDAndOrg(ctx context.Context, chainID int64, orgID uuid.UUID) (*repository.Deployment, error) {
+	args := m.Called(ctx, chainID, orgID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -78,8 +87,24 @@ func (m *MockRepository) ListAllDeployments(ctx context.Context) ([]*repository.
 	return args.Get(0).([]*repository.Deployment), args.Error(1)
 }
 
-func (m *MockRepository) MarkStaleDeploymentsFailed(ctx context.Context, timeout time.Duration) (int, error) {
-	args := m.Called(ctx, timeout)
+func (m *MockRepository) ListDeploymentsByOrg(ctx context.Context, orgID uuid.UUID) ([]*repository.Deployment, error) {
+	args := m.Called(ctx, orgID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*repository.Deployment), args.Error(1)
+}
+
+func (m *MockRepository) ListDeploymentsByOrgAndStatus(ctx context.Context, orgID uuid.UUID, status repository.Status) ([]*repository.Deployment, error) {
+	args := m.Called(ctx, orgID, status)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*repository.Deployment), args.Error(1)
+}
+
+func (m *MockRepository) MarkStaleDeploymentsFailed(ctx context.Context, orgID uuid.UUID, timeout time.Duration) (int, error) {
+	args := m.Called(ctx, orgID, timeout)
 	return args.Int(0), args.Error(1)
 }
 
@@ -145,10 +170,29 @@ func (m *MockOrchestrator) StartDeployment(ctx context.Context, deploymentID uui
 
 var _ Orchestrator = (*MockOrchestrator)(nil)
 
+// Test org and user IDs for authentication context
+var (
+	testOrgID  = uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	testUserID = uuid.MustParse("22222222-2222-2222-2222-222222222222")
+)
+
+// mockAuthMiddleware injects test authentication context for handler tests.
+func mockAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Inject org ID and user ID into context using the same keys as real middleware
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, middleware.OrgIDKey, testOrgID.String())
+		ctx = context.WithValue(ctx, middleware.UserIDKey, testUserID.String())
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 // Helper to create a test router with the handler
 func setupTestRouter(repo *MockRepository, orch *MockOrchestrator) *chi.Mux {
-	handler := NewDeploymentHandler(repo, orch)
+	handler := NewDeploymentHandler(repo, orch, nil)
 	r := chi.NewRouter()
+	// Add mock auth middleware to inject authentication context
+	r.Use(mockAuthMiddleware)
 	r.Mount("/api/v1/deployments", handler.Routes())
 	return r
 }
@@ -159,7 +203,8 @@ func TestCreate_Success(t *testing.T) {
 	mockRepo := new(MockRepository)
 	mockOrch := new(MockOrchestrator)
 
-	mockRepo.On("GetDeploymentByChainID", mock.Anything, int64(12345)).Return(nil, repository.ErrNotFound)
+	// Mock uses GetDeploymentByChainIDAndOrg (authorization-aware check)
+	mockRepo.On("GetDeploymentByChainIDAndOrg", mock.Anything, int64(12345), testOrgID).Return(nil, repository.ErrNotFound)
 	mockRepo.On("CreateDeployment", mock.Anything, mock.AnythingOfType("*repository.Deployment")).Return(nil)
 
 	router := setupTestRouter(mockRepo, mockOrch)
@@ -193,10 +238,12 @@ func TestCreate_DuplicateChainID(t *testing.T) {
 	existingDeployment := &repository.Deployment{
 		ID:      uuid.New(),
 		ChainID: 12345,
+		OrgID:   testOrgID,
 		Stack:   repository.StackOPStack,
 		Status:  repository.StatusPending,
 	}
-	mockRepo.On("GetDeploymentByChainID", mock.Anything, int64(12345)).Return(existingDeployment, nil)
+	// Mock uses GetDeploymentByChainIDAndOrg (authorization-aware check)
+	mockRepo.On("GetDeploymentByChainIDAndOrg", mock.Anything, int64(12345), testOrgID).Return(existingDeployment, nil)
 
 	router := setupTestRouter(mockRepo, mockOrch)
 
@@ -269,6 +316,7 @@ func TestGet_Success(t *testing.T) {
 	deployment := &repository.Deployment{
 		ID:        deploymentID,
 		ChainID:   12345,
+		OrgID:     testOrgID, // Must match authenticated user's org
 		Stack:     repository.StackNitro,
 		Status:    repository.StatusRunning,
 		Config:    json.RawMessage(`{"name": "test"}`),
@@ -340,6 +388,7 @@ func TestStart_Success(t *testing.T) {
 	deployment := &repository.Deployment{
 		ID:        deploymentID,
 		ChainID:   12345,
+		OrgID:     testOrgID, // Must match authenticated user's org
 		Stack:     repository.StackOPStack,
 		Status:    repository.StatusPending,
 		Config:    json.RawMessage(`{}`),
@@ -379,6 +428,7 @@ func TestStart_AlreadyRunning(t *testing.T) {
 	deployment := &repository.Deployment{
 		ID:        deploymentID,
 		ChainID:   12345,
+		OrgID:     testOrgID, // Must match authenticated user's org
 		Stack:     repository.StackOPStack,
 		Status:    repository.StatusRunning,
 		Config:    json.RawMessage(`{}`),
@@ -427,6 +477,7 @@ func TestGetArtifacts_Success(t *testing.T) {
 	deployment := &repository.Deployment{
 		ID:        deploymentID,
 		ChainID:   12345,
+		OrgID:     testOrgID, // Must match authenticated user's org
 		Stack:     repository.StackOPStack,
 		Status:    repository.StatusCompleted,
 		CreatedAt: time.Now(),
@@ -478,6 +529,15 @@ func TestGetArtifact_Success(t *testing.T) {
 	mockOrch := new(MockOrchestrator)
 
 	deploymentID := uuid.New()
+	deployment := &repository.Deployment{
+		ID:        deploymentID,
+		ChainID:   12345,
+		OrgID:     testOrgID, // Must match authenticated user's org
+		Stack:     repository.StackOPStack,
+		Status:    repository.StatusCompleted,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 	artifact := &repository.Artifact{
 		ID:           uuid.New(),
 		DeploymentID: deploymentID,
@@ -486,6 +546,8 @@ func TestGetArtifact_Success(t *testing.T) {
 		CreatedAt:    time.Now(),
 	}
 
+	// CRIT-010: Handler now verifies deployment ownership first
+	mockRepo.On("GetDeployment", mock.Anything, deploymentID).Return(deployment, nil)
 	mockRepo.On("GetArtifact", mock.Anything, deploymentID, "genesis").Return(artifact, nil)
 
 	router := setupTestRouter(mockRepo, mockOrch)
@@ -512,6 +574,18 @@ func TestGetArtifact_NotFound(t *testing.T) {
 	mockOrch := new(MockOrchestrator)
 
 	deploymentID := uuid.New()
+	deployment := &repository.Deployment{
+		ID:        deploymentID,
+		ChainID:   12345,
+		OrgID:     testOrgID, // Must match authenticated user's org
+		Stack:     repository.StackOPStack,
+		Status:    repository.StatusCompleted,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	// CRIT-010: Handler now verifies deployment ownership first
+	mockRepo.On("GetDeployment", mock.Anything, deploymentID).Return(deployment, nil)
 	mockRepo.On("GetArtifact", mock.Anything, deploymentID, "nonexistent").Return(nil, repository.ErrNotFound)
 
 	router := setupTestRouter(mockRepo, mockOrch)
@@ -535,6 +609,7 @@ func TestGetTransactions_Success(t *testing.T) {
 	deployment := &repository.Deployment{
 		ID:        deploymentID,
 		ChainID:   12345,
+		OrgID:     testOrgID, // Must match authenticated user's org
 		Stack:     repository.StackOPStack,
 		Status:    repository.StatusCompleted,
 		CreatedAt: time.Now(),
@@ -589,6 +664,7 @@ func TestList_Success(t *testing.T) {
 		{
 			ID:        uuid.New(),
 			ChainID:   12345,
+			OrgID:     testOrgID, // Must match authenticated user's org
 			Stack:     repository.StackOPStack,
 			Status:    repository.StatusPending,
 			Config:    json.RawMessage(`{}`),
@@ -597,11 +673,8 @@ func TestList_Success(t *testing.T) {
 		},
 	}
 
-	mockRepo.On("ListDeploymentsByStatus", mock.Anything, repository.StatusPending).Return(deployments, nil)
-	mockRepo.On("ListDeploymentsByStatus", mock.Anything, repository.StatusRunning).Return([]*repository.Deployment{}, nil)
-	mockRepo.On("ListDeploymentsByStatus", mock.Anything, repository.StatusCompleted).Return([]*repository.Deployment{}, nil)
-	mockRepo.On("ListDeploymentsByStatus", mock.Anything, repository.StatusFailed).Return([]*repository.Deployment{}, nil)
-	mockRepo.On("ListDeploymentsByStatus", mock.Anything, repository.StatusPaused).Return([]*repository.Deployment{}, nil)
+	// CRIT-014: Now uses ListDeploymentsByOrg (org-scoped query)
+	mockRepo.On("ListDeploymentsByOrg", mock.Anything, testOrgID).Return(deployments, nil)
 
 	router := setupTestRouter(mockRepo, mockOrch)
 
@@ -630,6 +703,7 @@ func TestList_WithStatusFilter(t *testing.T) {
 		{
 			ID:        uuid.New(),
 			ChainID:   12345,
+			OrgID:     testOrgID, // Must match authenticated user's org
 			Stack:     repository.StackOPStack,
 			Status:    repository.StatusRunning,
 			Config:    json.RawMessage(`{}`),
@@ -638,7 +712,8 @@ func TestList_WithStatusFilter(t *testing.T) {
 		},
 	}
 
-	mockRepo.On("ListDeploymentsByStatus", mock.Anything, repository.StatusRunning).Return(deployments, nil)
+	// CRIT-014: Now uses ListDeploymentsByOrgAndStatus (org-scoped query)
+	mockRepo.On("ListDeploymentsByOrgAndStatus", mock.Anything, testOrgID, repository.StatusRunning).Return(deployments, nil)
 
 	router := setupTestRouter(mockRepo, mockOrch)
 

@@ -39,6 +39,7 @@ const (
 // Deployment represents a chain deployment record.
 type Deployment struct {
 	ID           uuid.UUID
+	OrgID        uuid.UUID // Organization that owns this deployment
 	ChainID      int64
 	Stack        Stack
 	Status       Status

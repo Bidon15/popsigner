@@ -12,6 +12,7 @@ import (
 
 // CreateDeploymentRequest is the request body for creating a new deployment.
 type CreateDeploymentRequest struct {
+	OrgID   uuid.UUID       `json:"org_id"`
 	ChainID int64           `json:"chain_id"`
 	Stack   string          `json:"stack"`
 	Config  json.RawMessage `json:"config"`
@@ -20,6 +21,7 @@ type CreateDeploymentRequest struct {
 // DeploymentResponse is the API response for a deployment.
 type DeploymentResponse struct {
 	ID           uuid.UUID       `json:"id"`
+	OrgID        uuid.UUID       `json:"org_id"`
 	ChainID      int64           `json:"chain_id"`
 	Stack        string          `json:"stack"`
 	Status       string          `json:"status"`
@@ -61,6 +63,7 @@ type StartResponse struct {
 func toDeploymentResponse(d *repository.Deployment) *DeploymentResponse {
 	return &DeploymentResponse{
 		ID:           d.ID,
+		OrgID:        d.OrgID,
 		ChainID:      d.ChainID,
 		Stack:        string(d.Stack),
 		Status:       string(d.Status),

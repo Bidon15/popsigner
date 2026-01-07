@@ -82,6 +82,8 @@ func TestOrchestrator_Deploy(t *testing.T) {
 		ctx := context.Background()
 		deploymentID := uuid.New()
 
+		// reportProgress is called first, setting status to "running"
+		mockRepo.On("UpdateDeploymentStatus", ctx, deploymentID, repository.StatusRunning, mock.Anything).Return(nil)
 		mockRepo.On("GetDeployment", ctx, deploymentID).Return(nil, nil)
 		mockRepo.On("SetDeploymentError", ctx, deploymentID, mock.AnythingOfType("string")).Return(nil)
 		mockRepo.On("UpdateDeploymentStatus", ctx, deploymentID, repository.StatusFailed, mock.Anything).Return(nil)
@@ -105,6 +107,8 @@ func TestOrchestrator_Deploy(t *testing.T) {
 			Config: json.RawMessage(`invalid json`),
 		}
 
+		// reportProgress is called first, setting status to "running"
+		mockRepo.On("UpdateDeploymentStatus", ctx, deploymentID, repository.StatusRunning, mock.Anything).Return(nil)
 		mockRepo.On("GetDeployment", ctx, deploymentID).Return(deployment, nil)
 		mockRepo.On("SetDeploymentError", ctx, deploymentID, mock.AnythingOfType("string")).Return(nil)
 		mockRepo.On("UpdateDeploymentStatus", ctx, deploymentID, repository.StatusFailed, mock.Anything).Return(nil)
@@ -133,6 +137,8 @@ func TestOrchestrator_Deploy(t *testing.T) {
 			Config: configJSON,
 		}
 
+		// reportProgress is called first, setting status to "running"
+		mockRepo.On("UpdateDeploymentStatus", ctx, deploymentID, repository.StatusRunning, mock.Anything).Return(nil)
 		mockRepo.On("GetDeployment", ctx, deploymentID).Return(deployment, nil)
 		mockRepo.On("SetDeploymentError", ctx, deploymentID, mock.AnythingOfType("string")).Return(nil)
 		mockRepo.On("UpdateDeploymentStatus", ctx, deploymentID, repository.StatusFailed, mock.Anything).Return(nil)

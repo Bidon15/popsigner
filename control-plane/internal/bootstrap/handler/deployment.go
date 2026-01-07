@@ -13,8 +13,11 @@ import (
 	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/bundle"
 	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/preflight"
 	"github.com/Bidon15/popsigner/control-plane/internal/bootstrap/repository"
+	"github.com/Bidon15/popsigner/control-plane/internal/middleware"
+	"github.com/Bidon15/popsigner/control-plane/internal/models"
 	apierrors "github.com/Bidon15/popsigner/control-plane/internal/pkg/errors"
 	"github.com/Bidon15/popsigner/control-plane/internal/pkg/response"
+	"github.com/Bidon15/popsigner/control-plane/internal/service"
 )
 
 // Orchestrator defines the interface for starting deployments.
@@ -36,17 +39,60 @@ type DeploymentHandler struct {
 	repo         repository.Repository
 	orchestrator Orchestrator
 	bundler      *bundle.Bundler
+	orgService   service.OrgService
 }
 
 // NewDeploymentHandler creates a new deployment handler.
-func NewDeploymentHandler(repo repository.Repository, orch Orchestrator) *DeploymentHandler {
+func NewDeploymentHandler(repo repository.Repository, orch Orchestrator, orgService service.OrgService) *DeploymentHandler {
 	if orch == nil {
 		orch = &noopOrchestrator{}
 	}
 	return &DeploymentHandler{
 		repo:         repo,
 		orchestrator: orch,
+		orgService:   orgService,
 	}
+}
+
+// getOrgIDFromContext extracts and validates the org ID from request context.
+// Returns an error if the org ID is not present or invalid.
+func (h *DeploymentHandler) getOrgIDFromContext(r *http.Request) (uuid.UUID, error) {
+	orgIDStr := middleware.GetOrgID(r.Context())
+	if orgIDStr == "" {
+		return uuid.Nil, apierrors.ErrUnauthorized
+	}
+	orgID, err := uuid.Parse(orgIDStr)
+	if err != nil {
+		return uuid.Nil, apierrors.ErrUnauthorized
+	}
+	return orgID, nil
+}
+
+// getUserIDFromContext extracts and validates the user ID from request context.
+// Returns an error if the user ID is not present or invalid.
+func (h *DeploymentHandler) getUserIDFromContext(r *http.Request) (uuid.UUID, error) {
+	userID := middleware.GetUserIDFromContext(r.Context())
+	if userID == uuid.Nil {
+		return uuid.Nil, apierrors.ErrUnauthorized
+	}
+	return userID, nil
+}
+
+// checkDeploymentAccess verifies the user has access to a deployment.
+// It checks that the deployment belongs to the user's organization.
+func (h *DeploymentHandler) checkDeploymentAccess(ctx context.Context, deployment *repository.Deployment, userOrgID uuid.UUID) error {
+	if deployment.OrgID != userOrgID {
+		return apierrors.ErrForbidden
+	}
+	return nil
+}
+
+// checkOrgAccess verifies the user has at least viewer access to the organization.
+func (h *DeploymentHandler) checkOrgAccess(ctx context.Context, orgID, userID uuid.UUID) error {
+	if h.orgService == nil {
+		return nil // Skip check if orgService not configured
+	}
+	return h.orgService.CheckAccess(ctx, orgID, userID, models.RoleViewer)
 }
 
 // SetBundler sets the bundler for bundle generation.
@@ -56,10 +102,44 @@ func (h *DeploymentHandler) SetBundler(b *bundle.Bundler) {
 
 // Create handles POST /api/v1/deployments
 func (h *DeploymentHandler) Create(w http.ResponseWriter, r *http.Request) {
+	// Get authenticated user and org from context
+	userID, err := h.getUserIDFromContext(r)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+
+	contextOrgID, err := h.getOrgIDFromContext(r)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+
 	var req CreateDeploymentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(w, apierrors.ErrBadRequest.WithMessage("invalid request body"))
 		return
+	}
+
+	// HIGH-027: Validate org_id in request matches user's org from context
+	// If org_id is provided in request, it must match the authenticated user's org
+	if req.OrgID != uuid.Nil && req.OrgID != contextOrgID {
+		response.Error(w, apierrors.ErrForbidden.WithMessage("org_id does not match authenticated organization"))
+		return
+	}
+
+	// Use the authenticated org's ID if not provided in request
+	orgID := contextOrgID
+	if req.OrgID != uuid.Nil {
+		orgID = req.OrgID
+	}
+
+	// Verify user has access to create deployments in this org (at least operator role)
+	if h.orgService != nil {
+		if err := h.orgService.CheckAccess(r.Context(), orgID, userID, models.RoleOperator); err != nil {
+			response.Error(w, apierrors.ErrForbidden.WithMessage("insufficient permissions to create deployments"))
+			return
+		}
 	}
 
 	// Validate required fields
@@ -85,20 +165,21 @@ func (h *DeploymentHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check for existing deployment with same chain_id
-	existing, err := h.repo.GetDeploymentByChainID(r.Context(), req.ChainID)
+	// Check for existing deployment with same chain_id in this org
+	existing, err := h.repo.GetDeploymentByChainIDAndOrg(r.Context(), req.ChainID, orgID)
 	if err != nil && !errors.Is(err, repository.ErrNotFound) {
 		response.Error(w, apierrors.ErrInternal)
 		return
 	}
 	if existing != nil {
-		response.Error(w, apierrors.NewConflictError("deployment already exists for this chain_id"))
+		response.Error(w, apierrors.NewConflictError("deployment already exists for this chain_id in your organization"))
 		return
 	}
 
-	// Create deployment
+	// Create deployment with org_id
 	deployment := &repository.Deployment{
 		ID:      uuid.New(),
+		OrgID:   orgID,
 		ChainID: req.ChainID,
 		Stack:   stack,
 		Status:  repository.StatusPending,
@@ -115,6 +196,13 @@ func (h *DeploymentHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 // Get handles GET /api/v1/deployments/{id}
 func (h *DeploymentHandler) Get(w http.ResponseWriter, r *http.Request) {
+	// CRIT-010: Get authenticated user's org for authorization
+	orgID, err := h.getOrgIDFromContext(r)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		response.Error(w, apierrors.ErrBadRequest.WithMessage("invalid deployment ID"))
@@ -128,6 +216,12 @@ func (h *DeploymentHandler) Get(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		response.Error(w, apierrors.ErrInternal)
+		return
+	}
+
+	// CRIT-010: Verify deployment belongs to user's organization
+	if err := h.checkDeploymentAccess(r.Context(), deployment, orgID); err != nil {
+		response.Error(w, apierrors.NewNotFoundError("deployment"))
 		return
 	}
 
@@ -136,6 +230,19 @@ func (h *DeploymentHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 // Start handles POST /api/v1/deployments/{id}/start
 func (h *DeploymentHandler) Start(w http.ResponseWriter, r *http.Request) {
+	// CRIT-010: Get authenticated user's org for authorization
+	userID, err := h.getUserIDFromContext(r)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+
+	orgID, err := h.getOrgIDFromContext(r)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		response.Error(w, apierrors.ErrBadRequest.WithMessage("invalid deployment ID"))
@@ -150,6 +257,20 @@ func (h *DeploymentHandler) Start(w http.ResponseWriter, r *http.Request) {
 		}
 		response.Error(w, apierrors.ErrInternal)
 		return
+	}
+
+	// CRIT-010: Verify deployment belongs to user's organization
+	if err := h.checkDeploymentAccess(r.Context(), deployment, orgID); err != nil {
+		response.Error(w, apierrors.NewNotFoundError("deployment"))
+		return
+	}
+
+	// Starting a deployment requires operator role
+	if h.orgService != nil {
+		if err := h.orgService.CheckAccess(r.Context(), orgID, userID, models.RoleOperator); err != nil {
+			response.Error(w, apierrors.ErrForbidden.WithMessage("insufficient permissions to start deployments"))
+			return
+		}
 	}
 
 	// Only pending or paused deployments can be started
@@ -180,20 +301,33 @@ func (h *DeploymentHandler) Start(w http.ResponseWriter, r *http.Request) {
 
 // GetArtifacts handles GET /api/v1/deployments/{id}/artifacts
 func (h *DeploymentHandler) GetArtifacts(w http.ResponseWriter, r *http.Request) {
+	// CRIT-010: Get authenticated user's org for authorization
+	orgID, err := h.getOrgIDFromContext(r)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		response.Error(w, apierrors.ErrBadRequest.WithMessage("invalid deployment ID"))
 		return
 	}
 
-	// Verify deployment exists
-	_, err = h.repo.GetDeployment(r.Context(), id)
+	// Verify deployment exists and belongs to user's org
+	deployment, err := h.repo.GetDeployment(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			response.Error(w, apierrors.NewNotFoundError("deployment"))
 			return
 		}
 		response.Error(w, apierrors.ErrInternal)
+		return
+	}
+
+	// CRIT-010: Verify deployment belongs to user's organization
+	if err := h.checkDeploymentAccess(r.Context(), deployment, orgID); err != nil {
+		response.Error(w, apierrors.NewNotFoundError("deployment"))
 		return
 	}
 
@@ -213,9 +347,33 @@ func (h *DeploymentHandler) GetArtifacts(w http.ResponseWriter, r *http.Request)
 
 // GetArtifact handles GET /api/v1/deployments/{id}/artifacts/{type}
 func (h *DeploymentHandler) GetArtifact(w http.ResponseWriter, r *http.Request) {
+	// CRIT-010: Get authenticated user's org for authorization
+	orgID, err := h.getOrgIDFromContext(r)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		response.Error(w, apierrors.ErrBadRequest.WithMessage("invalid deployment ID"))
+		return
+	}
+
+	// Verify deployment exists and belongs to user's org
+	deployment, err := h.repo.GetDeployment(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			response.Error(w, apierrors.NewNotFoundError("deployment"))
+			return
+		}
+		response.Error(w, apierrors.ErrInternal)
+		return
+	}
+
+	// CRIT-010: Verify deployment belongs to user's organization
+	if err := h.checkDeploymentAccess(r.Context(), deployment, orgID); err != nil {
+		response.Error(w, apierrors.NewNotFoundError("deployment"))
 		return
 	}
 
@@ -241,13 +399,20 @@ func (h *DeploymentHandler) GetArtifact(w http.ResponseWriter, r *http.Request) 
 // GetBundle handles GET /api/v1/deployments/{id}/bundle
 // Returns a downloadable .tar.gz bundle containing all deployment artifacts.
 func (h *DeploymentHandler) GetBundle(w http.ResponseWriter, r *http.Request) {
+	// CRIT-010: Get authenticated user's org for authorization
+	orgID, err := h.getOrgIDFromContext(r)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		response.Error(w, apierrors.ErrBadRequest.WithMessage("invalid deployment ID"))
 		return
 	}
 
-	// Verify deployment exists
+	// Verify deployment exists and belongs to user's org
 	deployment, err := h.repo.GetDeployment(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
@@ -255,6 +420,12 @@ func (h *DeploymentHandler) GetBundle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		response.Error(w, apierrors.ErrInternal)
+		return
+	}
+
+	// CRIT-010: Verify deployment belongs to user's organization
+	if err := h.checkDeploymentAccess(r.Context(), deployment, orgID); err != nil {
+		response.Error(w, apierrors.NewNotFoundError("deployment"))
 		return
 	}
 
@@ -308,20 +479,33 @@ func (h *DeploymentHandler) extractChainName(d *repository.Deployment) string {
 
 // GetTransactions handles GET /api/v1/deployments/{id}/transactions
 func (h *DeploymentHandler) GetTransactions(w http.ResponseWriter, r *http.Request) {
+	// CRIT-010: Get authenticated user's org for authorization
+	orgID, err := h.getOrgIDFromContext(r)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		response.Error(w, apierrors.ErrBadRequest.WithMessage("invalid deployment ID"))
 		return
 	}
 
-	// Verify deployment exists
-	_, err = h.repo.GetDeployment(r.Context(), id)
+	// Verify deployment exists and belongs to user's org
+	deployment, err := h.repo.GetDeployment(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			response.Error(w, apierrors.NewNotFoundError("deployment"))
 			return
 		}
 		response.Error(w, apierrors.ErrInternal)
+		return
+	}
+
+	// CRIT-010: Verify deployment belongs to user's organization
+	if err := h.checkDeploymentAccess(r.Context(), deployment, orgID); err != nil {
+		response.Error(w, apierrors.NewNotFoundError("deployment"))
 		return
 	}
 
@@ -341,29 +525,25 @@ func (h *DeploymentHandler) GetTransactions(w http.ResponseWriter, r *http.Reque
 
 // List handles GET /api/v1/deployments
 func (h *DeploymentHandler) List(w http.ResponseWriter, r *http.Request) {
+	// CRIT-010 & CRIT-014: Get authenticated user's org for filtering
+	orgID, err := h.getOrgIDFromContext(r)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+
 	// Optional status filter
 	statusFilter := r.URL.Query().Get("status")
 
 	var deployments []*repository.Deployment
-	var err error
 
 	if statusFilter != "" {
+		// CRIT-014: Filter by org AND status
 		status := repository.Status(statusFilter)
-		deployments, err = h.repo.ListDeploymentsByStatus(r.Context(), status)
+		deployments, err = h.repo.ListDeploymentsByOrgAndStatus(r.Context(), orgID, status)
 	} else {
-		// List all - fetch each status and combine
-		// For now, just return pending ones as a simple implementation
-		deployments, err = h.repo.ListDeploymentsByStatus(r.Context(), repository.StatusPending)
-		if err == nil {
-			running, _ := h.repo.ListDeploymentsByStatus(r.Context(), repository.StatusRunning)
-			deployments = append(deployments, running...)
-			completed, _ := h.repo.ListDeploymentsByStatus(r.Context(), repository.StatusCompleted)
-			deployments = append(deployments, completed...)
-			failed, _ := h.repo.ListDeploymentsByStatus(r.Context(), repository.StatusFailed)
-			deployments = append(deployments, failed...)
-			paused, _ := h.repo.ListDeploymentsByStatus(r.Context(), repository.StatusPaused)
-			deployments = append(deployments, paused...)
-		}
+		// CRIT-014: List all deployments for this org only
+		deployments, err = h.repo.ListDeploymentsByOrg(r.Context(), orgID)
 	}
 
 	if err != nil {

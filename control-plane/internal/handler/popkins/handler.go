@@ -90,18 +90,20 @@ func (h *Handler) DeploymentsList(w http.ResponseWriter, r *http.Request) {
 	// Mark stale running deployments as failed (pod may have crashed)
 	// A deployment is considered stale if it's been "running" for more than 30 minutes
 	// without any status update
+	// HIGH-028: Scoped to user's organization to prevent cross-org data access
 	staleTimeout := 30 * time.Minute
-	staleCount, err := h.deployRepo.MarkStaleDeploymentsFailed(r.Context(), staleTimeout)
+	staleCount, err := h.deployRepo.MarkStaleDeploymentsFailed(r.Context(), org.ID, staleTimeout)
 	if err != nil {
-		slog.Warn("failed to mark stale deployments as failed", "error", err)
+		slog.Warn("failed to mark stale deployments as failed", "org_id", org.ID, "error", err)
 	} else if staleCount > 0 {
-		slog.Info("marked stale deployments as failed", "count", staleCount)
+		slog.Info("marked stale deployments as failed", "org_id", org.ID, "count", staleCount)
 	}
 
-	// Fetch all deployments from repository
-	deployments, err := h.deployRepo.ListAllDeployments(r.Context())
+	// CRIT-014: Fetch deployments for user's organization ONLY
+	// Previously this was calling ListAllDeployments which returned ALL deployments globally
+	deployments, err := h.deployRepo.ListDeploymentsByOrg(r.Context(), org.ID)
 	if err != nil {
-		slog.Error("failed to list deployments", "error", err)
+		slog.Error("failed to list deployments", "org_id", org.ID, "error", err)
 		// Continue with empty list
 		deployments = []*repository.Deployment{}
 	}
@@ -353,9 +355,10 @@ func (h *Handler) DeploymentsCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create deployment record
+	// Create deployment record with organization ID for authorization
 	deployment := &repository.Deployment{
 		ID:      uuid.New(),
+		OrgID:   org.ID, // CRIT-010: Associate deployment with user's organization
 		ChainID: chainID,
 		Stack:   repository.Stack(stack),
 		Status:  repository.StatusPending,
@@ -487,6 +490,12 @@ func (h *Handler) DeploymentDetail(w http.ResponseWriter, r *http.Request) {
 		}
 		slog.Error("failed to get deployment", "id", deploymentID, "error", err)
 		http.Error(w, "Failed to load deployment", http.StatusInternalServerError)
+		return
+	}
+
+	// CRIT-010: Verify deployment belongs to user's organization
+	if deployment.OrgID != org.ID {
+		http.Error(w, "Deployment not found", http.StatusNotFound)
 		return
 	}
 
@@ -646,6 +655,12 @@ func (h *Handler) DeploymentStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// CRIT-010: Verify deployment belongs to user's organization
+	if deployment.OrgID != org.ID {
+		http.Redirect(w, r, "/deployments", http.StatusFound)
+		return
+	}
+
 	// If completed, redirect to complete page
 	if deployment.Status == repository.StatusCompleted {
 		http.Redirect(w, r, "/deployments/"+deploymentID+"/complete", http.StatusFound)
@@ -653,7 +668,7 @@ func (h *Handler) DeploymentStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Build progress data
-	data := h.buildProgressData(user, org, deployment)
+	data := h.buildProgressData(r.Context(), user, org, deployment)
 
 	// Render progress page
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -689,8 +704,14 @@ func (h *Handler) DeploymentProgressPartial(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// CRIT-010: Verify deployment belongs to user's organization
+	if deployment.OrgID != org.ID {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	// Build progress data
-	data := h.buildProgressData(user, org, deployment)
+	data := h.buildProgressData(r.Context(), user, org, deployment)
 
 	// Render just the progress content (partial)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -698,13 +719,13 @@ func (h *Handler) DeploymentProgressPartial(w http.ResponseWriter, r *http.Reque
 }
 
 // buildProgressData constructs the progress page data from a deployment
-func (h *Handler) buildProgressData(user *models.User, org *models.Organization, deployment *repository.Deployment) pages.DeploymentProgressData {
+func (h *Handler) buildProgressData(ctx context.Context, user *models.User, org *models.Organization, deployment *repository.Deployment) pages.DeploymentProgressData {
 	// Build stage list based on stack
 	stages := h.buildStagesInfo(deployment)
 
 	// Get latest transaction if available
 	var latestTx *components.TxInfo
-	txs, err := h.deployRepo.GetTransactionsByDeployment(context.Background(), deployment.ID)
+	txs, err := h.deployRepo.GetTransactionsByDeployment(ctx, deployment.ID)
 	if err == nil && len(txs) > 0 {
 		lastTx := txs[len(txs)-1]
 		explorerURL := getExplorerURL(lastTx.TxHash, extractL1ChainID(deployment))
@@ -935,6 +956,13 @@ func (h *Handler) DeploymentComplete(w http.ResponseWriter, r *http.Request) {
 // The bundle includes: genesis.json, rollup.json, addresses.json, docker-compose.yml,
 // .env.example, jwt.txt, config.toml (for Celestia DA), and README.md.
 func (h *Handler) DownloadBundle(w http.ResponseWriter, r *http.Request) {
+	// CRIT-010: Get authenticated user's org for authorization
+	_, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		h.handleAuthError(w, r)
+		return
+	}
+
 	deploymentID := chi.URLParam(r, "id")
 	if deploymentID == "" {
 		http.Error(w, "Missing deployment ID", http.StatusBadRequest)
@@ -951,6 +979,12 @@ func (h *Handler) DownloadBundle(w http.ResponseWriter, r *http.Request) {
 	deployment, err := h.deployRepo.GetDeployment(r.Context(), deployID)
 	if err != nil {
 		slog.Error("failed to get deployment", "id", deploymentID, "error", err)
+		http.Error(w, "Deployment not found", http.StatusNotFound)
+		return
+	}
+
+	// CRIT-010: Verify deployment belongs to user's organization
+	if deployment.OrgID != org.ID {
 		http.Error(w, "Deployment not found", http.StatusNotFound)
 		return
 	}
@@ -1133,6 +1167,13 @@ Nitro uses them via:
 
 // DeploymentResume handles starting or resuming a pending/failed/paused deployment
 func (h *Handler) DeploymentResume(w http.ResponseWriter, r *http.Request) {
+	// CRIT-010: Get authenticated user's org for authorization
+	_, org, err := h.getUserAndOrg(r)
+	if err != nil {
+		h.handleAuthError(w, r)
+		return
+	}
+
 	deploymentID := chi.URLParam(r, "id")
 	if deploymentID == "" {
 		http.Redirect(w, r, "/deployments", http.StatusFound)
@@ -1150,6 +1191,12 @@ func (h *Handler) DeploymentResume(w http.ResponseWriter, r *http.Request) {
 	deployment, err := h.deployRepo.GetDeployment(r.Context(), deployID)
 	if err != nil {
 		slog.Error("failed to get deployment", "id", deploymentID, "error", err)
+		http.Redirect(w, r, "/deployments", http.StatusFound)
+		return
+	}
+
+	// CRIT-010: Verify deployment belongs to user's organization
+	if deployment.OrgID != org.ID {
 		http.Redirect(w, r, "/deployments", http.StatusFound)
 		return
 	}
@@ -1178,11 +1225,19 @@ func (h *Handler) DeploymentResume(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Start deployment asynchronously
-	go func() {
-		if err := h.orchestrator.StartDeployment(context.Background(), deployID); err != nil {
+	go func(deployID uuid.UUID) {
+		// Use a timeout context for deployment operations
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+		defer cancel()
+
+		if err := h.orchestrator.StartDeployment(ctx, deployID); err != nil {
 			slog.Error("failed to resume deployment", "deployment_id", deployID, "error", err)
+			// Update deployment status on error
+			if setErr := h.deployRepo.SetDeploymentError(context.Background(), deployID, err.Error()); setErr != nil {
+				slog.Error("failed to set deployment error", "deployment_id", deployID, "error", setErr)
+			}
 		}
-	}()
+	}(deployID)
 
 	slog.Info("deployment started", "id", deploymentID)
 	

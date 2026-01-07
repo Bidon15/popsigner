@@ -32,12 +32,12 @@ func (r *PostgresRepository) CreateDeployment(ctx context.Context, d *Deployment
 	}
 
 	query := `
-		INSERT INTO deployments (id, chain_id, stack, status, current_stage, config, error_message)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO deployments (id, org_id, chain_id, stack, status, current_stage, config, error_message)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING created_at, updated_at`
 
 	err := r.pool.QueryRow(ctx, query,
-		d.ID, d.ChainID, d.Stack, d.Status, d.CurrentStage, d.Config, d.ErrorMessage,
+		d.ID, d.OrgID, d.ChainID, d.Stack, d.Status, d.CurrentStage, d.Config, d.ErrorMessage,
 	).Scan(&d.CreatedAt, &d.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("CreateDeployment: %w", err)
@@ -48,13 +48,13 @@ func (r *PostgresRepository) CreateDeployment(ctx context.Context, d *Deployment
 // GetDeployment retrieves a deployment by its UUID.
 func (r *PostgresRepository) GetDeployment(ctx context.Context, id uuid.UUID) (*Deployment, error) {
 	query := `
-		SELECT id, chain_id, stack, status, current_stage, config, error_message, created_at, updated_at
+		SELECT id, org_id, chain_id, stack, status, current_stage, config, error_message, created_at, updated_at
 		FROM deployments
 		WHERE id = $1`
 
 	var d Deployment
 	err := r.pool.QueryRow(ctx, query, id).Scan(
-		&d.ID, &d.ChainID, &d.Stack, &d.Status, &d.CurrentStage,
+		&d.ID, &d.OrgID, &d.ChainID, &d.Stack, &d.Status, &d.CurrentStage,
 		&d.Config, &d.ErrorMessage, &d.CreatedAt, &d.UpdatedAt,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -69,13 +69,13 @@ func (r *PostgresRepository) GetDeployment(ctx context.Context, id uuid.UUID) (*
 // GetDeploymentByChainID retrieves a deployment by chain ID.
 func (r *PostgresRepository) GetDeploymentByChainID(ctx context.Context, chainID int64) (*Deployment, error) {
 	query := `
-		SELECT id, chain_id, stack, status, current_stage, config, error_message, created_at, updated_at
+		SELECT id, org_id, chain_id, stack, status, current_stage, config, error_message, created_at, updated_at
 		FROM deployments
 		WHERE chain_id = $1`
 
 	var d Deployment
 	err := r.pool.QueryRow(ctx, query, chainID).Scan(
-		&d.ID, &d.ChainID, &d.Stack, &d.Status, &d.CurrentStage,
+		&d.ID, &d.OrgID, &d.ChainID, &d.Stack, &d.Status, &d.CurrentStage,
 		&d.Config, &d.ErrorMessage, &d.CreatedAt, &d.UpdatedAt,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -83,6 +83,27 @@ func (r *PostgresRepository) GetDeploymentByChainID(ctx context.Context, chainID
 	}
 	if err != nil {
 		return nil, fmt.Errorf("GetDeploymentByChainID: %w", err)
+	}
+	return &d, nil
+}
+
+// GetDeploymentByChainIDAndOrg retrieves a deployment by chain ID scoped to an organization.
+func (r *PostgresRepository) GetDeploymentByChainIDAndOrg(ctx context.Context, chainID int64, orgID uuid.UUID) (*Deployment, error) {
+	query := `
+		SELECT id, org_id, chain_id, stack, status, current_stage, config, error_message, created_at, updated_at
+		FROM deployments
+		WHERE chain_id = $1 AND org_id = $2`
+
+	var d Deployment
+	err := r.pool.QueryRow(ctx, query, chainID, orgID).Scan(
+		&d.ID, &d.OrgID, &d.ChainID, &d.Stack, &d.Status, &d.CurrentStage,
+		&d.Config, &d.ErrorMessage, &d.CreatedAt, &d.UpdatedAt,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("GetDeploymentByChainIDAndOrg: %w", err)
 	}
 	return &d, nil
 }
@@ -159,7 +180,7 @@ func (r *PostgresRepository) ClearDeploymentError(ctx context.Context, id uuid.U
 // ListDeploymentsByStatus retrieves all deployments with the given status.
 func (r *PostgresRepository) ListDeploymentsByStatus(ctx context.Context, status Status) ([]*Deployment, error) {
 	query := `
-		SELECT id, chain_id, stack, status, current_stage, config, error_message, created_at, updated_at
+		SELECT id, org_id, chain_id, stack, status, current_stage, config, error_message, created_at, updated_at
 		FROM deployments
 		WHERE status = $1
 		ORDER BY created_at DESC`
@@ -174,7 +195,7 @@ func (r *PostgresRepository) ListDeploymentsByStatus(ctx context.Context, status
 	for rows.Next() {
 		var d Deployment
 		if err := rows.Scan(
-			&d.ID, &d.ChainID, &d.Stack, &d.Status, &d.CurrentStage,
+			&d.ID, &d.OrgID, &d.ChainID, &d.Stack, &d.Status, &d.CurrentStage,
 			&d.Config, &d.ErrorMessage, &d.CreatedAt, &d.UpdatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("ListDeploymentsByStatus scan: %w", err)
@@ -187,7 +208,7 @@ func (r *PostgresRepository) ListDeploymentsByStatus(ctx context.Context, status
 // ListAllDeployments retrieves all deployments ordered by creation date.
 func (r *PostgresRepository) ListAllDeployments(ctx context.Context) ([]*Deployment, error) {
 	query := `
-		SELECT id, chain_id, stack, status, current_stage, config, error_message, created_at, updated_at
+		SELECT id, org_id, chain_id, stack, status, current_stage, config, error_message, created_at, updated_at
 		FROM deployments
 		ORDER BY created_at DESC`
 
@@ -201,10 +222,66 @@ func (r *PostgresRepository) ListAllDeployments(ctx context.Context) ([]*Deploym
 	for rows.Next() {
 		var d Deployment
 		if err := rows.Scan(
-			&d.ID, &d.ChainID, &d.Stack, &d.Status, &d.CurrentStage,
+			&d.ID, &d.OrgID, &d.ChainID, &d.Stack, &d.Status, &d.CurrentStage,
 			&d.Config, &d.ErrorMessage, &d.CreatedAt, &d.UpdatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("ListAllDeployments scan: %w", err)
+		}
+		deployments = append(deployments, &d)
+	}
+	return deployments, rows.Err()
+}
+
+// ListDeploymentsByOrg retrieves all deployments for a specific organization.
+func (r *PostgresRepository) ListDeploymentsByOrg(ctx context.Context, orgID uuid.UUID) ([]*Deployment, error) {
+	query := `
+		SELECT id, org_id, chain_id, stack, status, current_stage, config, error_message, created_at, updated_at
+		FROM deployments
+		WHERE org_id = $1
+		ORDER BY created_at DESC`
+
+	rows, err := r.pool.Query(ctx, query, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("ListDeploymentsByOrg: %w", err)
+	}
+	defer rows.Close()
+
+	var deployments []*Deployment
+	for rows.Next() {
+		var d Deployment
+		if err := rows.Scan(
+			&d.ID, &d.OrgID, &d.ChainID, &d.Stack, &d.Status, &d.CurrentStage,
+			&d.Config, &d.ErrorMessage, &d.CreatedAt, &d.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("ListDeploymentsByOrg scan: %w", err)
+		}
+		deployments = append(deployments, &d)
+	}
+	return deployments, rows.Err()
+}
+
+// ListDeploymentsByOrgAndStatus retrieves deployments filtered by org and status.
+func (r *PostgresRepository) ListDeploymentsByOrgAndStatus(ctx context.Context, orgID uuid.UUID, status Status) ([]*Deployment, error) {
+	query := `
+		SELECT id, org_id, chain_id, stack, status, current_stage, config, error_message, created_at, updated_at
+		FROM deployments
+		WHERE org_id = $1 AND status = $2
+		ORDER BY created_at DESC`
+
+	rows, err := r.pool.Query(ctx, query, orgID, status)
+	if err != nil {
+		return nil, fmt.Errorf("ListDeploymentsByOrgAndStatus: %w", err)
+	}
+	defer rows.Close()
+
+	var deployments []*Deployment
+	for rows.Next() {
+		var d Deployment
+		if err := rows.Scan(
+			&d.ID, &d.OrgID, &d.ChainID, &d.Stack, &d.Status, &d.CurrentStage,
+			&d.Config, &d.ErrorMessage, &d.CreatedAt, &d.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("ListDeploymentsByOrgAndStatus scan: %w", err)
 		}
 		deployments = append(deployments, &d)
 	}
@@ -350,20 +427,24 @@ func (r *PostgresRepository) GetAllArtifacts(ctx context.Context, deploymentID u
 // MarkStaleDeploymentsFailed marks deployments that have been "running" for longer
 // than the timeout as "failed". This handles cases where the deployment pod crashed
 // without properly updating the status.
-func (r *PostgresRepository) MarkStaleDeploymentsFailed(ctx context.Context, timeout time.Duration) (int, error) {
-	// Find and update all running deployments that haven't been updated within the timeout
+// HIGH-028: Scoped to a specific organization to prevent cross-org data access.
+func (r *PostgresRepository) MarkStaleDeploymentsFailed(ctx context.Context, orgID uuid.UUID, timeout time.Duration) (int, error) {
+	// Find and update running deployments that haven't been updated within the timeout
+	// Only affects deployments belonging to the specified organization
 	query := `
 		UPDATE deployments
 		SET status = $1, 
 		    error_message = $2,
 		    updated_at = NOW()
-		WHERE status = $3
-		  AND updated_at < NOW() - $4::interval`
+		WHERE org_id = $3
+		  AND status = $4
+		  AND updated_at < NOW() - $5::interval`
 
 	errorMsg := "Deployment timed out - worker may have crashed. Click 'Resume Deployment' to retry."
 	result, err := r.pool.Exec(ctx, query,
 		StatusFailed,
 		errorMsg,
+		orgID,
 		StatusRunning,
 		timeout.String(),
 	)
