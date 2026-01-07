@@ -42,10 +42,23 @@ func Logging(logger *slog.Logger) func(next http.Handler) http.Handler {
 
 			duration := time.Since(start)
 
-			// Log the request
+			// Skip logging for health/ready/metrics endpoints to reduce noise
+			path := r.URL.Path
+			if path == "/health" || path == "/ready" || path == "/metrics" {
+				// Log at debug level only for observability endpoints
+				logger.Debug("request",
+					slog.String("method", r.Method),
+					slog.String("path", path),
+					slog.Int("status", wrapped.status),
+					slog.Duration("duration", duration),
+				)
+				return
+			}
+
+			// Log the request at info level
 			logger.Info("request",
 				slog.String("method", r.Method),
-				slog.String("path", r.URL.Path),
+				slog.String("path", path),
 				slog.Int("status", wrapped.status),
 				slog.Duration("duration", duration),
 				slog.String("request_id", reqID),
