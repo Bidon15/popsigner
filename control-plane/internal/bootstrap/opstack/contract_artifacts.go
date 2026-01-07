@@ -30,6 +30,17 @@ const ArtifactBaseURL = "https://op-contracts.s3.nl-ams.scw.cloud"
 // v26: Salt propagation fix - passes Create2Salt to DeployImplementations for ALL contracts.
 const ContractArtifactURL = ArtifactBaseURL + "/artifacts-op-node-v1.16.3-" + ArtifactVersion + ".tzst"
 
+// ArtifactChecksums contains SHA256 hashes for each artifact version.
+// These checksums are verified after downloading to prevent tampering.
+// To calculate a checksum: sha256sum artifacts-op-node-v1.16.3-vXX.tzst
+// Update this map when uploading new artifacts to S3.
+var ArtifactChecksums = map[string]string{
+	// v27: Blueprint.sol fix
+	// TODO: Calculate and add the real SHA256 hash after uploading to S3:
+	//   sha256sum artifacts-op-node-v1.16.3-v27.tzst
+	"v27": "", // Empty string disables verification until hash is added
+}
+
 // ContractArtifactDownloader handles downloading and extracting OP Stack contract artifacts.
 // It bypasses op-deployer's built-in artifact handling which has issues with
 // directory structure expectations.
@@ -52,6 +63,12 @@ func NewContractArtifactDownloader(cacheDir string) *ContractArtifactDownloader 
 // The result can be used with artifacts.NewFileLocator() for op-deployer.
 // Caching is DISABLED - always downloads fresh to avoid stale artifact issues.
 func (d *ContractArtifactDownloader) Download(ctx context.Context, url string) (string, error) {
+	return d.DownloadWithVersion(ctx, url, ArtifactVersion)
+}
+
+// DownloadWithVersion downloads and extracts artifacts for a specific version.
+// This allows specifying which version's checksum to use for verification.
+func (d *ContractArtifactDownloader) DownloadWithVersion(ctx context.Context, url, version string) (string, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -74,6 +91,13 @@ func (d *ContractArtifactDownloader) Download(ctx context.Context, url string) (
 	if info, err := os.Stat(tzstPath); err == nil {
 		fmt.Printf("[DEBUG] Downloaded artifact size: %d bytes from %s\n", info.Size(), url)
 	}
+
+	// Verify artifact integrity before extraction
+	if err := d.verifyChecksum(tzstPath, version); err != nil {
+		os.Remove(tzstPath)
+		return "", fmt.Errorf("artifact integrity check failed: %w", err)
+	}
+
 	// Clean up after extraction
 	defer os.Remove(tzstPath)
 
@@ -138,6 +162,44 @@ func (d *ContractArtifactDownloader) Download(ctx context.Context, url string) (
 	}
 
 	return extractDir, nil
+}
+
+// verifyChecksum calculates SHA256 of the file and compares with the expected checksum.
+// If the expected checksum is empty (not yet configured), verification is skipped with a warning.
+func (d *ContractArtifactDownloader) verifyChecksum(filePath, version string) error {
+	expectedHash, ok := ArtifactChecksums[version]
+	if !ok {
+		return fmt.Errorf("no checksum configured for artifact version %s", version)
+	}
+
+	// If checksum is empty, skip verification with a warning
+	// This allows rolling out new versions before checksums are calculated
+	if expectedHash == "" {
+		fmt.Printf("[WARN] No checksum configured for artifact version %s - skipping integrity verification\n", version)
+		return nil
+	}
+
+	// Open the file
+	f, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("open file for checksum: %w", err)
+	}
+	defer f.Close()
+
+	// Calculate SHA256 hash
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return fmt.Errorf("calculate checksum: %w", err)
+	}
+	actualHash := fmt.Sprintf("%x", h.Sum(nil))
+
+	// Compare checksums
+	if actualHash != expectedHash {
+		return fmt.Errorf("checksum mismatch: expected %s, got %s", expectedHash, actualHash)
+	}
+
+	fmt.Printf("[DEBUG] Artifact checksum verified: %s\n", actualHash)
+	return nil
 }
 
 // downloadFile downloads a file from URL to the given path.
