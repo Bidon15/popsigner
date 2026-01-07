@@ -138,12 +138,17 @@ func (b *Bundler) buildBundleConfig(deployment *repository.Deployment, artifacts
 		cfg.Artifacts[a.ArtifactType] = a.Content
 	}
 
+	// Extract ready-to-use .env file if present (from env_file artifact)
+	if envFileData, ok := cfg.Artifacts["env_file"]; ok {
+		cfg.EnvFile = string(envFileData)
+	}
+
 	// Set default POPSigner endpoints
 	switch cfg.Stack {
 	case StackOPStack:
 		cfg.POPSignerEndpoint = "https://rpc.popsigner.com"
 	case StackNitro:
-		cfg.POPSignerMTLSEndpoint = "https://rpc-mtls.popsigner.com"
+		cfg.POPSignerMTLSEndpoint = "https://rpc-mtls.popsigner.com:8546"
 	}
 
 	return cfg

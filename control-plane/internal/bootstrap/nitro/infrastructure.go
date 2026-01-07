@@ -133,7 +133,8 @@ func (d *InfrastructureDeployer) EnsureInfrastructure(
 	// Deploy infrastructure contracts
 	result, err := d.deployInfrastructure(ctx, client)
 	if err != nil {
-		return nil, fmt.Errorf("deploy infrastructure: %w", err)
+		// Don't double-wrap, the error already contains contract name
+		return nil, err
 	}
 
 	// Save to database
@@ -205,6 +206,11 @@ func (d *InfrastructureDeployer) deployInfrastructure(
 
 	// Helper to deploy a contract and track it
 	deploy := func(name string, artifact *ContractArtifact, constructorArgs []byte) error {
+		d.logger.Info("deploying contract...",
+			slog.String("name", name),
+			slog.Int("constructor_args_len", len(constructorArgs)),
+		)
+
 		nonce, err := client.PendingNonceAt(ctx, d.signer.Address())
 		if err != nil {
 			return fmt.Errorf("get nonce for %s: %w", name, err)
@@ -212,6 +218,11 @@ func (d *InfrastructureDeployer) deployInfrastructure(
 
 		addr, txHash, err := d.deployContract(ctx, client, artifact, nonce, gasPrice, chainID, constructorArgs)
 		if err != nil {
+			d.logger.Error("contract deployment failed",
+				slog.String("name", name),
+				slog.Uint64("nonce", nonce),
+				slog.String("error", err.Error()),
+			)
 			return fmt.Errorf("deploy %s: %w", name, err)
 		}
 
@@ -572,12 +583,29 @@ func (d *InfrastructureDeployer) deployContract(
 		gasLimit = 10_000_000
 		d.logger.Warn("gas estimation failed, using default",
 			slog.Uint64("gas_limit", gasLimit),
+			slog.Int("bytecode_length", len(data)),
+			slog.String("from", d.signer.Address().Hex()),
 			slog.String("error", err.Error()),
+		)
+	} else {
+		d.logger.Debug("gas estimation succeeded",
+			slog.Uint64("estimated_gas", gasLimit),
 		)
 	}
 
 	// Add 20% buffer to gas limit
 	gasLimit = gasLimit * 120 / 100
+
+	// Cap at 15M to stay under block gas limit (Sepolia is ~16.7M, mainnet is ~30M)
+	// Leave room for other transactions in the block
+	const maxGasLimit = 15_000_000
+	if gasLimit > maxGasLimit {
+		d.logger.Warn("gas limit capped to max",
+			slog.Uint64("original", gasLimit),
+			slog.Uint64("capped", maxGasLimit),
+		)
+		gasLimit = maxGasLimit
+	}
 
 	// Create transaction
 	tx := types.NewContractCreation(

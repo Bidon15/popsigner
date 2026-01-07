@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math/big"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -112,7 +113,7 @@ func (o *Orchestrator) Deploy(ctx context.Context, deploymentID uuid.UUID, onPro
 		slog.String("deployment_id", deploymentID.String()),
 	)
 
-	// Helper to report progress
+	// Helper to report progress and update database stage
 	reportProgress := func(stage string, progress float64, message string) {
 		if onProgress != nil {
 			onProgress(stage, progress, message)
@@ -122,9 +123,13 @@ func (o *Orchestrator) Deploy(ctx context.Context, deploymentID uuid.UUID, onPro
 			slog.String("stage", stage),
 			slog.Float64("progress", progress),
 		)
+		// Update current stage in database for UI display
+		if err := o.repo.UpdateDeploymentStatus(ctx, deploymentID, boostrepo.StatusRunning, &stage); err != nil {
+			o.logger.Warn("failed to update deployment stage", slog.String("error", err.Error()))
+		}
 	}
 
-	reportProgress("init", 0.0, "Loading deployment configuration")
+	reportProgress("init", 0.0, "Loading deployment configuration...")
 
 	// 1. Load deployment from database
 	deployment, err := o.repo.GetDeployment(ctx, deploymentID)
@@ -141,7 +146,8 @@ func (o *Orchestrator) Deploy(ctx context.Context, deploymentID uuid.UUID, onPro
 		return o.failDeployment(ctx, deploymentID, fmt.Errorf("parse deployment config: %w", err))
 	}
 
-	reportProgress("init", 0.1, "Validating deployment configuration")
+	reportProgress("init", 0.1, "Validating deployment configuration...")
+	reportProgress("certificates", 0.15, "Fetching PopSigner certificates...")
 
 	// 3. Get mTLS certificates for POPSigner
 	var certs *CertificateBundle
@@ -192,30 +198,30 @@ func (o *Orchestrator) Deploy(ctx context.Context, deploymentID uuid.UUID, onPro
 		return o.failDeployment(ctx, deploymentID, fmt.Errorf("mTLS certificates not available"))
 	}
 
-	reportProgress("init", 0.2, "Building deployment configuration")
+	reportProgress("init", 0.2, "Building deployment configuration...")
 
 	// 4. Build DeployConfig for the TypeScript worker
 	// Use getter methods to handle both POPKins form names (l1_*) and explicit names (parent_chain_*)
+	// Also handles batcher_address/proposer_address resolved by unified orchestrator
 	deployConfig := &DeployConfig{
-		ChainID:                  config.ChainID,
-		ChainName:                config.ChainName,
-		ParentChainID:            config.GetParentChainID(),
-		ParentChainRpc:           config.GetParentChainRpc(),
-		Owner:                    config.DeployerAddress,
-		BatchPosters:             config.BatchPosters,
-		Validators:               config.Validators,
-		StakeToken:               config.StakeToken,
-		BaseStake:                config.BaseStake,
-		DataAvailability:         config.GetDataAvailability(),
-		NativeToken:              config.NativeToken,
-		ConfirmPeriodBlocks:      config.ConfirmPeriodBlocks,
-		ExtraChallengeTimeBlocks: config.ExtraChallengeTimeBlocks,
-		MaxDataSize:              config.MaxDataSize,
-		DeployFactoriesToL2:      config.DeployFactoriesToL2,
-		PopsignerEndpoint:        o.config.POPSignerMTLSEndpoint,
-		ClientCert:               certs.ClientCert,
-		ClientKey:                certs.ClientKey,
-		CaCert:                   certs.CaCert,
+		ChainID:             config.ChainID,
+		ChainName:           config.ChainName,
+		ParentChainID:       config.GetParentChainID(),
+		ParentChainRpc:      config.GetParentChainRpc(),
+		Owner:               config.DeployerAddress,
+		BatchPosters:        config.GetBatchPosters(),
+		Validators:          config.GetValidators(),
+		StakeToken:          config.StakeToken,
+		BaseStake:           config.BaseStake,
+		DataAvailability:    config.GetDataAvailability(),
+		NativeToken:         config.NativeToken,
+		ConfirmPeriodBlocks: config.ConfirmPeriodBlocks,
+		MaxDataSize:         config.MaxDataSize,
+		DeployFactoriesToL2: config.DeployFactoriesToL2,
+		PopsignerEndpoint:   o.config.POPSignerMTLSEndpoint,
+		ClientCert:          certs.ClientCert,
+		ClientKey:           certs.ClientKey,
+		CaCert:              certs.CaCert,
 	}
 
 	// Validate required fields
@@ -229,16 +235,46 @@ func (o *Orchestrator) Deploy(ctx context.Context, deploymentID uuid.UUID, onPro
 		return o.failDeployment(ctx, deploymentID, fmt.Errorf("deployer_address is required"))
 	}
 	if len(deployConfig.BatchPosters) == 0 {
-		// Default to deployer address
-		deployConfig.BatchPosters = []string{deployConfig.Owner}
+		// BatchPosters should be explicitly provided - don't default to deployer
+		return o.failDeployment(ctx, deploymentID, fmt.Errorf("batch_posters (or batcher_key) is required - select a key for the batch poster role"))
 	}
 	if len(deployConfig.Validators) == 0 {
-		// Default to deployer address
-		deployConfig.Validators = []string{deployConfig.Owner}
+		// Validators should be explicitly provided - don't default to deployer
+		return o.failDeployment(ctx, deploymentID, fmt.Errorf("validators (or proposer_key for Nitro validator) is required - select a key for the validator/staker role"))
 	}
-	if deployConfig.StakeToken == "" {
-		// Default to native ETH
-		deployConfig.StakeToken = "0x0000000000000000000000000000000000000000"
+
+	// CRITICAL: Prevent footgun - batch poster and validator must NOT be the deployer address
+	// These roles have different security requirements and should be separate keys
+	zeroAddr := "0x0000000000000000000000000000000000000000"
+	ownerLower := strings.ToLower(deployConfig.Owner)
+
+	for _, bp := range deployConfig.BatchPosters {
+		if bp == "" || strings.ToLower(bp) == zeroAddr {
+			return o.failDeployment(ctx, deploymentID, fmt.Errorf("batch_poster address is invalid (empty or zero address)"))
+		}
+		if strings.ToLower(bp) == ownerLower {
+			return o.failDeployment(ctx, deploymentID, fmt.Errorf("batch_poster cannot be the same as deployer address (%s) - select a different key for batch poster role", deployConfig.Owner))
+		}
+	}
+
+	for _, v := range deployConfig.Validators {
+		if v == "" || strings.ToLower(v) == zeroAddr {
+			return o.failDeployment(ctx, deploymentID, fmt.Errorf("validator address is invalid (empty or zero address)"))
+		}
+		if strings.ToLower(v) == ownerLower {
+			return o.failDeployment(ctx, deploymentID, fmt.Errorf("validator cannot be the same as deployer address (%s) - select a different key for validator/staker role", deployConfig.Owner))
+		}
+	}
+	if deployConfig.StakeToken == "" || deployConfig.StakeToken == "0x0000000000000000000000000000000000000000" {
+		// BOLD protocol requires WETH for staking, NOT native ETH
+		// Default to Sepolia WETH if on Sepolia, otherwise require explicit configuration
+		if deployConfig.ParentChainID == 11155111 {
+			deployConfig.StakeToken = "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9" // Sepolia WETH
+		} else if deployConfig.ParentChainID == 1 {
+			deployConfig.StakeToken = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" // Mainnet WETH
+		} else {
+			return o.failDeployment(ctx, deploymentID, fmt.Errorf("stake_token is required for BOLD protocol (use WETH address)"))
+		}
 	}
 	if deployConfig.BaseStake == "" {
 		// Default base stake (0.1 ETH)
@@ -249,7 +285,16 @@ func (o *Orchestrator) Deploy(ctx context.Context, deploymentID uuid.UUID, onPro
 		deployConfig.DataAvailability = "celestia"
 	}
 
-	reportProgress("deploying", 0.3, "Executing Nitro chain deployment")
+	// Log resolved wallet assignments for debugging
+	o.logger.Info("wallet assignments resolved",
+		slog.String("deployment_id", deploymentID.String()),
+		slog.String("owner", deployConfig.Owner),
+		slog.Any("batch_posters", deployConfig.BatchPosters),
+		slog.Any("validators", deployConfig.Validators),
+		slog.String("stake_token", deployConfig.StakeToken),
+	)
+
+	reportProgress("download_artifacts", 0.25, "Downloading contract artifacts...")
 
 	// Execute deployment using Go-based deployer
 	return o.deployWithGo(ctx, deploymentID, deployConfig, certs, reportProgress)
@@ -263,7 +308,7 @@ func (o *Orchestrator) deployWithGo(
 	certs *CertificateBundle,
 	reportProgress func(stage string, progress float64, message string),
 ) error {
-	reportProgress("artifacts", 0.35, "Downloading contract artifacts...")
+	reportProgress("download_artifacts", 0.30, "Fetching contracts from S3...")
 
 	// 1. Download artifacts
 	artifacts, err := o.artifactDownloader.DownloadDefault(ctx)
@@ -275,7 +320,7 @@ func (o *Orchestrator) deployWithGo(
 		slog.String("version", artifacts.Version),
 	)
 
-	reportProgress("signer", 0.40, "Initializing POPSigner...")
+	reportProgress("download_artifacts", 0.35, "Initializing transaction signer...")
 
 	// 2. Create signer
 	signer, err := NewNitroSigner(SignerConfig{
@@ -290,25 +335,26 @@ func (o *Orchestrator) deployWithGo(
 		return o.failDeployment(ctx, deploymentID, fmt.Errorf("create signer: %w", err))
 	}
 
-	reportProgress("infrastructure", 0.45, "Checking infrastructure...")
+	reportProgress("infrastructure", 0.40, "Checking for existing infrastructure...")
 
 	// 3. Get or deploy RollupCreator
 	var rollupCreatorAddr common.Address
 
-	// Use well-known infrastructure if available (any version for now)
-	// TODO: Implement full infrastructure deployment for v3.2+ with External DA support
-	// For now, we use Arbitrum's existing RollupCreator which is v3.1 on most chains
+	// Check if well-known RollupCreator has a compatible version
+	// We require v3.2+ for External DA (0x01 header) support
 	if addr, version, exists := GetWellKnownRollupCreatorAnyVersion(config.ParentChainID); exists {
-		rollupCreatorAddr = addr
-		o.logger.Info("using well-known RollupCreator",
-			slog.String("address", addr.Hex()),
-			slog.String("version", version),
-			slog.Int64("chain_id", config.ParentChainID),
-		)
-		if version != TargetContractVersion {
-			o.logger.Warn("well-known RollupCreator is older version, External DA (0x01 header) may not work",
+		if isVersionCompatible(version, TargetContractVersion) {
+			rollupCreatorAddr = addr
+			o.logger.Info("using well-known RollupCreator",
+				slog.String("address", addr.Hex()),
+				slog.String("version", version),
+				slog.Int64("chain_id", config.ParentChainID),
+			)
+		} else {
+			o.logger.Info("well-known RollupCreator version incompatible, will deploy v3.2+",
 				slog.String("well_known_version", version),
-				slog.String("target_version", TargetContractVersion),
+				slog.String("required_version", TargetContractVersion),
+				slog.Int64("chain_id", config.ParentChainID),
 			)
 		}
 	}
@@ -340,7 +386,7 @@ func (o *Orchestrator) deployWithGo(
 
 	// If no RollupCreator found, we need to deploy infrastructure
 	if rollupCreatorAddr == (common.Address{}) {
-		reportProgress("infrastructure", 0.50, "Deploying Nitro infrastructure...")
+		reportProgress("infrastructure", 0.45, "Deploying 22 infrastructure contracts...")
 
 		infraDeployer := NewInfrastructureDeployer(
 			artifacts,
@@ -360,7 +406,7 @@ func (o *Orchestrator) deployWithGo(
 		rollupCreatorAddr = infraResult.RollupCreatorAddress
 	}
 
-	reportProgress("deploying", 0.60, "Deploying rollup contracts...")
+	reportProgress("deploying", 0.70, "Calling createRollup()...")
 
 	// 4. Create RollupDeployer and deploy
 	rollupDeployer, err := NewRollupDeployer(artifacts, signer, o.logger)
@@ -380,7 +426,11 @@ func (o *Orchestrator) deployWithGo(
 		return o.failDeployment(ctx, deploymentID, fmt.Errorf("deployment failed: %s", result.Error))
 	}
 
-	reportProgress("artifacts", 0.90, "Generating deployment artifacts...")
+	reportProgress("staking", 0.85, "Configuring WETH for staking...")
+
+	// Note: WETH wrapping is now done in the deployer after createRollup
+
+	reportProgress("artifacts", 0.90, "Generating node configs & bundle...")
 
 	// 5. Save deployment result
 	// Convert RollupContracts to CoreContracts for persistence
@@ -422,22 +472,30 @@ func (o *Orchestrator) deployWithGo(
 		slog.String("tx_hash", result.TransactionHash.Hex()),
 	)
 
+	// Update deployment status to completed in database
+	if err := o.repo.UpdateDeploymentStatus(ctx, deploymentID, boostrepo.StatusCompleted, nil); err != nil {
+		o.logger.Warn("failed to update deployment status to completed", slog.String("error", err.Error()))
+	}
+
+	o.logger.Info("deployment completed successfully",
+		slog.String("deployment_id", deploymentID.String()),
+	)
+
 	return nil
 }
 
 // convertToRollupConfig converts the wrapper DeployConfig to RollupConfig.
 func (o *Orchestrator) convertToRollupConfig(config *DeployConfig) *RollupConfig {
 	rollupCfg := &RollupConfig{
-		ChainID:                  config.ChainID,
-		ChainName:                config.ChainName,
-		ParentChainID:            config.ParentChainID,
-		ParentChainRPC:           config.ParentChainRpc,
-		Owner:                    common.HexToAddress(config.Owner),
-		StakeToken:               common.HexToAddress(config.StakeToken),
-		ConfirmPeriodBlocks:      int64(config.ConfirmPeriodBlocks),
-		ExtraChallengeTimeBlocks: int64(config.ExtraChallengeTimeBlocks),
-		MaxDataSize:              int64(config.MaxDataSize),
-		DeployFactoriesToL2:      config.DeployFactoriesToL2,
+		ChainID:             config.ChainID,
+		ChainName:           config.ChainName,
+		ParentChainID:       config.ParentChainID,
+		ParentChainRPC:      config.ParentChainRpc,
+		Owner:               common.HexToAddress(config.Owner),
+		StakeToken:          common.HexToAddress(config.StakeToken),
+		ConfirmPeriodBlocks: int64(config.ConfirmPeriodBlocks),
+		MaxDataSize:         int64(config.MaxDataSize),
+		DeployFactoriesToL2: config.DeployFactoriesToL2,
 	}
 
 	// Convert base stake
@@ -537,9 +595,12 @@ type NitroDeploymentConfigRaw struct {
 	// Deployer address (resolved from deployer_key by unified orchestrator)
 	DeployerAddress string `json:"deployer_address"`
 
-	// Operator addresses
-	BatchPosters []string `json:"batch_posters"`
-	Validators   []string `json:"validators"`
+	// Operator addresses - can be specified as arrays or single addresses
+	// The unified orchestrator resolves keys to batcher_address/proposer_address
+	BatchPosters    []string `json:"batch_posters"`
+	Validators      []string `json:"validators"`
+	BatcherAddress  string   `json:"batcher_address"`  // Resolved from batcher_key
+	ProposerAddress string   `json:"proposer_address"` // Resolved from proposer_key (used as validator)
 
 	// Staking configuration
 	StakeToken string `json:"stake_token"`
@@ -553,10 +614,9 @@ type NitroDeploymentConfigRaw struct {
 	NativeToken string `json:"native_token,omitempty"`
 
 	// Optional deployment parameters
-	ConfirmPeriodBlocks      int  `json:"confirm_period_blocks,omitempty"`
-	ExtraChallengeTimeBlocks int  `json:"extra_challenge_time_blocks,omitempty"`
-	MaxDataSize              int  `json:"max_data_size,omitempty"`
-	DeployFactoriesToL2      bool `json:"deploy_factories_to_l2,omitempty"`
+	ConfirmPeriodBlocks int  `json:"confirm_period_blocks,omitempty"`
+	MaxDataSize         int  `json:"max_data_size,omitempty"`
+	DeployFactoriesToL2 bool `json:"deploy_factories_to_l2,omitempty"`
 
 	// POPSigner mTLS certs (may be provided directly or looked up via certProvider)
 	ClientCert string `json:"client_cert,omitempty"`
@@ -589,4 +649,28 @@ func (c *NitroDeploymentConfigRaw) GetDataAvailability() string {
 		return c.DataAvailability
 	}
 	return "celestia" // Default
+}
+
+// GetBatchPosters returns batch poster addresses.
+// Prefers batch_posters array, falls back to batcher_address.
+func (c *NitroDeploymentConfigRaw) GetBatchPosters() []string {
+	if len(c.BatchPosters) > 0 {
+		return c.BatchPosters
+	}
+	if c.BatcherAddress != "" {
+		return []string{c.BatcherAddress}
+	}
+	return nil
+}
+
+// GetValidators returns validator addresses.
+// Prefers validators array, falls back to proposer_address (Nitro uses proposer_key for validator).
+func (c *NitroDeploymentConfigRaw) GetValidators() []string {
+	if len(c.Validators) > 0 {
+		return c.Validators
+	}
+	if c.ProposerAddress != "" {
+		return []string{c.ProposerAddress}
+	}
+	return nil
 }

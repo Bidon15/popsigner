@@ -61,10 +61,23 @@ func (b *Bundler) createNitroBundle(cfg *BundleConfig) (*BundleResult, error) {
 	}
 	files = append(files, FileEntry{
 		Path:        ".env.example",
-		Description: "Environment variables template (copy to .env and fill in)",
-		Required:    true,
+		Description: "Environment variables template (for reference)",
+		Required:    false,
 		SizeBytes:   int64(len(cfg.EnvExample)),
 	})
+
+	// .env (ready-to-use with actual values)
+	if cfg.EnvFile != "" {
+		if err := tarW.addFile(baseDir+"/.env", []byte(cfg.EnvFile)); err != nil {
+			return nil, fmt.Errorf("add .env: %w", err)
+		}
+		files = append(files, FileEntry{
+			Path:        ".env",
+			Description: "Ready-to-use environment file (pre-configured)",
+			Required:    true,
+			SizeBytes:   int64(len(cfg.EnvFile)),
+		})
+	}
 
 	// ===========================================
 	// CONFIG DIRECTORY

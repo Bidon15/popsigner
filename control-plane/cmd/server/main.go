@@ -167,6 +167,9 @@ func main() {
 		nitroMTLSEndpoint = "https://51.15.112.44:8546"
 	}
 
+	// Initialize Nitro infrastructure repository (stores deployed RollupCreator addresses)
+	nitroInfraRepo := repository.NewNitroInfrastructureRepository(db.Pool())
+
 	nitroOrch := nitro.NewOrchestrator(
 		bootstrapRepo,
 		nitroCertProvider,
@@ -174,9 +177,13 @@ func main() {
 			Logger:                logger,
 			WorkerPath:            "internal/bootstrap/nitro/worker",
 			POPSignerMTLSEndpoint: nitroMTLSEndpoint,
+			NitroInfraRepo:        nitroInfraRepo,
 		},
 	)
-	logger.Info("Nitro orchestrator initialized", slog.String("mtls_endpoint", nitroMTLSEndpoint))
+	logger.Info("Nitro orchestrator initialized",
+		slog.String("mtls_endpoint", nitroMTLSEndpoint),
+		slog.Bool("infra_repo_enabled", true),
+	)
 
 	// Initialize key resolver and API key manager for orchestrator
 	keyResolver := bootstraporchestrator.NewKeyServiceResolver(keySvc)

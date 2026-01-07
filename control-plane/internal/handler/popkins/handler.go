@@ -778,17 +778,19 @@ func (h *Handler) buildStagesInfo(deployment *repository.Deployment) []component
 			{Name: "Create Bundle", Status: "pending", TxCount: 0},
 		}
 	} else {
-		// Nitro stages
+		// Nitro stages - detailed breakdown of actual deployment steps
 		stages = []components.StageInfo{
-			{Name: "Initialize Configuration", Status: "pending", TxCount: 0},
-			{Name: "Validate Settings", Status: "pending", TxCount: 0},
-			{Name: "Deploy Rollup Contracts", Status: "pending", TxCount: 1},
-			{Name: "Configure Validator", Status: "pending", TxCount: 0},
-			{Name: "Finalize Deployment", Status: "pending", TxCount: 0},
+			{Name: "Initialize", Status: "pending", TxCount: 0, Details: "Loading configuration"},
+			{Name: "Fetch Certificates", Status: "pending", TxCount: 0, Details: "Getting PopSigner certs"},
+			{Name: "Download Contracts", Status: "pending", TxCount: 0, Details: "Fetching from S3"},
+			{Name: "Deploy Infrastructure", Status: "pending", TxCount: 22, Details: "Core contracts"},
+			{Name: "Create Rollup", Status: "pending", TxCount: 1, Details: "RollupCreator.createRollup()"},
+			{Name: "Configure Staking", Status: "pending", TxCount: 1, Details: "Wrap ETH → WETH"},
+			{Name: "Generate Bundle", Status: "pending", TxCount: 0, Details: "Node configs & artifacts"},
 		}
 	}
 
-	// Map orchestrator stage names to UI stage indices for OP Stack
+	// Map orchestrator stage names to UI stage indices
 	opStackStageIndex := map[string]int{
 		"init":                   0, // Preflight Checks
 		"deploy_superchain":      1, // Deploy Superchain
@@ -800,6 +802,32 @@ func (h *Handler) buildStagesInfo(deployment *repository.Deployment) []component
 		"completed":              5, // Create Bundle (all done)
 	}
 
+	// Map orchestrator stage names to UI stage indices for Nitro
+	nitroStageIndex := map[string]int{
+		"init":               0, // Initialize
+		"certificates":       1, // Fetch Certificates
+		"download_artifacts": 2, // Download Contracts
+		"infrastructure":     3, // Deploy Infrastructure (22 contracts)
+		"deploying":          4, // Create Rollup
+		"staking":            5, // Configure Staking (WETH wrap)
+		"artifacts":          6, // Generate Bundle
+		"completed":          6, // All done
+	}
+
+	// Helper function to get stage index from current stage name
+	getStageIndex := func(stageName string) int {
+		if deployment.Stack == repository.StackOPStack {
+			if idx, ok := opStackStageIndex[stageName]; ok {
+				return idx
+			}
+		} else {
+			if idx, ok := nitroStageIndex[stageName]; ok {
+				return idx
+			}
+		}
+		return 0
+	}
+
 	// Update stages based on deployment status
 	if deployment.Status == repository.StatusCompleted {
 		// All stages complete
@@ -809,12 +837,7 @@ func (h *Handler) buildStagesInfo(deployment *repository.Deployment) []component
 		}
 	} else if deployment.Status == repository.StatusFailed {
 		// Determine which stage failed based on currentStage
-		failedIndex := 0
-		if currentStage != "" {
-			if idx, ok := opStackStageIndex[currentStage]; ok {
-				failedIndex = idx
-			}
-		}
+		failedIndex := getStageIndex(currentStage)
 
 		// Mark stages before failed as complete, failed stage as failed
 		for i := range stages {
@@ -828,12 +851,7 @@ func (h *Handler) buildStagesInfo(deployment *repository.Deployment) []component
 		}
 	} else if deployment.Status == repository.StatusRunning {
 		// Determine current stage index
-		currentIndex := 0
-		if currentStage != "" {
-			if idx, ok := opStackStageIndex[currentStage]; ok {
-				currentIndex = idx
-			}
-		}
+		currentIndex := getStageIndex(currentStage)
 
 		// Mark stages before current as complete, current as in_progress
 		for i := range stages {
@@ -842,18 +860,13 @@ func (h *Handler) buildStagesInfo(deployment *repository.Deployment) []component
 				stages[i].TxComplete = stages[i].TxCount
 			} else if i == currentIndex {
 				stages[i].Status = "in_progress"
-				stages[i].Details = "Processing..."
+				// Keep the predefined details for better UX
 			}
 			// Remaining stages stay "pending"
 		}
 	} else if deployment.Status == repository.StatusPaused {
 		// Paused - show current stage as paused indicator
-		currentIndex := 0
-		if currentStage != "" {
-			if idx, ok := opStackStageIndex[currentStage]; ok {
-				currentIndex = idx
-			}
-		}
+		currentIndex := getStageIndex(currentStage)
 
 		for i := range stages {
 			if i < currentIndex {

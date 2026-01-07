@@ -18,12 +18,15 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-// Default deployment parameters (matching TypeScript implementation)
+// Default deployment parameters
 const (
-	DefaultConfirmPeriodBlocks      = 45818 // ~1 week on Ethereum
-	DefaultExtraChallengeTimeBlocks = 0
-	DefaultMaxDataSize              = 117964
+	DefaultConfirmPeriodBlocks = 45818  // ~1 week on Ethereum
+	DefaultMaxDataSize         = 117964 // ~115KB max batch size
 )
+
+// DefaultWasmModuleRoot is the WASM module root hash for Nitro consensus-v51 (ArbOS 51)
+// Source: https://github.com/OffchainLabs/nitro/releases/tag/consensus-v51
+var DefaultWasmModuleRoot = common.HexToHash("0x8a7513bf7bb3e3db04b0d982d0e973bcf57bf8b88aef7c6d03dba3a81a56a499")
 
 // DataAvailabilityMode represents the data availability mode for the chain.
 type DataAvailabilityMode string
@@ -52,12 +55,11 @@ type RollupConfig struct {
 	BaseStake  *big.Int       `json:"baseStake"`
 
 	// Optional parameters with defaults
-	ConfirmPeriodBlocks      int64                `json:"confirmPeriodBlocks,omitempty"`
-	ExtraChallengeTimeBlocks int64                `json:"extraChallengeTimeBlocks,omitempty"`
-	MaxDataSize              int64                `json:"maxDataSize,omitempty"`
-	DataAvailability         DataAvailabilityMode `json:"dataAvailability,omitempty"`
-	NativeToken              common.Address       `json:"nativeToken,omitempty"`
-	DeployFactoriesToL2      bool                 `json:"deployFactoriesToL2,omitempty"`
+	ConfirmPeriodBlocks int64                `json:"confirmPeriodBlocks,omitempty"`
+	MaxDataSize         int64                `json:"maxDataSize,omitempty"`
+	DataAvailability    DataAvailabilityMode `json:"dataAvailability,omitempty"`
+	NativeToken         common.Address       `json:"nativeToken,omitempty"`
+	DeployFactoriesToL2 bool                 `json:"deployFactoriesToL2,omitempty"`
 }
 
 // RollupContracts contains addresses of all deployed core contracts.
@@ -86,6 +88,79 @@ type RollupDeployResult struct {
 	Error           string                 `json:"error,omitempty"`
 }
 
+// BOLD protocol ABI types for createRollup encoding
+// These must match the exact structure expected by nitro-contracts v3.2.0
+
+// GlobalState represents the global state in an assertion.
+type GlobalState struct {
+	Bytes32Vals [2][32]byte `abi:"bytes32Vals"`
+	U64Vals     [2]uint64   `abi:"u64Vals"`
+}
+
+// AssertionState represents the state of an assertion.
+type AssertionState struct {
+	GlobalState    GlobalState `abi:"globalState"`
+	MachineStatus  uint8       `abi:"machineStatus"`
+	EndHistoryRoot [32]byte    `abi:"endHistoryRoot"`
+}
+
+// MaxTimeVariation represents sequencer inbox time bounds.
+type MaxTimeVariation struct {
+	DelayBlocks   *big.Int `abi:"delayBlocks"`
+	FutureBlocks  *big.Int `abi:"futureBlocks"`
+	DelaySeconds  *big.Int `abi:"delaySeconds"`
+	FutureSeconds *big.Int `abi:"futureSeconds"`
+}
+
+// BufferConfig represents delay buffer configuration.
+type BufferConfig struct {
+	Threshold            uint64 `abi:"threshold"`
+	Max                  uint64 `abi:"max"`
+	ReplenishRateInBasis uint64 `abi:"replenishRateInBasis"`
+}
+
+// BOLDConfig represents the BOLD protocol chain configuration.
+// Note: abi tags must match the Solidity struct field names exactly (camelCase).
+type BOLDConfig struct {
+	ConfirmPeriodBlocks            uint64         `abi:"confirmPeriodBlocks"`
+	StakeToken                     common.Address `abi:"stakeToken"`
+	BaseStake                      *big.Int       `abi:"baseStake"`
+	WasmModuleRoot                 [32]byte       `abi:"wasmModuleRoot"`
+	Owner                          common.Address `abi:"owner"`
+	LoserStakeEscrow               common.Address `abi:"loserStakeEscrow"`
+	ChainId                        *big.Int       `abi:"chainId"`
+	ChainConfig                    string         `abi:"chainConfig"`
+	MinimumAssertionPeriod         *big.Int       `abi:"minimumAssertionPeriod"`
+	ValidatorAfkBlocks             uint64         `abi:"validatorAfkBlocks"`
+	MiniStakeValues                []*big.Int     `abi:"miniStakeValues"`
+	SequencerInboxMaxTimeVariation MaxTimeVariation `abi:"sequencerInboxMaxTimeVariation"`
+	LayerZeroBlockEdgeHeight       *big.Int       `abi:"layerZeroBlockEdgeHeight"`
+	LayerZeroBigStepEdgeHeight     *big.Int       `abi:"layerZeroBigStepEdgeHeight"`
+	LayerZeroSmallStepEdgeHeight   *big.Int       `abi:"layerZeroSmallStepEdgeHeight"`
+	GenesisAssertionState          AssertionState `abi:"genesisAssertionState"`
+	GenesisInboxCount              *big.Int       `abi:"genesisInboxCount"`
+	AnyTrustFastConfirmer          common.Address `abi:"anyTrustFastConfirmer"`
+	NumBigStepLevel                uint8          `abi:"numBigStepLevel"`
+	ChallengeGracePeriodBlocks     uint64         `abi:"challengeGracePeriodBlocks"`
+	BufferConfig                   BufferConfig   `abi:"bufferConfig"`
+	DataCostEstimate               *big.Int       `abi:"dataCostEstimate"`
+}
+
+// RollupDeploymentParams represents the full createRollup parameters.
+// Note: abi tags must match the Solidity struct field names exactly (camelCase).
+type RollupDeploymentParams struct {
+	Config                    BOLDConfig       `abi:"config"`
+	Validators                []common.Address `abi:"validators"`
+	MaxDataSize               *big.Int         `abi:"maxDataSize"`
+	NativeToken               common.Address   `abi:"nativeToken"`
+	DeployFactoriesToL2       bool             `abi:"deployFactoriesToL2"`
+	MaxFeePerGasForRetryables *big.Int         `abi:"maxFeePerGasForRetryables"`
+	BatchPosters              []common.Address `abi:"batchPosters"`
+	BatchPosterManager        common.Address   `abi:"batchPosterManager"`
+	FeeTokenPricer            common.Address   `abi:"feeTokenPricer"`
+	CustomOsp                 common.Address   `abi:"customOsp"`
+}
+
 // RollupDeployer handles deployment of Nitro rollups using RollupCreator.
 type RollupDeployer struct {
 	artifacts *NitroArtifacts
@@ -93,8 +168,8 @@ type RollupDeployer struct {
 	logger    *slog.Logger
 
 	// Cached ABIs
-	rollupCreatorABI abi.ABI
-	sequencerInboxABI abi.ABI
+	rollupCreatorABI   abi.ABI
+	sequencerInboxABI  abi.ABI
 	upgradeExecutorABI abi.ABI
 }
 
@@ -227,6 +302,16 @@ func (d *RollupDeployer) Deploy(
 	// Add 20% buffer
 	gasLimit = gasLimit * 120 / 100
 
+	// Cap at 15M to stay under block gas limit (Sepolia ~16.7M)
+	const maxGasLimit = 15_000_000
+	if gasLimit > maxGasLimit {
+		d.logger.Warn("gas limit capped to max",
+			slog.Uint64("original", gasLimit),
+			slog.Uint64("capped", maxGasLimit),
+		)
+		gasLimit = maxGasLimit
+	}
+
 	d.logger.Info("sending createRollup transaction",
 		slog.String("rollup_creator", rollupCreatorAddr.Hex()),
 		slog.Uint64("gas_limit", gasLimit),
@@ -302,6 +387,18 @@ func (d *RollupDeployer) Deploy(
 		}
 	}
 
+	// Ensure validator has WETH for BOLD staking
+	// This wraps ETH to WETH automatically so the user doesn't have to
+	if cfg.StakeToken != (common.Address{}) {
+		requiredWETH := big.NewInt(100000000000000000) // 0.1 WETH (enough for all stake levels)
+		if err := d.ensureWETHBalance(ctx, client, cfg.StakeToken, requiredWETH); err != nil {
+			d.logger.Warn("failed to ensure WETH balance for staking",
+				slog.String("error", err.Error()),
+			)
+			// Don't fail - staker can wrap manually if needed
+		}
+	}
+
 	return &RollupDeployResult{
 		Success:         true,
 		Contracts:       coreContracts,
@@ -350,7 +447,7 @@ func (d *RollupDeployer) prepareChainConfig(cfg *RollupConfig) map[string]interf
 			"EnableArbOS":               true,
 			"AllowDebugPrecompiles":     false,
 			"DataAvailabilityCommittee": cfg.DataAvailability == DAModeAnytrust,
-			"InitialArbOSVersion":       32,
+			"InitialArbOSVersion":       51, // ArbOS 51 - Nitro consensus-v51
 			"GenesisBlockNum":           0,
 			"MaxCodeSize":               24576,
 			"MaxInitCodeSize":           49152,
@@ -360,7 +457,29 @@ func (d *RollupDeployer) prepareChainConfig(cfg *RollupConfig) map[string]interf
 	}
 }
 
-// encodeCreateRollup encodes the createRollup function call.
+// BOLD protocol default values (from nitro-contracts v3.2)
+const (
+	// Default ArbOS version - ArbOS 51 from Nitro consensus-v51
+	// Source: https://github.com/OffchainLabs/nitro/releases/tag/consensus-v51
+	DefaultArbOSVersion = 51
+
+	// Minimum assertion period in blocks (75 blocks ~= 15 minutes on Ethereum)
+	DefaultMinimumAssertionPeriod = 75
+	// Validator AFK timeout in blocks (201600 ~= 28 days)
+	DefaultValidatorAfkBlocks = 201600
+	// Layer zero heights for dispute game
+	DefaultLayerZeroBlockEdgeHeight     = 1 << 25 // 2^25
+	DefaultLayerZeroBigStepEdgeHeight   = 1 << 19 // 2^19
+	DefaultLayerZeroSmallStepEdgeHeight = 1 << 23 // 2^23
+	// Number of big step levels in dispute game
+	DefaultNumBigStepLevel = 3
+	// Challenge grace period in blocks (14400 ~= 2 days)
+	DefaultChallengeGracePeriodBlocks = 14400
+	// Data cost estimate (0 = no estimate)
+	DefaultDataCostEstimate = 0
+)
+
+// encodeCreateRollup encodes the createRollup function call for BOLD protocol.
 func (d *RollupDeployer) encodeCreateRollup(cfg *RollupConfig, chainConfig map[string]interface{}) ([]byte, error) {
 	// Encode chain config as JSON
 	chainConfigJSON, err := json.Marshal(chainConfig)
@@ -368,59 +487,83 @@ func (d *RollupDeployer) encodeCreateRollup(cfg *RollupConfig, chainConfig map[s
 		return nil, fmt.Errorf("marshal chain config: %w", err)
 	}
 
-	// Build RollupDeploymentParams struct
-	// This matches the orbit-sdk's createRollupPrepareTransactionRequest
-	deploymentParams := struct {
-		Config struct {
-			ConfirmPeriodBlocks      uint64
-			ExtraChallengeTimeBlocks uint64
-			StakeToken               common.Address
-			BaseStake                *big.Int
-			WasmModuleRoot           [32]byte
-			Owner                    common.Address
-			LoserStakeEscrow         common.Address
-			ChainId                  *big.Int
-			ChainConfig              string
-			GenesisBlockNum          uint64
-			SequencerInboxMaxTimeVariation struct {
-				DelayBlocks   *big.Int
-				FutureBlocks  *big.Int
-				DelaySeconds  *big.Int
-				FutureSeconds *big.Int
-			}
-		}
-		BatchPosters        []common.Address
-		Validators          []common.Address
-		MaxDataSize         *big.Int
-		NativeToken         common.Address
-		DeployFactoriesToL2 bool
-		MaxFeePerGasForRetryables *big.Int
-	}{}
+	baseStake := cfg.BaseStake
+	if baseStake == nil {
+		baseStake = big.NewInt(100000000000000000) // 0.1 ETH default
+	}
 
-	deploymentParams.Config.ConfirmPeriodBlocks = uint64(cfg.ConfirmPeriodBlocks)
-	deploymentParams.Config.ExtraChallengeTimeBlocks = uint64(cfg.ExtraChallengeTimeBlocks)
-	deploymentParams.Config.StakeToken = cfg.StakeToken
-	deploymentParams.Config.BaseStake = cfg.BaseStake
-	// WasmModuleRoot - default empty for now
-	deploymentParams.Config.Owner = cfg.Owner
-	deploymentParams.Config.ChainId = big.NewInt(cfg.ChainID)
-	deploymentParams.Config.ChainConfig = string(chainConfigJSON)
-	
-	// Default time variation values
-	deploymentParams.Config.SequencerInboxMaxTimeVariation.DelayBlocks = big.NewInt(5760)
-	deploymentParams.Config.SequencerInboxMaxTimeVariation.FutureBlocks = big.NewInt(64)
-	deploymentParams.Config.SequencerInboxMaxTimeVariation.DelaySeconds = big.NewInt(86400)
-	deploymentParams.Config.SequencerInboxMaxTimeVariation.FutureSeconds = big.NewInt(3600)
+	// Mini stake values (stake required at each challenge level)
+	// EdgeChallengeManager requires numBigStepLevel + 2 stake amounts
+	// For numBigStepLevel=3, we need 5 stake amounts
+	miniStake := new(big.Int).Div(baseStake, big.NewInt(10))
+	miniStakeValues := []*big.Int{miniStake, miniStake, miniStake, miniStake, miniStake}
 
-	deploymentParams.BatchPosters = cfg.BatchPosters
-	deploymentParams.Validators = cfg.Validators
-	deploymentParams.MaxDataSize = big.NewInt(cfg.MaxDataSize)
-	deploymentParams.NativeToken = cfg.NativeToken
-	deploymentParams.DeployFactoriesToL2 = cfg.DeployFactoriesToL2
-	deploymentParams.MaxFeePerGasForRetryables = big.NewInt(100000000) // 0.1 gwei
+	// BOLD protocol requires a stake token (ERC20), zero address is not allowed
+	// Use WETH on Sepolia if no stake token is provided
+	stakeToken := cfg.StakeToken
+	if stakeToken == (common.Address{}) {
+		// Default to WETH on Sepolia: 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9
+		stakeToken = common.HexToAddress("0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9")
+		d.logger.Info("stake token was zero, defaulted to Sepolia WETH",
+			slog.String("stake_token", stakeToken.Hex()),
+		)
+	}
 
-	// Encode the function call
-	return d.rollupCreatorABI.Pack("createRollup", deploymentParams)
+	d.logger.Info("createRollup config",
+		slog.String("stake_token", stakeToken.Hex()),
+		slog.String("owner", cfg.Owner.Hex()),
+		slog.Int64("chain_id", cfg.ChainID),
+		slog.String("base_stake", baseStake.String()),
+	)
+
+	// Build the entire RollupDeploymentParams as a single struct
+	// The go-ethereum ABI encoder requires all nested structs to be concrete types
+	deployParams := RollupDeploymentParams{
+		Config: BOLDConfig{
+			ConfirmPeriodBlocks: uint64(cfg.ConfirmPeriodBlocks),
+			StakeToken:          stakeToken,
+			BaseStake:           baseStake,
+			WasmModuleRoot:      DefaultWasmModuleRoot, // Latest Nitro WASM root
+			Owner:               cfg.Owner,
+			LoserStakeEscrow:    cfg.Owner,
+			ChainId:             big.NewInt(cfg.ChainID),
+			ChainConfig:         string(chainConfigJSON),
+			MinimumAssertionPeriod: big.NewInt(DefaultMinimumAssertionPeriod),
+			ValidatorAfkBlocks:    DefaultValidatorAfkBlocks,
+			MiniStakeValues:       miniStakeValues,
+			SequencerInboxMaxTimeVariation: MaxTimeVariation{
+				DelayBlocks:   big.NewInt(5760),
+				FutureBlocks:  big.NewInt(64),
+				DelaySeconds:  big.NewInt(86400),
+				FutureSeconds: big.NewInt(3600),
+			},
+			LayerZeroBlockEdgeHeight:     big.NewInt(DefaultLayerZeroBlockEdgeHeight),
+			LayerZeroBigStepEdgeHeight:   big.NewInt(DefaultLayerZeroBigStepEdgeHeight),
+			LayerZeroSmallStepEdgeHeight: big.NewInt(DefaultLayerZeroSmallStepEdgeHeight),
+			GenesisAssertionState: AssertionState{
+				GlobalState:    GlobalState{},
+				MachineStatus:  1, // FINISHED
+				EndHistoryRoot: [32]byte{},
+			},
+			GenesisInboxCount:          big.NewInt(1),
+			AnyTrustFastConfirmer:      common.Address{},
+			NumBigStepLevel:            DefaultNumBigStepLevel,
+			ChallengeGracePeriodBlocks: DefaultChallengeGracePeriodBlocks,
+			BufferConfig:               BufferConfig{},
+			DataCostEstimate:           big.NewInt(DefaultDataCostEstimate),
+		},
+		Validators:                cfg.Validators,
+		MaxDataSize:               big.NewInt(cfg.MaxDataSize),
+		NativeToken:               cfg.NativeToken,
+		DeployFactoriesToL2:       cfg.DeployFactoriesToL2,
+		MaxFeePerGasForRetryables: big.NewInt(100000000), // 0.1 gwei
+		BatchPosters:              cfg.BatchPosters,
+		BatchPosterManager:        cfg.Owner,
+		FeeTokenPricer:            common.Address{},
+		CustomOsp:                 common.Address{},
+	}
+
+	return d.rollupCreatorABI.Pack("createRollup", deployParams)
 }
 
 // getGasPrice returns a boosted gas price for faster inclusion.
@@ -445,7 +588,7 @@ func (d *RollupDeployer) getGasPrice(ctx context.Context, client *ethclient.Clie
 
 // parseDeploymentLogs parses the RollupCreated event from transaction logs.
 func (d *RollupDeployer) parseDeploymentLogs(receipt *types.Receipt) (*RollupContracts, error) {
-	// RollupCreated event signature
+	// RollupCreated event signature for BOLD (v3.2.0):
 	// event RollupCreated(
 	//   address indexed rollupAddress,
 	//   address indexed nativeToken,
@@ -459,54 +602,100 @@ func (d *RollupDeployer) parseDeploymentLogs(receipt *types.Receipt) (*RollupCon
 	//   address upgradeExecutor,
 	//   address validatorWalletCreator
 	// )
-	
-	// Find the RollupCreated event by looking for logs with the right data size
-	for _, log := range receipt.Logs {
-		if len(log.Topics) < 3 {
+
+	// RollupCreated event topic hash
+	// keccak256("RollupCreated(address,address,address,address,address,address,address,address,address,address,address)")
+	rollupCreatedTopic := common.HexToHash("0xd9bfd3bb3012f0caa103d1ba172692464d2de5c7b75877ce255c72147086a79d")
+
+	d.logger.Info("parsing deployment logs",
+		slog.Int("num_logs", len(receipt.Logs)),
+		slog.String("tx_hash", receipt.TxHash.Hex()),
+	)
+
+	for i, log := range receipt.Logs {
+		d.logger.Debug("checking log",
+			slog.Int("index", i),
+			slog.Int("num_topics", len(log.Topics)),
+			slog.Int("data_len", len(log.Data)),
+			slog.String("address", log.Address.Hex()),
+		)
+
+		if len(log.Topics) == 0 {
 			continue
 		}
-		
-		// For now, use a heuristic: look for logs with multiple address topics
-		// The RollupCreated event has indexed rollupAddress and nativeToken
-		
-		// This is a simplified implementation - in production, we'd properly
-		// decode the event using the ABI
-		if len(log.Data) >= 32*9 { // 9 non-indexed address parameters
-			contracts := &RollupContracts{}
-			
-			// First two topics are indexed addresses
-			if len(log.Topics) >= 2 {
-				contracts.Rollup = common.BytesToAddress(log.Topics[1].Bytes())
-			}
-			if len(log.Topics) >= 3 {
-				contracts.NativeToken = common.BytesToAddress(log.Topics[2].Bytes())
-			}
-			
-			// Remaining addresses are in data
-			offset := 0
-			contracts.Inbox = common.BytesToAddress(log.Data[offset : offset+32])
-			offset += 32
-			contracts.Outbox = common.BytesToAddress(log.Data[offset : offset+32])
-			offset += 32
-			contracts.RollupEventInbox = common.BytesToAddress(log.Data[offset : offset+32])
-			offset += 32
-			contracts.ChallengeManager = common.BytesToAddress(log.Data[offset : offset+32])
-			offset += 32
-			contracts.AdminProxy = common.BytesToAddress(log.Data[offset : offset+32])
-			offset += 32
-			contracts.SequencerInbox = common.BytesToAddress(log.Data[offset : offset+32])
-			offset += 32
-			contracts.Bridge = common.BytesToAddress(log.Data[offset : offset+32])
-			offset += 32
-			contracts.UpgradeExecutor = common.BytesToAddress(log.Data[offset : offset+32])
-			offset += 32
-			contracts.ValidatorWalletCreator = common.BytesToAddress(log.Data[offset : offset+32])
-			
-			return contracts, nil
+
+		// Match by event topic signature
+		if log.Topics[0] != rollupCreatedTopic {
+			continue
+		}
+
+		d.logger.Info("found RollupCreated event",
+			slog.Int("index", i),
+			slog.Int("data_len", len(log.Data)),
+		)
+
+		// Must have at least 3 topics (event sig + 2 indexed params)
+		if len(log.Topics) < 3 {
+			d.logger.Warn("RollupCreated event has insufficient topics",
+				slog.Int("topics", len(log.Topics)),
+			)
+			continue
+		}
+
+		// Must have 9 addresses in data (9 * 32 = 288 bytes)
+		if len(log.Data) < 32*9 {
+			d.logger.Warn("RollupCreated event has insufficient data",
+				slog.Int("data_len", len(log.Data)),
+				slog.Int("expected", 32*9),
+			)
+			continue
+		}
+
+		contracts := &RollupContracts{}
+
+		// Indexed parameters from topics
+		contracts.Rollup = common.BytesToAddress(log.Topics[1].Bytes())
+		contracts.NativeToken = common.BytesToAddress(log.Topics[2].Bytes())
+
+		// Non-indexed parameters from data (each is a 32-byte ABI-encoded address)
+		contracts.Inbox = common.BytesToAddress(log.Data[0:32])
+		contracts.Outbox = common.BytesToAddress(log.Data[32:64])
+		contracts.RollupEventInbox = common.BytesToAddress(log.Data[64:96])
+		contracts.ChallengeManager = common.BytesToAddress(log.Data[96:128])
+		contracts.AdminProxy = common.BytesToAddress(log.Data[128:160])
+		contracts.SequencerInbox = common.BytesToAddress(log.Data[160:192])
+		contracts.Bridge = common.BytesToAddress(log.Data[192:224])
+		contracts.UpgradeExecutor = common.BytesToAddress(log.Data[224:256])
+		contracts.ValidatorWalletCreator = common.BytesToAddress(log.Data[256:288])
+
+		d.logger.Info("parsed RollupCreated event",
+			slog.String("rollup", contracts.Rollup.Hex()),
+			slog.String("inbox", contracts.Inbox.Hex()),
+			slog.String("bridge", contracts.Bridge.Hex()),
+			slog.String("sequencer_inbox", contracts.SequencerInbox.Hex()),
+			slog.String("outbox", contracts.Outbox.Hex()),
+			slog.String("challenge_manager", contracts.ChallengeManager.Hex()),
+			slog.String("upgrade_executor", contracts.UpgradeExecutor.Hex()),
+		)
+
+		return contracts, nil
+	}
+
+	// If we didn't find the event, log all topics for debugging
+	d.logger.Error("RollupCreated event not found",
+		slog.String("expected_topic", rollupCreatedTopic.Hex()),
+	)
+	for i, log := range receipt.Logs {
+		if len(log.Topics) > 0 {
+			d.logger.Error("log topic",
+				slog.Int("index", i),
+				slog.String("topic0", log.Topics[0].Hex()),
+				slog.String("address", log.Address.Hex()),
+			)
 		}
 	}
 
-	return nil, fmt.Errorf("RollupCreated event not found in logs")
+	return nil, fmt.Errorf("RollupCreated event not found in logs (checked %d logs)", len(receipt.Logs))
 }
 
 // whitelistBatchPosters whitelists batch posters on the SequencerInbox via UpgradeExecutor.
@@ -660,6 +849,148 @@ func (d *RollupDeployer) isBatchPoster(
 	}
 
 	return isWhitelisted, nil
+}
+
+// ensureWETHBalance wraps ETH to WETH if the signer doesn't have enough WETH.
+// This automates the WETH wrapping so users don't have to do it manually.
+func (d *RollupDeployer) ensureWETHBalance(
+	ctx context.Context,
+	client *ethclient.Client,
+	wethAddress common.Address,
+	requiredAmount *big.Int,
+) error {
+	signerAddr := d.signer.Address()
+
+	// Check current WETH balance
+	// WETH.balanceOf(address) -> uint256
+	wethABI, err := abi.JSON(strings.NewReader(`[{
+		"inputs": [{"name": "account", "type": "address"}],
+		"name": "balanceOf",
+		"outputs": [{"name": "", "type": "uint256"}],
+		"stateMutability": "view",
+		"type": "function"
+	}, {
+		"inputs": [],
+		"name": "deposit",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	}]`))
+	if err != nil {
+		return fmt.Errorf("parse WETH ABI: %w", err)
+	}
+
+	balanceData, err := wethABI.Pack("balanceOf", signerAddr)
+	if err != nil {
+		return fmt.Errorf("pack balanceOf: %w", err)
+	}
+
+	result, err := client.CallContract(ctx, ethereum.CallMsg{
+		To:   &wethAddress,
+		Data: balanceData,
+	}, nil)
+	if err != nil {
+		return fmt.Errorf("call balanceOf: %w", err)
+	}
+
+	var currentBalance *big.Int
+	if err := wethABI.UnpackIntoInterface(&currentBalance, "balanceOf", result); err != nil {
+		return fmt.Errorf("unpack balanceOf: %w", err)
+	}
+
+	d.logger.Info("checked WETH balance",
+		slog.String("address", signerAddr.Hex()),
+		slog.String("current_weth", currentBalance.String()),
+		slog.String("required_weth", requiredAmount.String()),
+	)
+
+	// If we have enough WETH, we're done
+	if currentBalance.Cmp(requiredAmount) >= 0 {
+		d.logger.Info("sufficient WETH balance, no wrapping needed")
+		return nil
+	}
+
+	// Calculate how much more we need (with some buffer)
+	needed := new(big.Int).Sub(requiredAmount, currentBalance)
+	// Add 50% buffer to avoid running out
+	wrapAmount := new(big.Int).Mul(needed, big.NewInt(150))
+	wrapAmount = wrapAmount.Div(wrapAmount, big.NewInt(100))
+
+	// Check ETH balance
+	ethBalance, err := client.BalanceAt(ctx, signerAddr, nil)
+	if err != nil {
+		return fmt.Errorf("get ETH balance: %w", err)
+	}
+
+	// Need at least wrapAmount + gas costs
+	gasBuffer := big.NewInt(100000000000000) // 0.0001 ETH for gas
+	minRequired := new(big.Int).Add(wrapAmount, gasBuffer)
+
+	if ethBalance.Cmp(minRequired) < 0 {
+		return fmt.Errorf("insufficient ETH to wrap: have %s, need %s",
+			ethBalance.String(), minRequired.String())
+	}
+
+	d.logger.Info("wrapping ETH to WETH for BOLD staking",
+		slog.String("amount", wrapAmount.String()),
+		slog.String("weth_contract", wethAddress.Hex()),
+	)
+
+	// Create deposit() transaction
+	depositData, err := wethABI.Pack("deposit")
+	if err != nil {
+		return fmt.Errorf("pack deposit: %w", err)
+	}
+
+	nonce, err := client.PendingNonceAt(ctx, signerAddr)
+	if err != nil {
+		return fmt.Errorf("get nonce: %w", err)
+	}
+
+	gasPrice, err := client.SuggestGasPrice(ctx)
+	if err != nil {
+		return fmt.Errorf("get gas price: %w", err)
+	}
+
+	tx := types.NewTransaction(
+		nonce,
+		wethAddress,
+		wrapAmount, // Send ETH with the transaction
+		100000,     // Gas limit for deposit is low
+		gasPrice,
+		depositData,
+	)
+
+	signedTx, err := d.signer.SignTransaction(ctx, tx)
+	if err != nil {
+		return fmt.Errorf("sign deposit transaction: %w", err)
+	}
+
+	if err := client.SendTransaction(ctx, signedTx); err != nil {
+		return fmt.Errorf("send deposit transaction: %w", err)
+	}
+
+	d.logger.Info("WETH deposit transaction submitted",
+		slog.String("tx_hash", signedTx.Hash().Hex()),
+		slog.String("amount", wrapAmount.String()),
+	)
+
+	// Wait for confirmation
+	receipt, err := bind.WaitMined(ctx, client, signedTx)
+	if err != nil {
+		return fmt.Errorf("wait for deposit receipt: %w", err)
+	}
+
+	if receipt.Status != types.ReceiptStatusSuccessful {
+		return fmt.Errorf("WETH deposit transaction reverted")
+	}
+
+	d.logger.Info("ETH wrapped to WETH successfully",
+		slog.String("tx_hash", signedTx.Hash().Hex()),
+		slog.String("amount_wrapped", wrapAmount.String()),
+	)
+
+	return nil
 }
 
 // errorResult creates an error result.

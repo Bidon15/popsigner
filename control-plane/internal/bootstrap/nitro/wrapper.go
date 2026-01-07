@@ -46,9 +46,8 @@ type DeployConfig struct {
 	NativeToken string `json:"nativeToken,omitempty"`
 
 	// Optional: deployment parameters
-	ConfirmPeriodBlocks      int  `json:"confirmPeriodBlocks,omitempty"`
-	ExtraChallengeTimeBlocks int  `json:"extraChallengeTimeBlocks,omitempty"`
-	MaxDataSize              int  `json:"maxDataSize,omitempty"`
+	ConfirmPeriodBlocks int `json:"confirmPeriodBlocks,omitempty"`
+	MaxDataSize         int `json:"maxDataSize,omitempty"`
 	DeployFactoriesToL2      bool `json:"deployFactoriesToL2,omitempty"`
 
 	// POPSigner mTLS configuration

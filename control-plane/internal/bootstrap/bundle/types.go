@@ -111,6 +111,7 @@ type BundleConfig struct {
 	// Generated files (from compose generator)
 	DockerCompose string
 	EnvExample    string
+	EnvFile       string // Ready-to-use .env file with actual values
 }
 
 // BundleResult contains the generated bundle and metadata.
