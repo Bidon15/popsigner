@@ -101,15 +101,23 @@ func BuildIntent(cfg *DeploymentConfig) (*state.Intent, error) {
 		Eip1559Elasticity:          6,     // Standard values
 		Roles:                      buildChainRoles(cfg, deployerAddr),
 		// Celestia DA configuration - POPKins only supports Celestia
+		// 
+		// IMPORTANT: Even for GenericCommitment (Celestia), OP Stack requires non-zero
+		// DAChallengeWindow and DAResolveWindow. These values are used internally for
+		// safe head advancement calculations, even when data availability is external.
+		// The DAChallengeAddress remains zero (required for GenericCommitment).
+		//
+		// Values based on Celestia's finality (~12 seconds per block, ~1 min finality):
+		// - DAChallengeWindow: 300 blocks (~10 min) - time to challenge a commitment
+		// - DAResolveWindow: 300 blocks (~10 min) - time to resolve a challenge
 		DangerousAltDAConfig: genesis.AltDADeployConfig{
 			UseAltDA:         true,
 			DACommitmentType: CelestiaDACommitmentType,
-			// GenericCommitment (Celestia) doesn't require challenge/resolve windows
-			// as data availability is guaranteed by Celestia's consensus
-			DAChallengeWindow:          0,
-			DAResolveWindow:            0,
-			DABondSize:                 0,
-			DAResolverRefundPercentage: 0,
+			// Non-zero windows required by op-node runtime, even for Celestia
+			DAChallengeWindow:          300, // ~10 min at 2s block time
+			DAResolveWindow:            300, // ~10 min at 2s block time
+			DABondSize:                 0,   // No bond for GenericCommitment
+			DAResolverRefundPercentage: 0,   // No refunds for GenericCommitment
 		},
 	}
 
