@@ -149,7 +149,7 @@ services:
       # For P2P-enabled sequencers, add:
       #   --p2p.sequencer.endpoint=${POPSIGNER_RPC_URL}
       #   --p2p.sequencer.address=${SEQUENCER_ADDRESS}
-      #   --p2p.sequencer.header=X-API-Key:${POPSIGNER_API_KEY}
+      #   --p2p.sequencer.header=X-API-Key=${POPSIGNER_API_KEY}
 {{- if .UseAltDA }}
       # Celestia Alt-DA
       - --altda.enabled=true
@@ -201,7 +201,7 @@ services:
       # POPSigner for batcher signing
       - --signer.endpoint=${POPSIGNER_RPC_URL}
       - --signer.address=${BATCHER_ADDRESS}
-      - --signer.header=X-API-Key:${POPSIGNER_API_KEY}
+      - --signer.header=X-API-Key=${POPSIGNER_API_KEY}
       - --signer.tls.enabled=false
 {{- if .UseAltDA }}
       # Celestia Alt-DA
@@ -240,7 +240,7 @@ services:
       # POPSigner for proposer signing
       - --signer.endpoint=${POPSIGNER_RPC_URL}
       - --signer.address=${PROPOSER_ADDRESS}
-      - --signer.header=X-API-Key:${POPSIGNER_API_KEY}
+      - --signer.header=X-API-Key=${POPSIGNER_API_KEY}
       - --signer.tls.enabled=false
       - --metrics.enabled
       - --metrics.port=7302
