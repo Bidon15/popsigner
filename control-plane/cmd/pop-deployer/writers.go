@@ -643,7 +643,7 @@ func (w *ConfigWriter) writeEnvExample() error {
 	}
 
 	env := fmt.Sprintf(`# L1 Configuration
-L1_RPC_URL=http://anvil:8545
+L1_RPC_URL=http://anvil:9546
 L1_CHAIN_ID=%d
 L1_RPC_KIND=basic
 BLOCK_TIME=%d
@@ -704,14 +704,14 @@ func (w *ConfigWriter) writeREADME() error {
 	readme += "2. Start the devnet:\n```bash\ndocker compose up -d\n```\n\n"
 	readme += "3. Wait for L2 to start (~30 seconds):\n```bash\ndocker compose logs -f op-node\n```\n\n"
 	readme += "4. Verify services:\n```bash\n# Check Anvil (L1)\ncast block-number --rpc-url http://localhost:9546\n\n"
-	readme += "# Check OP-Geth (L2)\ncast block-number --rpc-url http://localhost:9545\n\n"
+	readme += "# Check OP-Geth (L2)\ncast block-number --rpc-url http://localhost:8545\n\n"
 	readme += "# Check POPSigner-Lite\ncurl http://localhost:3000/health\n```\n\n"
 	readme += "## Services\n\n"
 	readme += "- **Anvil** (L1): http://localhost:9546\n"
 	readme += "- **POPSigner-Lite**: http://localhost:3000 (REST), http://localhost:8555 (JSON-RPC)\n"
 	readme += "- **Localestia** (Mock Celestia): http://localhost:26658\n"
-	readme += "- **OP-Geth** (L2): http://localhost:9545\n"
-	readme += "- **OP-Node**: http://localhost:7545\n\n"
+	readme += "- **OP-Geth** (L2): http://localhost:8545\n"
+	readme += "- **OP-Node**: http://localhost:9545\n\n"
 	readme += "## What's Inside\n\n"
 	readme += "This bundle contains:\n"
 	readme += "- **Pre-deployed OP Stack contracts** on Anvil L1\n"

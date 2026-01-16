@@ -193,7 +193,7 @@ func main() {
 
 	chainIDBigInt := new(big.Int).SetUint64(l1ChainID)
 	adapter := opstack.NewPOPSignerAdapter(
-		popSignerRPC,
+		l1RPC,
 		popSignerAPIKey,
 		chainIDBigInt,
 	)
